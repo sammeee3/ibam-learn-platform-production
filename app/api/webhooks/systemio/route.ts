@@ -1,84 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// In-memory log storage (for development)
 const webhookLogs: any[] = []
+
+// Course assignment logic based on tags
+const TAG_TO_COURSE_MAP = {
+  'USA Church Leader': {
+    courseId: 'church-leadership-101',
+    courseName: 'Church Leadership Fundamentals',
+    modules: ['leadership-basics', 'biblical-leadership', 'team-building']
+  },
+  'IBAM Impact Members': {
+    courseId: 'ibam-impact-training',
+    courseName: 'IBAM Impact Member Training',
+    modules: ['impact-principles', 'marketplace-ministry', 'discipleship']
+  },
+  'Doner': {
+    courseId: 'stewardship-course',
+    courseName: 'Biblical Stewardship',
+    modules: ['giving-principles', 'financial-discipleship']
+  }
+}
 
 export async function GET(request: NextRequest) {
   return NextResponse.json({
-    message: 'IBAM Webhook Endpoint is LIVE!',
-    status: 'ready',
+    message: 'IBAM Learning Platform Webhook ACTIVE',
+    status: 'processing webhooks',
     timestamp: new Date().toISOString(),
-    totalReceived: webhookLogs.length,
-    recentWebhooks: webhookLogs.slice(-3).reverse(),
-    note: 'This endpoint receives System.io webhooks via POST requests'
+    totalProcessed: webhookLogs.length,
+    recentEvents: webhookLogs.slice(-3).reverse(),
+    availableCourses: Object.keys(TAG_TO_COURSE_MAP),
+    note: 'Automatically assigns courses based on System.io tags'
   })
 }
 
 export async function POST(request: NextRequest) {
+  const timestamp = new Date().toISOString()
+  
   try {
-    // Get the raw body
     const body = await request.text()
-    const timestamp = new Date().toISOString()
-    
-    // Parse JSON if possible
-    let parsedBody
-    try {
-      parsedBody = JSON.parse(body)
-    } catch {
-      parsedBody = { raw: body }
-    }
-    
-    // Get headers
+    const webhookData = JSON.parse(body)
     const headers = Object.fromEntries(request.headers.entries())
     
-    // Log everything
+    // Extract contact and tag information
+    const contact = webhookData.contact
+    const tag = webhookData.tag
+    const eventType = headers['x-webhook-event']
+    
+    console.log(`🎯 Processing ${eventType} for ${contact?.email}`)
+    
+    let courseAssignment = null
+    
+    // Handle tag added events
+    if (eventType === 'CONTACT_TAG_ADDED' && tag?.name) {
+      const courseConfig = TAG_TO_COURSE_MAP[tag.name]
+      
+      if (courseConfig) {
+        courseAssignment = {
+          email: contact.email,
+          name: `${contact.fields?.find(f => f.slug === 'first_name')?.value || ''} ${contact.fields?.find(f => f.slug === 'surname')?.value || ''}`.trim(),
+          tag: tag.name,
+          assignedCourse: courseConfig,
+          assignedAt: timestamp,
+          status: 'enrolled'
+        }
+        
+        console.log(`📚 Course Assigned: ${courseConfig.courseName} to ${contact.email}`)
+      }
+    }
+    
+    // Log the event
     const logEntry = {
       timestamp,
-      headers,
-      body: parsedBody,
-      rawBody: body,
-      method: request.method,
-      url: request.url
+      eventType,
+      contact: {
+        email: contact?.email,
+        name: `${contact?.fields?.find(f => f.slug === 'first_name')?.value || ''} ${contact?.fields?.find(f => f.slug === 'surname')?.value || ''}`.trim(),
+        tags: contact?.tags?.map(t => t.name) || []
+      },
+      tag: tag?.name,
+      courseAssignment,
+      processed: true
     }
     
     webhookLogs.push(logEntry)
     
-    // Keep only last 50 entries
-    if (webhookLogs.length > 50) {
+    // Keep only last 100 entries
+    if (webhookLogs.length > 100) {
       webhookLogs.shift()
     }
     
-    console.log('🎯 WEBHOOK RECEIVED:', logEntry)
+    // TODO: Here you would typically:
+    // 1. Save to Supabase database
+    // 2. Send welcome email with course access
+    // 3. Create user account in learning platform
+    // 4. Trigger course assignment workflow
     
-    // Process the webhook data
-    if (parsedBody.event_type) {
-      console.log(`📨 Event: ${parsedBody.event_type}`)
-      
-      if (parsedBody.event_type === 'contact.tag_added') {
-        console.log(`🏷️ Tag "${parsedBody.tag?.name}" added to ${parsedBody.contact?.email}`)
-      }
-    }
-    
-    // Always return 200 OK quickly
     return NextResponse.json({ 
       success: true, 
-      received: timestamp,
-      message: 'Webhook processed successfully'
+      processed: timestamp,
+      courseAssigned: !!courseAssignment,
+      message: courseAssignment ? `Enrolled in ${courseAssignment.assignedCourse.courseName}` : 'Event logged'
     }, { status: 200 })
     
   } catch (error) {
-    console.error('❌ Webhook Error:', error)
+    console.error('❌ Webhook Processing Error:', error)
     
-    // Log the error too
     webhookLogs.push({
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-      headers: Object.fromEntries(request.headers.entries())
+      timestamp,
+      error: String(error),
+      success: false
     })
     
     return NextResponse.json({ 
-      error: 'Webhook processing failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+      error: 'Processing failed',
+      message: String(error)
+    }, { status: 200 })
   }
 }
