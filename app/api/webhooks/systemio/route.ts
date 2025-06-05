@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export async function GET(request: NextRequest) {
+  return NextResponse.json({ 
+    message: 'IBAM Webhook Endpoint is LIVE!',
+    status: 'ready',
+    timestamp: new Date().toISOString(),
+    note: 'This endpoint receives System.io webhooks via POST requests'
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
