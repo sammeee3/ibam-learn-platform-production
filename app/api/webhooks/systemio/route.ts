@@ -75,13 +75,14 @@ async function createUserAccount(contact: any, product: any) {
 async function updateUserAccess(contact: any, tag: any) {
   console.log(`🔄 Updating access for ${contact?.email} with tag: ${tag?.name}`)
   
-  const tagMapping = {
+  const tagMapping: { [key: string]: string[] } = {
     'premium': ['ibam-fundamentals', 'advanced-strategies', 'business-planner-pro'],
     'basic': ['ibam-fundamentals'],
     'trial': ['ibam-fundamentals-preview']
   }
   
-  const courseAccess = tagMapping[tag?.name?.toLowerCase()] || ['ibam-fundamentals']
+  const tagName = tag?.name?.toLowerCase() || ''
+  const courseAccess = tagMapping[tagName] || ['ibam-fundamentals']
   console.log(`📚 Course access updated to: ${courseAccess.join(', ')}`)
 }
 
