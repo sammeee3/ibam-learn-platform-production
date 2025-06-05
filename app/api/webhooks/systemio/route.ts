@@ -1,101 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// In-memory log storage (for development)
+const webhookLogs: any[] = []
+
 export async function GET(request: NextRequest) {
-  return NextResponse.json({ 
+  return NextResponse.json({
     message: 'IBAM Webhook Endpoint is LIVE!',
     status: 'ready',
     timestamp: new Date().toISOString(),
+    totalReceived: webhookLogs.length,
+    recentWebhooks: webhookLogs.slice(-3).reverse(),
     note: 'This endpoint receives System.io webhooks via POST requests'
   })
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const signature = request.headers.get('x-systeme-signature')
+    // Get the raw body
+    const body = await request.text()
+    const timestamp = new Date().toISOString()
     
-    console.log('🎯 System.io Webhook received:', JSON.stringify(body, null, 2))
-    
-    // Handle different event types
-    switch (body.event_type) {
-      case 'purchase.created':
-        console.log(`✅ New purchase: ${body.contact?.email} bought ${body.product?.name}`)
-        await createUserAccount(body.contact, body.product)
-        break
-        
-      case 'contact.opted_in':
-        console.log(`📧 New opt-in: ${body.contact?.email}`)
-        await createUserAccount(body.contact, { name: 'Free Course Access' })
-        break
-        
-      case 'contact.tag_added':
-        console.log(`🏷️ Tag added to ${body.contact?.email}: ${body.tag?.name}`)
-        await updateUserAccess(body.contact, body.tag)
-        break
-        
-      case 'purchase.cancelled':
-        console.log(`❌ Purchase cancelled: ${body.contact?.email}`)
-        await revokeUserAccess(body.contact, body.product)
-        break
-        
-      default:
-        console.log(`🔍 Unknown event type: ${body.event_type}`)
+    // Parse JSON if possible
+    let parsedBody
+    try {
+      parsedBody = JSON.parse(body)
+    } catch {
+      parsedBody = { raw: body }
     }
     
+    // Get headers
+    const headers = Object.fromEntries(request.headers.entries())
+    
+    // Log everything
+    const logEntry = {
+      timestamp,
+      headers,
+      body: parsedBody,
+      rawBody: body,
+      method: request.method,
+      url: request.url
+    }
+    
+    webhookLogs.push(logEntry)
+    
+    // Keep only last 50 entries
+    if (webhookLogs.length > 50) {
+      webhookLogs.shift()
+    }
+    
+    console.log('🎯 WEBHOOK RECEIVED:', logEntry)
+    
+    // Process the webhook data
+    if (parsedBody.event_type) {
+      console.log(`📨 Event: ${parsedBody.event_type}`)
+      
+      if (parsedBody.event_type === 'contact.tag_added') {
+        console.log(`🏷️ Tag "${parsedBody.tag?.name}" added to ${parsedBody.contact?.email}`)
+      }
+    }
+    
+    // Always return 200 OK quickly
     return NextResponse.json({ 
-      status: 'success',
-      message: 'Webhook processed successfully',
-      timestamp: new Date().toISOString()
-    })
+      success: true, 
+      received: timestamp,
+      message: 'Webhook processed successfully'
+    }, { status: 200 })
     
   } catch (error) {
-    console.error('❌ Webhook error:', error)
+    console.error('❌ Webhook Error:', error)
+    
+    // Log the error too
+    webhookLogs.push({
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+      headers: Object.fromEntries(request.headers.entries())
+    })
+    
     return NextResponse.json({ 
       error: 'Webhook processing failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-}
-
-async function createUserAccount(contact: any, product: any) {
-  if (!contact?.email) {
-    console.log('⚠️ No email provided, skipping user creation')
-    return
-  }
-  
-  const userData = {
-    email: contact.email,
-    firstName: contact.first_name || 'Member',
-    lastName: contact.last_name || '',
-    systemIOId: contact.id || contact.email,
-    courseAccess: [product?.name || 'ibam-fundamentals'],
-    subscriptionStatus: 'active',
-    createdAt: new Date().toISOString(),
-    lastLogin: null,
-    progress: {}
-  }
-  
-  console.log('👤 User data prepared:', userData)
-  console.log('🎯 User account would be created/updated in database')
-  
-  return userData
-}
-
-async function updateUserAccess(contact: any, tag: any) {
-  console.log(`🔄 Updating access for ${contact?.email} with tag: ${tag?.name}`)
-  
-  const tagMapping: { [key: string]: string[] } = {
-    'premium': ['ibam-fundamentals', 'advanced-strategies', 'business-planner-pro'],
-    'basic': ['ibam-fundamentals'],
-    'trial': ['ibam-fundamentals-preview']
-  }
-  
-  const tagName = tag?.name?.toLowerCase() || ''
-  const courseAccess = tagMapping[tagName] || ['ibam-fundamentals']
-  console.log(`📚 Course access updated to: ${courseAccess.join(', ')}`)
-}
-
-async function revokeUserAccess(contact: any, product: any) {
-  console.log(`🚫 Revoking access for ${contact?.email} from ${product?.name}`)
-  console.log('🔄 User access would be updated to remove course access')
 }
