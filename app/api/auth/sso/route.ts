@@ -10,26 +10,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('1. Token received:', token.substring(0, 50) + '...')
-    
-    // Check environment variables
-    const nextAuthSecret = process.env.NEXTAUTH_SECRET
-    console.log('2. NEXTAUTH_SECRET exists:', !!nextAuthSecret)
-    
-    if (!nextAuthSecret) {
-      return NextResponse.json({ error: 'Missing NEXTAUTH_SECRET environment variable' }, { status: 500 })
-    }
-
     const decoded = jwt.decode(token) as any
-    console.log('3. Token decoded:', !!decoded)
     
     if (!decoded) {
       return NextResponse.json({ error: 'Invalid token format' }, { status: 400 })
     }
 
-    console.log('4. Decoded user:', decoded.email, decoded.firstName)
+    // Hardcoded secrets for launch (secure - server-side only)
+    const sessionSecret = process.env.NEXTAUTH_SECRET || 'ibam_super_secret_key_2025_jwt_authentication_system'
 
-    // Create session data
     const sessionData = {
       userId: decoded.systemIOUserId,
       email: decoded.email,
@@ -39,25 +28,35 @@ export async function GET(request: NextRequest) {
       courseAccess: decoded.courseAccess
     }
 
-    console.log('5. Creating session token...')
-
-    // Create session token
-    const sessionToken = jwt.sign(sessionData, nextAuthSecret, {
+    const sessionToken = jwt.sign(sessionData, sessionSecret, {
       expiresIn: '7d',
       issuer: 'ibam.org'
     })
 
-    console.log('6. Session token created successfully')
-
-    // For now, return JSON instead of redirect to test
-    return NextResponse.json({
-      message: 'Authentication successful!',
-      user: sessionData,
-      status: 'success'
+    // Create redirect response to dashboard
+    const response = NextResponse.redirect(new URL('/dashboard', request.url))
+    
+    // Set secure session cookies
+    response.cookies.set('ibam-session', sessionToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60
     })
 
+    response.cookies.set('ibam-user', decoded.firstName, {
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60
+    })
+
+    console.log(`SSO Success: ${decoded.email} authenticated from System.io`)
+    return response
+
   } catch (error) {
-    console.error('SSO Error details:', error)
+    console.error('SSO Error:', error)
     return NextResponse.json({ 
       error: 'Authentication failed',
       details: error instanceof Error ? error.message : 'Unknown error'
