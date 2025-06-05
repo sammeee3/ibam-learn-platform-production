@@ -67,9 +67,6 @@ async function createUserAccount(contact: any, product: any) {
   }
   
   console.log('👤 User data prepared:', userData)
-  
-  // For now, we'll log the user data
-  // Later we'll connect this to your database
   console.log('🎯 User account would be created/updated in database')
   
   return userData
@@ -78,7 +75,6 @@ async function createUserAccount(contact: any, product: any) {
 async function updateUserAccess(contact: any, tag: any) {
   console.log(`🔄 Updating access for ${contact?.email} with tag: ${tag?.name}`)
   
-  // Map tags to course access levels
   const tagMapping = {
     'premium': ['ibam-fundamentals', 'advanced-strategies', 'business-planner-pro'],
     'basic': ['ibam-fundamentals'],
