@@ -2,8 +2,6 @@
 // Receives "USA Church Leader" tag notifications from systeme.io
 
 import { createClient } from '@supabase/supabase-js';
-import { sendEmail } from '../../../../utils/email';
-import { generateInviteLink } from '../../../../utils/inviteLinks';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
