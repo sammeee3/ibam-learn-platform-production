@@ -4,9 +4,15 @@ export async function POST(req) {
   try {
     console.log('🚀 CHURCH WEBHOOK FIRED AT', new Date());
     
-    // Use environment variables
+    // Use environment variables with detailed logging
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    
+    console.log('Environment check:', {
+      supabaseUrl: supabaseUrl ? 'SET' : 'NOT SET',
+      supabaseKey: supabaseKey ? 'SET' : 'NOT SET',
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
+    });
     
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase environment variables');
