@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       if (courseConfig) {
         courseAssignment = {
           email: contact.email,
-          name: `${contact.fields?.find(f => f.slug === 'first_name')?.value || ''} ${contact.fields?.find(f => f.slug === 'surname')?.value || ''}`.trim(),
+          name: `${contact.fields?.find((f: any) => f.slug === 'first_name')?.value || ''} ${contact.fields?.find((f: any) => f.slug === 'surname')?.value || ''}`.trim(),
           tag: tag.name,
           assignedCourse: courseConfig,
           assignedAt: timestamp,
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       eventType,
       contact: {
         email: contact?.email,
-        name: `${contact?.fields?.find(f => f.slug === 'first_name')?.value || ''} ${contact?.fields?.find(f => f.slug === 'surname')?.value || ''}`.trim(),
+        name: `${contact?.fields?.find((f: any) => f.slug === 'first_name')?.value || ''} ${contact?.fields?.find((f: any) => f.slug === 'surname')?.value || ''}`.trim(),
         tags: contact?.tags?.map(t => t.name) || []
       },
       tag: tag?.name,
