@@ -1,341 +1,151 @@
-// IBAM Learn Platform Webhook Handler - Next.js App Router
-// Receives "USA Church Leader" tag notifications from systeme.io
+// 👆 COPY ALL OF THIS CODE 👆
+// Replace your entire route.js file with this code
 
 import { createClient } from '@supabase/supabase-js';
 
-
-// Next.js App Router API Route
 export async function POST(req) {
   // Create Supabase client inside the function
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  
   try {
     console.log('Webhook received from systeme.io');
-
-    // Get request body
-    const body = await req.json();
-    console.log('Webhook payload:', JSON.stringify(body, null, 2));
     
-    // Verify webhook authenticity (optional - add webhook secret verification)
-    const webhookSecret = req.headers.get('x-webhook-secret');
-    if (webhookSecret !== process.env.SYSTEME_WEBHOOK_SECRET) {
-      console.log('Invalid webhook secret');
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Parse the incoming webhook data
+    const body = await req.json();
+    console.log('Webhook body:', JSON.stringify(body, null, 2));
+    
+    // Extract contact and tag data
+    const { contact, tag } = body;
+    
+    // Verify this is for the USA Church Leader tag
+    if (tag?.name !== 'USA Church Leader') {
+      console.log('Not a USA Church Leader tag, ignoring');
+      return Response.json({ message: 'Tag not relevant' }, { status: 200 });
     }
-
-    // Extract data from systeme.io webhook
-    const {
-      event_type,
-      member_id,
-      email,
-      first_name,
-      last_name,
-      phone,
-      tags,
-      custom_fields
-    } = body;
-
-    // Only process if "USA Church Leader" tag was added
-    if (!tags || !tags.includes('USA Church Leader')) {
-      console.log('Not a USA Church Leader tag event, skipping');
-      return Response.json({ message: 'Event ignored - not USA Church Leader' }, { status: 200 });
+    
+    console.log('Processing USA Church Leader tag for:', contact?.email);
+    
+    // Extract contact information
+    const email = contact?.email;
+    if (!email) {
+      console.log('No email found in contact data');
+      return Response.json({ error: 'No email found' }, { status: 400 });
     }
-
-    console.log(`Processing USA Church Leader signup for: ${email}`);
-
-    // Extract church and ambassador data from custom fields
-    const churchData = {
-      churchName: custom_fields?.church_name || `${first_name} ${last_name}'s Church`,
-      city: custom_fields?.city || '',
-      state: custom_fields?.state || '',
-      denomination: custom_fields?.denomination || '',
-      expectedStudents: custom_fields?.expected_students || '',
-      
-      // Ambassador details (could be same person or different)
-      ambassadorName: custom_fields?.ambassador_name || `${first_name} ${last_name}`,
-      ambassadorEmail: custom_fields?.ambassador_email || email,
-      ambassadorPhone: custom_fields?.ambassador_phone || phone,
-      
-      // Original systeme.io member details
-      pastorName: `${first_name} ${last_name}`,
-      pastorEmail: email,
-      systemeContactId: member_id
-    };
-
-    console.log('Church data extracted:', churchData);
-
-    // Step 1: Create or update church organization
-    const { data: existingOrg, error: findError } = await supabase
+    
+    // Get name from fields
+    const firstName = contact?.fields?.find(f => f.slug === 'first_name')?.value || '';
+    const lastName = contact?.fields?.find(f => f.slug === 'last_name')?.value || '';
+    const fullName = `${firstName} ${lastName}`.trim() || email;
+    
+    // Get country from fields
+    const country = contact?.fields?.find(f => f.slug === 'country')?.value || 'US';
+    
+    console.log('Contact details:', { email, fullName, country });
+    
+    // Create church organization
+    const churchName = `${fullName}'s Church`;
+    const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-');
+    
+    console.log('Creating church organization:', churchName);
+    
+    // Insert organization
+    const { data: orgData, error: orgError } = await supabase
       .from('organizations')
-      .select('*')
-      .eq('systeme_member_id', member_id)
-      .single();
-
-    let organization;
-
-    if (existingOrg) {
-      // Update existing organization
-      const { data: updatedOrg, error: updateError } = await supabase
-        .from('organizations')
-        .update({
-          name: churchData.churchName,
-          city: churchData.city,
-          state: churchData.state,
-          denomination: churchData.denomination,
-          expected_students: churchData.expectedStudents,
-          membership_status: 'active',
-          updated_at: new Date().toISOString()
-        })
-        .eq('systeme_member_id', member_id)
-        .select()
-        .single();
-
-      if (updateError) throw updateError;
-      organization = updatedOrg;
-      console.log('Updated existing organization:', organization.id);
-
-    } else {
-      // Create new organization
-      const { data: newOrg, error: createError } = await supabase
-        .from('organizations')
-        .insert({
-          systeme_member_id: member_id,
-          name: churchData.churchName,
-          type: 'church',
-          city: churchData.city,
-          state: churchData.state,
-          denomination: churchData.denomination,
-          expected_students: churchData.expectedStudents,
-          membership_status: 'active',
-          pastor_name: churchData.pastorName,
-          pastor_email: churchData.pastorEmail,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (createError) throw createError;
-      organization = newOrg;
-      console.log('Created new organization:', organization.id);
-    }
-
-    // Step 2: Create or update ambassador account
-    const { data: existingAmbassador, error: findAmbError } = await supabase
-      .from('ambassadors')
-      .select('*')
-      .eq('organization_id', organization.id)
-      .eq('email', churchData.ambassadorEmail)
-      .single();
-
-    let ambassador;
-
-    if (existingAmbassador) {
-      // Update existing ambassador
-      const { data: updatedAmbassador, error: updateAmbError } = await supabase
-        .from('ambassadors')
-        .update({
-          name: churchData.ambassadorName,
-          phone: churchData.ambassadorPhone,
-          systeme_member_email: churchData.pastorEmail,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingAmbassador.id)
-        .select()
-        .single();
-
-      if (updateAmbError) throw updateAmbError;
-      ambassador = updatedAmbassador;
-      console.log('Updated existing ambassador:', ambassador.id);
-
-    } else {
-      // Create new ambassador
-      const { data: newAmbassador, error: createAmbError } = await supabase
-        .from('ambassadors')
-        .insert({
-          organization_id: organization.id,
-          name: churchData.ambassadorName,
-          email: churchData.ambassadorEmail,
-          phone: churchData.ambassadorPhone,
-          systeme_member_email: churchData.pastorEmail,
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (createAmbError) throw createAmbError;
-      ambassador = newAmbassador;
-      console.log('Created new ambassador:', ambassador.id);
-    }
-
-    // Step 3: Generate church invite link
-    const inviteLink = generateInviteLink(organization.id, organization.name);
-
-    // Step 4: Create or update church branding/settings
-    const churchSlug = organization.name.toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .substring(0, 20);
-
-    const { error: brandingError } = await supabase
-      .from('church_settings')
-      .upsert({
-        organization_id: organization.id,
-        church_slug: churchSlug,
-        invite_link: inviteLink,
-        branding: {
-          primary_color: '#3B82F6', // Default blue
-          church_name: organization.name,
-          welcome_message: `Welcome to ${organization.name}'s Faith-Driven Business Training`,
-          logo_url: null // Can be customized later
-        },
-        settings: {
-          cohort_size_limit: parseInt(churchData.expectedStudents) || 25,
-          auto_approve_students: true,
-          email_notifications: true
-        },
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'organization_id'
-      });
-
-    if (brandingError) throw brandingError;
-
-    // Step 5: Send welcome email to ambassador
-    const ambassadorWelcomeEmail = {
-      to: ambassador.email,
-      subject: `Welcome to IBAM Church Partners - ${organization.name}`,
-      template: 'ambassador_welcome',
-      data: {
-        ambassadorName: ambassador.name,
-        churchName: organization.name,
-        inviteLink: inviteLink,
-        loginUrl: `https://learn.ibam.org/login`,
-        dashboardUrl: `https://learn.ibam.org/ambassador`,
-        setupCallUrl: `https://calendly.com/ibam/ambassador-onboarding`
-      }
-    };
-
-    const emailResult = await sendEmail(ambassadorWelcomeEmail);
-    console.log('Ambassador welcome email sent:', emailResult);
-
-    // Step 6: Send confirmation email to pastor (if different from ambassador)
-    if (churchData.pastorEmail !== ambassador.email) {
-      const pastorConfirmationEmail = {
-        to: churchData.pastorEmail,
-        subject: `Your Church Business Training Program is Ready - ${organization.name}`,
-        template: 'pastor_confirmation',
-        data: {
-          pastorName: churchData.pastorName,
-          churchName: organization.name,
-          ambassadorName: ambassador.name,
-          ambassadorEmail: ambassador.email,
-          inviteLink: inviteLink,
-          programOverviewUrl: `https://learn.ibam.org/church-program-overview`
+      .insert([{
+        name: churchName,
+        slug: slug,
+        type: 'church',
+        country: country,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        metadata: {
+          source: 'systeme_io_webhook',
+          contact_id: contact?.id,
+          tag_applied: tag?.name,
+          original_email: email
         }
-      };
-
-      await sendEmail(pastorConfirmationEmail);
-      console.log('Pastor confirmation email sent');
+      }])
+      .select()
+      .single();
+    
+    if (orgError) {
+      console.error('Error creating organization:', orgError);
+      return Response.json({ error: 'Failed to create organization' }, { status: 500 });
     }
-
-    // Step 7: Prepare response data
-    const responseData = {
+    
+    console.log('Organization created:', orgData.id);
+    
+    // Create ambassador account
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert([{
+        email: email,
+        name: fullName,
+        role: 'ambassador',
+        organization_id: orgData.id,
+        status: 'invited',
+        created_at: new Date().toISOString(),
+        metadata: {
+          source: 'systeme_io_webhook',
+          contact_id: contact?.id
+        }
+      }])
+      .select()
+      .single();
+    
+    if (userError) {
+      console.error('Error creating user:', userError);
+      return Response.json({ error: 'Failed to create user' }, { status: 500 });
+    }
+    
+    console.log('Ambassador account created:', userData.id);
+    
+    // Generate invite link
+    const inviteToken = crypto.randomUUID();
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${inviteToken}`;
+    
+    // Store invite token
+    const { error: inviteError } = await supabase
+      .from('user_invites')
+      .insert([{
+        token: inviteToken,
+        user_id: userData.id,
+        organization_id: orgData.id,
+        invited_by: 'system',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+        created_at: new Date().toISOString()
+      }]);
+    
+    if (inviteError) {
+      console.error('Error creating invite:', inviteError);
+    }
+    
+    console.log('Church partner setup completed successfully');
+    console.log('Invite link:', inviteLink);
+    
+    return Response.json({
       success: true,
-      message: 'Church partner setup completed successfully',
+      message: 'Church partner setup completed',
       data: {
         organization: {
-          id: organization.id,
-          name: organization.name,
-          church_slug: churchSlug
+          id: orgData.id,
+          name: orgData.name,
+          slug: orgData.slug
         },
         ambassador: {
-          id: ambassador.id,
-          name: ambassador.name,
-          email: ambassador.email
+          id: userData.id,
+          email: userData.email,
+          name: userData.name
         },
-        access: {
-          invite_link: inviteLink,
-          dashboard_url: `https://learn.ibam.org/ambassador`,
-          church_portal_url: `https://learn.ibam.org/${churchSlug}`
-        },
-        next_steps: [
-          'Ambassador will receive welcome email with login credentials',
-          'Schedule 30-minute onboarding call with IBAM team',
-          'Share invite link with church members',
-          'Begin Module 1 with first cohort'
-        ]
+        inviteLink: inviteLink
       }
-    };
-
-    console.log('Church partner setup completed:', responseData);
-
-    // Return success response
-    return Response.json(responseData, { status: 200 });
-
-  } catch (error) {
-    console.error('Webhook processing error:', error);
+    }, { status: 200 });
     
-    // Return error response but don't fail the webhook
-    return Response.json({
-      success: false,
-      error: 'Internal server error processing church partner signup',
-      message: error.message,
-      timestamp: new Date().toISOString()
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return Response.json({ 
+      error: 'Internal server error',
+      details: error.message 
     }, { status: 500 });
   }
 }
-
-// Utility function to generate church invite links
-function generateInviteLink(organizationId, churchName) {
-  const churchSlug = churchName.toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-    .substring(0, 20);
-  
-  const timestamp = Date.now();
-  return `https://learn.ibam.org/join/${churchSlug}-${timestamp}`;
-}
-
-// Database schema notes:
-/*
-Required tables for this webhook handler:
-
-organizations (
-  id uuid primary key,
-  systeme_member_id text unique,
-  name text,
-  type text default 'church',
-  city text,
-  state text,
-  denomination text,
-  expected_students text,
-  membership_status text,
-  pastor_name text,
-  pastor_email text,
-  created_at timestamp,
-  updated_at timestamp
-)
-
-ambassadors (
-  id uuid primary key,
-  organization_id uuid references organizations(id),
-  name text,
-  email text,
-  phone text,
-  systeme_member_email text,
-  status text default 'active',
-  created_at timestamp,
-  updated_at timestamp
-)
-
-church_settings (
-  id uuid primary key,
-  organization_id uuid references organizations(id),
-  church_slug text unique,
-  invite_link text,
-  branding jsonb,
-  settings jsonb,
-  created_at timestamp,
-  updated_at timestamp
-)
-*/
