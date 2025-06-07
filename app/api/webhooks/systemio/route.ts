@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     
     // Handle tag added events
     if (eventType === 'CONTACT_TAG_ADDED' && tag?.name) {
-      const courseConfig = TAG_TO_COURSE_MAP[tag.name]
+      const courseConfig = TAG_TO_COURSE_MAP[tag.name as keyof typeof TAG_TO_COURSE_MAP]
       
       if (courseConfig) {
         courseAssignment = {
