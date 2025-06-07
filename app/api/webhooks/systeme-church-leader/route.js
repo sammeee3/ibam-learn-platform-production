@@ -2,32 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req) {
   try {
-    console.log('=== DEBUG: Environment Variables ===');
-    console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
-    console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
-    console.log('SUPABASE_URL value:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
-    console.log('SUPABASE_ANON_KEY value:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
-    
-    // List all env vars that start with SUPABASE
-    const supabaseEnvs = Object.keys(process.env).filter(key => key.startsWith('SUPABASE'));
-    console.log('All SUPABASE env vars:', supabaseEnvs);
-    
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-      return Response.json({ 
-        error: 'Missing Supabase environment variables',
-        debug: {
-          supabaseUrl: !!process.env.SUPABASE_URL,
-          supabaseAnonKey: !!process.env.SUPABASE_ANON_KEY,
-          allSupabaseVars: supabaseEnvs
-        }
-      }, { status: 500 });
-    }
-    
     // Create Supabase client inside the function
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    console.log('Supabase client created successfully');
     
-    console.log('Webhook received from systeme.io');
+    console.log('=== Church Leader Webhook ===');
+    console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+    console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
     
     // Parse the incoming webhook data
     const body = await req.json();
@@ -61,102 +41,97 @@ export async function POST(req) {
     
     console.log('Contact details:', { email, fullName, country });
     
-    // Create church organization
+    // Create church record
     const churchName = `${fullName}'s Church`;
-    const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-');
     
-    console.log('Creating church organization:', churchName);
+    console.log('Creating church:', churchName);
     
-    // Insert organization
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
+    // Insert into churches table (using existing structure)
+    const { data: churchData, error: churchError } = await supabase
+      .from('churches')
       .insert([{
         name: churchName,
-        slug: slug,
-        type: 'church',
-        country: country,
-        status: 'active',
-        created_at: new Date().toISOString(),
-        metadata: {
+        location: country,
+        website: null,
+        pastor_name: fullName,
+        business_ambassador_id: null, // Will be set after creating profile
+        subscription_tier: 'starter',
+        max_students: 50,
+        current_students: 0,
+        vision_statement: 'To multiply disciples in our local community',
+        mission_statement: 'Transforming lives through marketplace ministry',
+        local_market_info: `Church serving the ${country} market`,
+        custom_branding: {
           source: 'systeme_io_webhook',
           contact_id: contact?.id,
           tag_applied: tag?.name,
-          original_email: email
-        }
-      }])
-      .select()
-      .single();
-    
-    if (orgError) {
-      console.error('Error creating organization:', orgError);
-      return Response.json({ error: 'Failed to create organization' }, { status: 500 });
-    }
-    
-    console.log('Organization created:', orgData.id);
-    
-    // Create ambassador account
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .insert([{
-        email: email,
-        name: fullName,
-        role: 'ambassador',
-        organization_id: orgData.id,
-        status: 'invited',
+          original_email: email,
+          setup_date: new Date().toISOString()
+        },
         created_at: new Date().toISOString(),
-        metadata: {
-          source: 'systeme_io_webhook',
-          contact_id: contact?.id
-        }
+        updated_at: new Date().toISOString()
       }])
       .select()
       .single();
     
-    if (userError) {
-      console.error('Error creating user:', userError);
-      return Response.json({ error: 'Failed to create user' }, { status: 500 });
+    if (churchError) {
+      console.error('Error creating church:', churchError);
+      return Response.json({ error: 'Failed to create church', details: churchError.message }, { status: 500 });
     }
     
-    console.log('Ambassador account created:', userData.id);
+    console.log('Church created successfully:', churchData.id);
     
-    // Generate invite link
-    const inviteToken = crypto.randomUUID();
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${inviteToken}`;
+    // Check if we need to create a profile in the profiles table
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .single();
     
-    // Store invite token
-    const { error: inviteError } = await supabase
-      .from('user_invites')
-      .insert([{
-        token: inviteToken,
-        user_id: userData.id,
-        organization_id: orgData.id,
-        invited_by: 'system',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-        created_at: new Date().toISOString()
-      }]);
-    
-    if (inviteError) {
-      console.error('Error creating invite:', inviteError);
+    if (!existingProfile) {
+      console.log('Creating new profile for:', email);
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          email: email,
+          full_name: fullName,
+          role: 'church_leader',
+          church_id: churchData.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+      
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+      } else {
+        console.log('Profile created:', profileData.id);
+        
+        // Update church with business_ambassador_id
+        await supabase
+          .from('churches')
+          .update({ business_ambassador_id: profileData.id })
+          .eq('id', churchData.id);
+      }
+    } else {
+      console.log('Profile already exists for:', email);
     }
     
     console.log('Church partner setup completed successfully');
-    console.log('Invite link:', inviteLink);
     
     return Response.json({
       success: true,
       message: 'Church partner setup completed',
       data: {
-        organization: {
-          id: orgData.id,
-          name: orgData.name,
-          slug: orgData.slug
+        church: {
+          id: churchData.id,
+          name: churchData.name,
+          pastor_name: churchData.pastor_name
         },
-        ambassador: {
-          id: userData.id,
-          email: userData.email,
-          name: userData.name
-        },
-        inviteLink: inviteLink
+        email: email,
+        setupComplete: true
       }
     }, { status: 200 });
     
