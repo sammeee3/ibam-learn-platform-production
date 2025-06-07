@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       contact: {
         email: contact?.email,
         name: `${contact?.fields?.find((f: any) => f.slug === 'first_name')?.value || ''} ${contact?.fields?.find((f: any) => f.slug === 'surname')?.value || ''}`.trim(),
-        tags: contact?.tags?.map(t => t.name) || []
+        tags: contact?.tags?.map((t: any) => t.name) || []
       },
       tag: tag?.name,
       courseAssignment,
