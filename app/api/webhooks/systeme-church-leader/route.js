@@ -3,11 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 console.log("🔥 NEW WEBHOOK FIRED - THIS IS THE RIGHT ONE!");export async function POST(req) {
   try {
     // Create Supabase client inside the function
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     
     console.log('=== Church Leader Webhook ===');
     console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
-    console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
+    console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
     
     // Parse the incoming webhook data
     const body = await req.json();
