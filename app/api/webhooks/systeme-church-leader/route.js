@@ -1,13 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-console.log("🔥 NEW WEBHOOK FIRED - THIS IS THE RIGHT ONE!");export async function POST(req) {
+export async function POST(req) {
   try {
-    // Create Supabase client inside the function
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('🚀 CHURCH WEBHOOK FIRED AT', new Date());
+    
+    // TEMPORARY HARDCODED VALUES - YOUR ACTUAL VALUES
+    const SUPABASE_URL = 'https://tutrnikhomrgcpkzszvq.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5ODk0MTksImV4cCI6MjA2NDU2NTQxOX0.-TI2kjnGM27QYM0BfBSogGf8A17VRxNlydoRYmnGmn8';
+    
+    // Create Supabase client with hardcoded values
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
     
     console.log('=== Church Leader Webhook ===');
-    console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
-    console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('Supabase client created with hardcoded values');
     
     // Parse the incoming webhook data
     const body = await req.json();
@@ -54,7 +59,7 @@ console.log("🔥 NEW WEBHOOK FIRED - THIS IS THE RIGHT ONE!");export async func
         location: country,
         website: null,
         pastor_name: fullName,
-        business_ambassador_id: null, // Will be set after creating profile
+        business_ambassador_id: null,
         subscription_tier: 'starter',
         max_students: 50,
         current_students: 0,
@@ -79,47 +84,8 @@ console.log("🔥 NEW WEBHOOK FIRED - THIS IS THE RIGHT ONE!");export async func
       return Response.json({ error: 'Failed to create church', details: churchError.message }, { status: 500 });
     }
     
-    console.log('Church created successfully:', churchData.id);
-    
-    // Check if we need to create a profile in the profiles table
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (!existingProfile) {
-      console.log('Creating new profile for:', email);
-      
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          email: email,
-          full_name: fullName,
-          role: 'church_leader',
-          church_id: churchData.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-      
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-      } else {
-        console.log('Profile created:', profileData.id);
-        
-        // Update church with business_ambassador_id
-        await supabase
-          .from('churches')
-          .update({ business_ambassador_id: profileData.id })
-          .eq('id', churchData.id);
-      }
-    } else {
-      console.log('Profile already exists for:', email);
-    }
-    
-    console.log('Church partner setup completed successfully');
+    console.log('🎉 Church created successfully:', churchData.id);
+    console.log('Church name:', churchData.name);
     
     return Response.json({
       success: true,
