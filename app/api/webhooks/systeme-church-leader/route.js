@@ -60,7 +60,7 @@ export async function POST(req) {
         website: null,
         pastor_name: fullName,
         business_ambassador_id: null,
-        subscription_tier: 'starter',
+        subscription_tier: 'church_small',
         max_students: 50,
         current_students: 0,
         vision_statement: 'To multiply disciples in our local community',
