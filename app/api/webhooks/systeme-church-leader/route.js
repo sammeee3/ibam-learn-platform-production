@@ -4,14 +4,15 @@ export async function POST(req) {
   try {
     console.log('🚀 CHURCH WEBHOOK FIRED AT', new Date());
     
-    // Use environment variables with detailed logging
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    // Try NEXT_PUBLIC_ prefixed variables as workaround
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     
     console.log('Environment check:', {
       supabaseUrl: supabaseUrl ? 'SET' : 'NOT SET',
       supabaseKey: supabaseKey ? 'SET' : 'NOT SET',
-      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE')),
+      nextPublicVars: Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_'))
     });
     
     if (!supabaseUrl || !supabaseKey) {
