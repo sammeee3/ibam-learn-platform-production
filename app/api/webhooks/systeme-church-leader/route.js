@@ -1,13 +1,32 @@
-// 👆 COPY ALL OF THIS CODE 👆
-// Replace your entire route.js file with this code
-
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req) {
-  // Create Supabase client inside the function
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-  
   try {
+    console.log('=== DEBUG: Environment Variables ===');
+    console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+    console.log('SUPABASE_ANON_KEY exists:', !!process.env.SUPABASE_ANON_KEY);
+    console.log('SUPABASE_URL value:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
+    console.log('SUPABASE_ANON_KEY value:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+    
+    // List all env vars that start with SUPABASE
+    const supabaseEnvs = Object.keys(process.env).filter(key => key.startsWith('SUPABASE'));
+    console.log('All SUPABASE env vars:', supabaseEnvs);
+    
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      return Response.json({ 
+        error: 'Missing Supabase environment variables',
+        debug: {
+          supabaseUrl: !!process.env.SUPABASE_URL,
+          supabaseAnonKey: !!process.env.SUPABASE_ANON_KEY,
+          allSupabaseVars: supabaseEnvs
+        }
+      }, { status: 500 });
+    }
+    
+    // Create Supabase client inside the function
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    console.log('Supabase client created successfully');
+    
     console.log('Webhook received from systeme.io');
     
     // Parse the incoming webhook data
