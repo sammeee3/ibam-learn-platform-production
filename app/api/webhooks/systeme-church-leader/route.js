@@ -4,12 +4,17 @@ export async function POST(req) {
   try {
     console.log('🚀 CHURCH WEBHOOK FIRED AT', new Date());
     
-    // TEMPORARY HARDCODED VALUES - YOUR ACTUAL VALUES
-    const SUPABASE_URL = 'https://tutrnikhomrgcpkzszvq.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5ODk0MTksImV4cCI6MjA2NDU2NTQxOX0.-TI2kjnGM27QYM0BfBSogGf8A17VRxNlydoRYmnGmn8';
+    // Use environment variables
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    // Create Supabase client with hardcoded values
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables');
+      return Response.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+    
+    // Create Supabase client with environment variables
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
     console.log('=== Church Leader Webhook ===');
     console.log('Supabase client created with hardcoded values');
