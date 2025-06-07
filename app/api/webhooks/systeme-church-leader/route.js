@@ -3,11 +3,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 // Next.js App Router API Route
 export async function POST(req) {
-
+  // Create Supabase client inside the function
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
   try {
     console.log('Webhook received from systeme.io');
 
