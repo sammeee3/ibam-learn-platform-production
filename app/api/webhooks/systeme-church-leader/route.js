@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-export async function POST(req) {
+console.log("🔥 NEW WEBHOOK FIRED - THIS IS THE RIGHT ONE!");export async function POST(req) {
   try {
     // Create Supabase client inside the function
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
