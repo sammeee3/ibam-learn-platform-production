@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, CheckCircle, Book, Users, Heart, Target, ArrowRight, Edit, Save, X } from 'lucide-react';
+import { Play, CheckCircle, Book, Users, Heart, Target, ArrowRight, Edit, Save, X, Star, Award, Globe } from 'lucide-react';
 
 const Session1_1_Complete = ({ sessionId = 1 }) => {
   const [user, setUser] = useState(null);
@@ -96,47 +96,60 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
     }
   ];
 
-  // Seven Biblical Principles
+  // Seven Biblical Principles with enhanced design
   const biblicalPrinciples = [
     {
       title: "God's Image Bearers",
       description: "We are created in God's image to be creative and productive",
-      scripture: "Genesis 1:27"
+      scripture: "Genesis 1:27",
+      icon: "👑",
+      color: "from-purple-400 to-purple-600"
     },
     {
       title: "Dominion Mandate",
       description: "God gave us authority to steward His creation through work",
-      scripture: "Genesis 1:28"
+      scripture: "Genesis 1:28",
+      icon: "🌍",
+      color: "from-green-400 to-green-600"
     },
     {
       title: "Good Work",
       description: "God saw His work was good, and our work can reflect His character",
-      scripture: "Genesis 1:31"
+      scripture: "Genesis 1:31",
+      icon: "⭐",
+      color: "from-yellow-400 to-yellow-600"
     },
     {
       title: "Provision Through Work",
       description: "God provides for our needs through productive labor",
-      scripture: "2 Thessalonians 3:10"
+      scripture: "2 Thessalonians 3:10",
+      icon: "🌾",
+      color: "from-amber-400 to-amber-600"
     },
     {
       title: "Service to Others",
       description: "Business allows us to serve others and meet their needs",
-      scripture: "Galatians 5:13"
+      scripture: "Galatians 5:13",
+      icon: "🤝",
+      color: "from-blue-400 to-blue-600"
     },
     {
       title: "Stewardship",
       description: "We are called to wisely manage the resources God has given us",
-      scripture: "Matthew 25:14-30"
+      scripture: "Matthew 25:14-30",
+      icon: "💼",
+      color: "from-indigo-400 to-indigo-600"
     },
     {
       title: "Witness and Ministry",
       description: "Business provides opportunities to share God's love",
-      scripture: "Matthew 5:16"
+      scripture: "Matthew 5:16",
+      icon: "💡",
+      color: "from-pink-400 to-pink-600"
     }
   ];
 
   useEffect(() => {
-    // Check user authentication and admin status
     checkUserAuth();
     loadSessionData();
     loadUserProgress();
@@ -149,7 +162,6 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
         const session = await response.json();
         setUser(session.user);
         
-        // Check if user is admin
         if (session.user?.email === 'jsamuelson@ibam.org') {
           setIsAdmin(true);
         }
@@ -281,18 +293,19 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
     
     return (
       <div className="relative inline-block">
-        <span 
-          className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
+        <button 
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          onClick={() => setShowVerse(!showVerse)}
           onMouseEnter={() => setShowVerse(true)}
           onMouseLeave={() => setShowVerse(false)}
-          onClick={() => setShowVerse(!showVerse)}
         >
-          {reference}
-        </span>
+          📖 {reference}
+        </button>
         {showVerse && (
-          <div className="absolute z-10 w-96 p-4 bg-white border border-gray-300 rounded-lg shadow-lg -top-2 left-full ml-2">
-            <p className="text-sm font-semibold mb-2">{reference} (ESV)</p>
-            <p className="text-sm leading-relaxed">{scriptureVerses[reference]}</p>
+          <div className="absolute z-50 w-96 p-6 bg-white border-2 border-blue-200 rounded-xl shadow-2xl -top-2 left-full ml-4 transform transition-all duration-300">
+            <div className="absolute -left-2 top-4 w-4 h-4 bg-white border-l-2 border-t-2 border-blue-200 transform rotate-45"></div>
+            <p className="text-sm font-bold mb-3 text-blue-800 border-b border-blue-100 pb-2">📖 {reference} (ESV)</p>
+            <p className="text-sm leading-relaxed text-gray-700">{scriptureVerses[reference]}</p>
           </div>
         )}
       </div>
@@ -300,105 +313,135 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Beautiful Header with IBAM Branding */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 text-white shadow-2xl">
+        <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              {editMode && isAdmin ? (
-                <input
-                  type="text"
-                  value={sessionData.title}
-                  onChange={(e) => setSessionData({...sessionData, title: e.target.value})}
-                  className="text-2xl font-bold text-gray-900 border-b-2 border-blue-500 bg-transparent"
-                />
-              ) : (
-                <h1 className="text-2xl font-bold text-gray-900">{sessionData.title}</h1>
-              )}
-              {editMode && isAdmin ? (
-                <input
-                  type="text"
-                  value={sessionData.subtitle}
-                  onChange={(e) => setSessionData({...sessionData, subtitle: e.target.value})}
-                  className="text-lg text-gray-600 border-b border-gray-300 bg-transparent mt-1"
-                />
-              ) : (
-                <p className="text-lg text-gray-600">{sessionData.subtitle}</p>
-              )}
+            <div className="flex items-center space-x-4">
+              {/* IBAM Logo Placeholder */}
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <Globe className="text-blue-600" size={32} />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-blue-100 mb-1">IBAM LEARNING PLATFORM</div>
+                {editMode && isAdmin ? (
+                  <input
+                    type="text"
+                    value={sessionData.title}
+                    onChange={(e) => setSessionData({...sessionData, title: e.target.value})}
+                    className="text-3xl font-bold bg-transparent border-b-2 border-white text-white placeholder-blue-100"
+                  />
+                ) : (
+                  <h1 className="text-3xl font-bold">{sessionData.title}</h1>
+                )}
+                {editMode && isAdmin ? (
+                  <input
+                    type="text"
+                    value={sessionData.subtitle}
+                    onChange={(e) => setSessionData({...sessionData, subtitle: e.target.value})}
+                    className="text-xl text-blue-100 bg-transparent border-b border-blue-300 mt-1"
+                  />
+                ) : (
+                  <p className="text-xl text-blue-100 mt-1">{sessionData.subtitle}</p>
+                )}
+              </div>
             </div>
             {isAdmin && (
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {editMode ? (
                   <>
                     <button
                       onClick={saveSessionData}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
-                      <Save size={16} />
-                      Save
+                      <Save size={18} />
+                      Save Changes
                     </button>
                     <button
                       onClick={() => setEditMode(false)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                      className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
-                      <X size={16} />
+                      <X size={18} />
                       Cancel
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={() => setEditMode(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
-                    <Edit size={16} />
-                    Edit
+                    <Edit size={18} />
+                    Edit Content
                   </button>
                 )}
               </div>
             )}
           </div>
-          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-            <span>Module 1 • Session 1.1</span>
-            <span>•</span>
-            <span>{sessionData.duration}</span>
-            <span>•</span>
-            <span>Scripture: <ScriptureReference reference={sessionData.scripture_reference} /></span>
+          <div className="flex items-center gap-6 mt-4 text-blue-100">
+            <div className="flex items-center gap-2">
+              <Award size={16} />
+              <span className="font-medium">Module 1 • Session 1.1</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Play size={16} />
+              <span>{sessionData.duration}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>Scripture Study:</span>
+              <ScriptureReference reference={sessionData.scripture_reference} />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
-        {/* Learning Objective */}
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
-          <div className="flex items-start gap-3">
-            <Target className="text-blue-600 mt-1" size={20} />
-            <div>
-              <h3 className="font-semibold text-blue-900 mb-2">Learning Objective</h3>
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+        {/* Learning Objective - Enhanced */}
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-8 border-amber-400 p-8 rounded-2xl shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
+              <Target className="text-white" size={24} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-2xl text-amber-800 mb-3">🎯 Learning Objective</h3>
               {editMode && isAdmin ? (
                 <textarea
                   value={sessionData.learning_objective}
                   onChange={(e) => setSessionData({...sessionData, learning_objective: e.target.value})}
-                  className="w-full p-2 border border-blue-200 rounded bg-white"
-                  rows="2"
+                  className="w-full p-4 border-2 border-amber-200 rounded-xl bg-white text-lg"
+                  rows="3"
                 />
               ) : (
-                <p className="text-blue-800">{sessionData.learning_objective}</p>
+                <p className="text-amber-700 text-lg leading-relaxed">{sessionData.learning_objective}</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Video Section */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Play className="text-green-600" size={24} />
-              <h2 className="text-xl font-semibold">Session Video</h2>
-              {videoCompleted && <CheckCircle className="text-green-500" size={20} />}
+        {/* Video Section - Enhanced */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Play className="text-white" size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">🎥 Session Video</h2>
+                <p className="text-green-100">Watch and engage with today's content</p>
+              </div>
+              {videoCompleted && (
+                <div className="ml-auto">
+                  <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                    <CheckCircle className="text-white" size={20} />
+                    <span className="font-semibold">Completed!</span>
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+          </div>
+          
+          <div className="p-8">
+            <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-inner">
               {sessionData.video_url ? (
                 <iframe
                   src={sessionData.video_url.replace('vimeo.com/', 'player.vimeo.com/video/').replace(/\/[a-zA-Z0-9]+$/, '')}
@@ -410,172 +453,222 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">Video will be available soon</p>
+                  <div className="text-center">
+                    <Play className="text-gray-400 mx-auto mb-4" size={48} />
+                    <p className="text-gray-500 text-lg">Video will be available soon</p>
+                  </div>
                 </div>
               )}
             </div>
             
             {!videoCompleted && (
-              <button
-                onClick={handleVideoComplete}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Mark Video as Complete
-              </button>
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handleVideoComplete}
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  ✅ Mark Video as Complete
+                </button>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Seven Biblical Principles */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Book className="text-purple-600" size={24} />
-            <h2 className="text-xl font-semibold">Seven Biblical Principles: Why Business is God's Good Gift</h2>
+        {/* Seven Biblical Principles - Enhanced */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Book className="text-white" size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">📚 Seven Biblical Principles</h2>
+                <p className="text-purple-100">Why Business is God's Good Gift</p>
+              </div>
+            </div>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-4">
-            {biblicalPrinciples.map((principle, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-semibold text-sm">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{principle.title}</h3>
-                    <p className="text-gray-600 text-sm mb-2">{principle.description}</p>
-                    <ScriptureReference reference={principle.scripture} />
+          <div className="p-8">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {biblicalPrinciples.map((principle, index) => (
+                <div key={index} className="group hover:scale-105 transition-all duration-300">
+                  <div className="h-full border-2 border-gray-100 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-gray-50">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-16 h-16 bg-gradient-to-r ${principle.color} rounded-full flex items-center justify-center text-2xl shadow-lg`}>
+                        {principle.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm">
+                            {index + 1}
+                          </span>
+                          <h3 className="font-bold text-lg text-gray-900">{principle.title}</h3>
+                        </div>
+                        <p className="text-gray-600 mb-3 leading-relaxed">{principle.description}</p>
+                        <ScriptureReference reference={principle.scripture} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Quiz Section */}
+        {/* Quiz Section - Enhanced */}
         {videoCompleted && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Target className="text-orange-600" size={24} />
-              <h2 className="text-xl font-semibold">Knowledge Check Quiz</h2>
-              {quizCompleted && <CheckCircle className="text-green-500" size={20} />}
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Target className="text-white" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">🧠 Knowledge Check Quiz</h2>
+                  <p className="text-orange-100">Test your understanding of today's content</p>
+                </div>
+                {quizCompleted && (
+                  <div className="ml-auto">
+                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                      <CheckCircle className="text-white" size={20} />
+                      <span className="font-semibold">{quizScore}% Complete!</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {!quizCompleted ? (
-              <div>
-                {currentQuizQuestion < quizQuestions.length ? (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-sm text-gray-500">
-                        Question {currentQuizQuestion + 1} of {quizQuestions.length}
-                      </span>
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${((currentQuizQuestion + 1) / quizQuestions.length) * 100}%` }}
-                        />
+            <div className="p-8">
+              {!quizCompleted ? (
+                <div>
+                  {currentQuizQuestion < quizQuestions.length ? (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center mb-6">
+                        <span className="text-lg font-semibold text-gray-600">
+                          Question {currentQuizQuestion + 1} of {quizQuestions.length}
+                        </span>
+                        <div className="w-48 bg-gray-200 rounded-full h-3 shadow-inner">
+                          <div 
+                            className="bg-gradient-to-r from-orange-400 to-red-500 h-3 rounded-full transition-all duration-500 shadow-sm"
+                            style={{ width: `${((currentQuizQuestion + 1) / quizQuestions.length) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-2xl border-2 border-gray-100">
+                        <h3 className="font-bold text-xl mb-6 text-gray-800">
+                          {quizQuestions[currentQuizQuestion].question}
+                        </h3>
+                        
+                        <div className="space-y-3">
+                          {quizQuestions[currentQuizQuestion].options.map((option, index) => (
+                            <label key={index} className="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all duration-300 group">
+                              <input
+                                type="radio"
+                                name={`question-${currentQuizQuestion}`}
+                                value={index}
+                                onChange={() => handleQuizAnswer(currentQuizQuestion, index)}
+                                className="w-5 h-5 text-orange-500 focus:ring-orange-500"
+                              />
+                              <span className="text-lg group-hover:text-blue-700 transition-colors duration-300">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-8">
+                        <button
+                          onClick={() => setCurrentQuizQuestion(Math.max(0, currentQuizQuestion - 1))}
+                          disabled={currentQuizQuestion === 0}
+                          className="px-6 py-3 border-2 border-gray-300 rounded-full hover:bg-gray-50 disabled:opacity-50 font-semibold transition-all duration-300"
+                        >
+                          ← Previous
+                        </button>
+                        
+                        {currentQuizQuestion === quizQuestions.length - 1 ? (
+                          <button
+                            onClick={submitQuiz}
+                            disabled={Object.keys(quizAnswers).length < quizQuestions.length}
+                            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full font-semibold disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          >
+                            🎯 Submit Quiz
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setCurrentQuizQuestion(currentQuizQuestion + 1)}
+                            disabled={quizAnswers[currentQuizQuestion] === undefined}
+                            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full font-semibold disabled:opacity-50 flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          >
+                            Next <ArrowRight size={18} />
+                          </button>
+                        )}
                       </div>
                     </div>
-                    
-                    <h3 className="font-semibold text-lg mb-4">
-                      {quizQuestions[currentQuizQuestion].question}
-                    </h3>
-                    
-                    <div className="space-y-2">
-                      {quizQuestions[currentQuizQuestion].options.map((option, index) => (
-                        <label key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="radio"
-                            name={`question-${currentQuizQuestion}`}
-                            value={index}
-                            onChange={() => handleQuizAnswer(currentQuizQuestion, index)}
-                            className="text-orange-500"
-                          />
-                          <span>{option}</span>
-                        </label>
+                  ) : (
+                    <div className="text-center">
+                      <button
+                        onClick={submitQuiz}
+                        className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                      >
+                        🎯 Submit Quiz
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="mb-6">
+                    <div className={`text-6xl font-bold mb-2 ${quizScore >= 70 ? 'text-green-500' : 'text-red-500'}`}>
+                      {quizScore}%
+                    </div>
+                    <p className="text-xl font-semibold text-gray-600">
+                      {quizScore >= 70 ? '🎉 Outstanding! You passed the quiz!' : '📚 Please review the material and try again.'}
+                    </p>
+                  </div>
+                  
+                  {showQuizResults && (
+                    <div className="text-left space-y-4 mt-8">
+                      {quizQuestions.map((question, index) => (
+                        <div key={index} className="border-2 border-gray-100 rounded-2xl p-6 bg-gradient-to-r from-white to-gray-50">
+                          <p className="font-semibold text-lg mb-3 text-gray-800">{question.question}</p>
+                          <p className={`text-sm mb-2 font-medium ${quizAnswers[index] === question.correct ? 'text-green-600' : 'text-red-600'}`}>
+                            Your answer: {question.options[quizAnswers[index]] || 'Not answered'}
+                          </p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Correct answer: {question.options[question.correct]}
+                          </p>
+                          <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">{question.explanation}</p>
+                        </div>
                       ))}
                     </div>
-                    
-                    <div className="flex justify-between mt-6">
-                      <button
-                        onClick={() => setCurrentQuizQuestion(Math.max(0, currentQuizQuestion - 1))}
-                        disabled={currentQuizQuestion === 0}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      
-                      {currentQuizQuestion === quizQuestions.length - 1 ? (
-                        <button
-                          onClick={submitQuiz}
-                          disabled={Object.keys(quizAnswers).length < quizQuestions.length}
-                          className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
-                        >
-                          Submit Quiz
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setCurrentQuizQuestion(currentQuizQuestion + 1)}
-                          disabled={quizAnswers[currentQuizQuestion] === undefined}
-                          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2"
-                        >
-                          Next <ArrowRight size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={submitQuiz}
-                    className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-                  >
-                    Submit Quiz
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="mb-4">
-                  <div className={`text-4xl font-bold ${quizScore >= 70 ? 'text-green-600' : 'text-red-600'}`}>
-                    {quizScore}%
-                  </div>
-                  <p className="text-gray-600">
-                    {quizScore >= 70 ? 'Great job! You passed the quiz.' : 'Please review the material and try again.'}
-                  </p>
+                  )}
                 </div>
-                
-                {showQuizResults && (
-                  <div className="text-left space-y-4 mt-6">
-                    {quizQuestions.map((question, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4">
-                        <p className="font-medium mb-2">{question.question}</p>
-                        <p className={`text-sm ${quizAnswers[index] === question.correct ? 'text-green-600' : 'text-red-600'}`}>
-                          Your answer: {question.options[quizAnswers[index]] || 'Not answered'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Correct answer: {question.options[question.correct]}
-                        </p>
-                        <p className="text-sm text-blue-600 mt-1">{question.explanation}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
-        {/* 3/3 Discipleship Process */}
+        {/* 3/3 Discipleship Process - Enhanced */}
         {quizCompleted && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Users className="text-green-600" size={24} />
-              <h2 className="text-xl font-semibold">3/3 Discipleship Process</h2>
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Users className="text-white" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">🤝 3/3 Discipleship Process</h2>
+                  <p className="text-emerald-100">Reflect, Learn, and Apply God's Truth</p>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <Heart size={16} className="text-red-500" />
+            <div className="p-8 space-y-8">
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-2xl border-2 border-red-200">
+                <h3 className="font-bold text-xl text-red-700 mb-4 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-red-400 to-red-500 rounded-full flex items-center justify-center">
+                    <Heart size={20} className="text-white" />
+                  </div>
                   Look Back: How did God work in your life this week?
                 </h3>
                 <textarea
@@ -584,15 +677,17 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
                     ...discipleshipResponses,
                     lookBack: e.target.value
                   })}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  rows="3"
+                  className="w-full p-4 border-2 border-red-200 rounded-xl focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all duration-300"
+                  rows="4"
                   placeholder="Reflect on God's faithfulness, answers to prayer, challenges overcome..."
                 />
               </div>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <Book size={16} className="text-blue-500" />
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200">
+                <h3 className="font-bold text-xl text-blue-700 mb-4 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <Book size={20} className="text-white" />
+                  </div>
                   Look Up: What did you learn from today's session?
                 </h3>
                 <textarea
@@ -601,15 +696,17 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
                     ...discipleshipResponses,
                     lookUp: e.target.value
                   })}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  rows="3"
+                  className="w-full p-4 border-2 border-blue-200 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-300"
+                  rows="4"
                   placeholder="Key insights, scripture that spoke to you, business principles..."
                 />
               </div>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <Target size={16} className="text-green-500" />
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200">
+                <h3 className="font-bold text-xl text-green-700 mb-4 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+                    <Target size={20} className="text-white" />
+                  </div>
                   Look Forward: How will you apply this in your business/life?
                 </h3>
                 <textarea
@@ -618,54 +715,128 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
                     ...discipleshipResponses,
                     lookForward: e.target.value
                   })}
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  rows="3"
+                  className="w-full p-4 border-2 border-green-200 rounded-xl focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all duration-300"
+                  rows="4"
                   placeholder="Specific actions, people to share with, business practices to change..."
                 />
               </div>
 
-              <button
-                onClick={saveDiscipleshipResponses}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Save Responses
-              </button>
+              <div className="text-center">
+                <button
+                  onClick={saveDiscipleshipResponses}
+                  className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  💾 Save My Responses
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Progress Summary */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Session Progress</h2>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <CheckCircle className={videoCompleted ? 'text-green-500' : 'text-gray-300'} size={20} />
-              <span className={videoCompleted ? 'text-green-700' : 'text-gray-500'}>
-                Watch Session Video
-              </span>
+        {/* Progress Summary - Enhanced */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white">
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <Star className="text-white" size={28} />
+              📊 Your Session Progress
+            </h2>
+          </div>
+          <div className="p-8 space-y-6">
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className={`p-6 rounded-2xl border-2 transition-all duration-300 ${videoCompleted ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <CheckCircle className={videoCompleted ? 'text-green-500' : 'text-gray-300'} size={24} />
+                  <span className={`font-semibold ${videoCompleted ? 'text-green-700' : 'text-gray-500'}`}>
+                    Watch Session Video
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">Complete the video content</p>
+              </div>
+              
+              <div className={`p-6 rounded-2xl border-2 transition-all duration-300 ${quizCompleted ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <CheckCircle className={quizCompleted ? 'text-green-500' : 'text-gray-300'} size={24} />
+                  <span className={`font-semibold ${quizCompleted ? 'text-green-700' : 'text-gray-500'}`}>
+                    Complete Knowledge Quiz {quizCompleted && `(${quizScore}%)`}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">Test your understanding</p>
+              </div>
+              
+              <div className={`p-6 rounded-2xl border-2 transition-all duration-300 ${discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <CheckCircle className={discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'text-green-500' : 'text-gray-300'} size={24} />
+                  <span className={`font-semibold ${discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'text-green-700' : 'text-gray-500'}`}>
+                    3/3 Discipleship Process
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">Reflect and apply learning</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className={quizCompleted ? 'text-green-500' : 'text-gray-300'} size={20} />
-              <span className={quizCompleted ? 'text-green-700' : 'text-gray-500'}>
-                Complete Knowledge Quiz {quizCompleted && `(${quizScore}%)`}
-              </span>
+            
+            {videoCompleted && quizCompleted && discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward && (
+              <div className="mt-8 p-8 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl text-center">
+                <div className="text-6xl mb-4">🎉</div>
+                <p className="text-green-800 font-bold text-2xl mb-2">Congratulations!</p>
+                <p className="text-green-700 text-lg mb-4">You've completed Session 1.1 with excellence!</p>
+                <div className="bg-white p-4 rounded-xl border border-green-200">
+                  <p className="text-green-600 font-semibold">🚀 Ready for Session 1.2:</p>
+                  <p className="text-green-600">"Business Leaders Work Together with Church/Spiritual Leaders"</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* IBAM Footer */}
+      <footer className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 text-white mt-16">
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                  <Globe className="text-blue-600" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl">IBAM</h3>
+                  <p className="text-sm text-gray-300">Learning Platform</p>
+                </div>
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                Empowering faith-driven business leaders to see their work as worship and their businesses as platforms for discipleship.
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className={discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'text-green-500' : 'text-gray-300'} size={20} />
-              <span className={discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'text-green-700' : 'text-gray-500'}>
-                Complete 3/3 Discipleship Process
-              </span>
+            
+            <div>
+              <h4 className="font-semibold text-lg mb-4">Our Mission</h4>
+              <ul className="space-y-2 text-gray-300">
+                <li>• Integrate faith and business</li>
+                <li>• Multiply disciples through marketplace ministry</li>
+                <li>• Build God-honoring businesses</li>
+                <li>• Transform communities through business</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-lg mb-4">Learning Modules</h4>
+              <ul className="space-y-2 text-gray-300">
+                <li>• Biblical Business Foundations</li>
+                <li>• Leadership & Discipleship</li>
+                <li>• Marketplace Ministry</li>
+                <li>• Business Planning & Strategy</li>
+              </ul>
             </div>
           </div>
           
-          {videoCompleted && quizCompleted && discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 font-semibold">🎉 Congratulations! You've completed Session 1.1</p>
-              <p className="text-green-700 text-sm mt-1">Ready to move on to Session 1.2: Business Leaders Work Together with Church/Spiritual Leaders</p>
-            </div>
-          )}
+          <div className="border-t border-gray-700 mt-8 pt-8 text-center">
+            <p className="text-gray-400">
+              © 2025 IBAM Learning Platform. All rights reserved. | 
+              <span className="text-blue-400"> Transforming business through faith-driven leadership</span>
+            </p>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };
