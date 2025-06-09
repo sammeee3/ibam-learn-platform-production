@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, CheckCircle, Book, Users, Heart, Target, ArrowRight, Edit, Save, X, Star, Award, ChevronDown, ChevronUp, Lock, Unlock, Clock, Trophy, Zap, Lightbulb } from 'lucide-react';
+import { Play, CheckCircle, Book, Users, Heart, Target, ArrowRight, Edit, Save, X, Star, Award, ChevronDown, ChevronUp, Lock, Unlock, Clock, Trophy, Zap, Lightbulb, Video, Brain, MessageCircle } from 'lucide-react';
 
 const Session1_1_Complete = ({ sessionId = 1 }) => {
   const [user, setUser] = useState(null);
@@ -23,28 +23,25 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
     learning_objective: 'Understand that business is part of God\'s original design and calling for humanity.'
   });
 
-  // 3/3 Discipleship Responses
   const [discipleshipResponses, setDiscipleshipResponses] = useState({
     lookBack: '',
     lookUp: '',
     lookForward: ''
   });
 
-  // Scripture verses database
   const scriptureVerses = {
-    'Genesis 1:26-31': 'Then God said, "Let us make man in our image, after our likeness. And let them have dominion over the fish of the sea and over the birds of the heavens and over the livestock and over all the earth and over every creeping thing that creeps on the earth." So God created man in his own image, in the image of God he created him; male and female he created them. And God blessed them. And God said to them, "Be fruitful and multiply and fill the earth and subdue it, and have dominion over the fish of the sea and over the birds of the heavens and over every living thing that moves on the earth." And God said, "Behold, I have given you every plant yielding seed that is on the face of all the earth, and every tree with seed in its fruit. You shall have them for food. And to every beast of the earth and to every bird of the heavens and to everything that creeps on the earth, everything that has the breath of life, I have given every green plant for food." And it was so. And God saw everything that he had made, and behold, it was very good. And there was evening and there was morning, the sixth day.',
+    'Genesis 1:26-31': 'Then God said, "Let us make man in our image, after our likeness. And let them have dominion over the fish of the sea and over the birds of the heavens and over the livestock and over all the earth and over every creeping thing that creeps on the earth." So God created man in his own image, in the image of God he created him; male and female he created them.',
     'Genesis 1:27': 'So God created man in his own image, in the image of God he created him; male and female he created them.',
-    'Genesis 1:28': 'And God blessed them. And God said to them, "Be fruitful and multiply and fill the earth and subdue it, and have dominion over the fish of the sea and over the birds of the heavens and over every living thing that moves on the earth."',
-    'Genesis 1:31': 'And God saw everything that he had made, and behold, it was very good. And there was evening and there was morning, the sixth day.',
+    'Genesis 1:28': 'And God blessed them. And God said to them, "Be fruitful and multiply and fill the earth and subdue it."',
+    'Genesis 1:31': 'And God saw everything that he had made, and behold, it was very good.',
     '2 Thessalonians 3:10': 'For even when we were with you, we would give you this command: If anyone is not willing to work, let him not eat.',
     'Galatians 5:13': 'For you were called to freedom, brothers. Only do not use your freedom as an opportunity for the flesh, but through love serve one another.',
-    'Matthew 25:14-30': 'For it will be like a man going on a journey, who called his servants and entrusted to them his property. To one he gave five talents, to another two, to another one, to each according to his ability. Then he went away.',
+    'Matthew 25:14-30': 'For it will be like a man going on a journey, who called his servants and entrusted to them his property.',
     'Matthew 5:16': 'In the same way, let your light shine before others, so that they may see your good works and give glory to your Father who is in heaven.',
-    'Acts 16:14': 'One who heard us was a woman named Lydia, from the city of Thyatira, a seller of purple goods, who was a worshiper of God. The Lord opened her heart to pay attention to what was said by Paul.',
-    'Acts 18:2-3': 'And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla, because Claudius had commanded all the Jews to leave Rome. And he went to see them, and because he was of the same trade he stayed with them and worked, for they were tentmakers by trade.'
+    'Acts 16:14': 'One who heard us was a woman named Lydia, from the city of Thyatira, a seller of purple goods, who was a worshiper of God.',
+    'Acts 18:2-3': 'And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla.'
   };
 
-  // Quiz questions
   const quizQuestions = [
     {
       question: "According to Genesis 1:26-31, God's original design for humanity included:",
@@ -68,213 +65,61 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
       options: ["Five", "Six", "Seven", "Eight"],
       correct: 2,
       explanation: "The seven principles demonstrate God's comprehensive design for business in human life."
-    },
-    {
-      question: "Which of these best describes the biblical view of business?",
-      options: [
-        "A necessary evil for survival",
-        "A distraction from spiritual matters",
-        "Part of God's good design for human flourishing",
-        "Only acceptable if you give all profits to charity"
-      ],
-      correct: 2,
-      explanation: "Scripture shows business as part of God's good design for human productivity and stewardship."
-    },
-    {
-      question: "The Sabbath principle applies to business by:",
-      options: [
-        "Requiring businesses to close on Sundays",
-        "Promoting sustainable work-life balance",
-        "Making profit on weekends immoral",
-        "Only allowing religious businesses"
-      ],
-      correct: 1,
-      explanation: "The Sabbath teaches us about rest, balance, and trusting God rather than overwork."
-    },
-    {
-      question: "According to the session, business can be a form of:",
-      options: [
-        "Worldly compromise",
-        "Worship and service to God",
-        "Spiritual distraction",
-        "Necessary but unspiritual work"
-      ],
-      correct: 1,
-      explanation: "When done according to biblical principles, business becomes a form of worship and service."
     }
   ];
 
-  // Seven Biblical Principles
   const biblicalPrinciples = [
     {
       title: "God's Image Bearers",
       description: "We are created in God's image to be creative and productive",
       scripture: "Genesis 1:27",
       icon: "👑",
-      color: "from-purple-500 to-purple-700"
+      color: "from-purple-600 to-purple-800"
     },
     {
       title: "Dominion Mandate", 
       description: "God gave us authority to steward His creation through work",
       scripture: "Genesis 1:28",
       icon: "🌍",
-      color: "from-green-500 to-green-700"
+      color: "from-green-600 to-green-800"
     },
     {
       title: "Good Work",
       description: "God saw His work was good, and our work can reflect His character",
       scripture: "Genesis 1:31",
       icon: "⭐",
-      color: "from-yellow-500 to-orange-600"
+      color: "from-yellow-500 to-orange-700"
     },
     {
       title: "Provision Through Work",
       description: "God provides for our needs through productive labor",
       scripture: "2 Thessalonians 3:10",
       icon: "🌾",
-      color: "from-amber-500 to-orange-600"
+      color: "from-amber-600 to-orange-700"
     },
     {
       title: "Service to Others",
       description: "Business allows us to serve others and meet their needs",
       scripture: "Galatians 5:13",
       icon: "🤝",
-      color: "from-blue-500 to-blue-700"
+      color: "from-blue-600 to-blue-800"
     },
     {
       title: "Stewardship",
       description: "We are called to wisely manage the resources God has given us",
       scripture: "Matthew 25:14-30",
       icon: "💼",
-      color: "from-indigo-500 to-indigo-700"
+      color: "from-indigo-600 to-indigo-800"
     },
     {
       title: "Witness and Ministry",
       description: "Business provides opportunities to share God's love",
       scripture: "Matthew 5:16",
       icon: "💡",
-      color: "from-pink-500 to-pink-700"
+      color: "from-pink-600 to-pink-800"
     }
   ];
 
-  // IBAM Logo Component - Using actual logo
-  const IBAMLogo = ({ size = 80 }) => (
-    <div className={`relative flex items-center`} style={{ height: size }}>
-      <img 
-        src="https://images.squarespace-cdn.com/content/v1/5d3f8b5e4b49e10001d5f3e1/1625851877786-QR3ZXJV8Y1OYXQHQXZJY/IBAM+Logo+Horizontal+Reverse.png" 
-        alt="IBAM - Designed to Thrive"
-        className="h-full w-auto drop-shadow-lg"
-        style={{ height: size }}
-      />
-    </div>
-  );
-
-  const ProgressCard = ({ completed, title, description, icon }) => (
-    <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-      completed 
-        ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-lg' 
-        : 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200'
-    }`}>
-      <div className="flex items-center gap-3">
-        {completed ? (
-          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-            <CheckCircle className="text-white" size={20} />
-          </div>
-        ) : (
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-            {icon}
-          </div>
-        )}
-        <div>
-          <h4 className={`font-semibold ${completed ? 'text-green-800' : 'text-gray-600'}`}>
-            {title}
-          </h4>
-          <p className="text-sm text-gray-500">{description}</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const SectionCard = ({ 
-    id, 
-    title, 
-    subtitle, 
-    icon, 
-    isLocked, 
-    isCompleted, 
-    isActive, 
-    color, 
-    onClick, 
-    children 
-  }) => (
-    <div className={`rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 ${
-      isActive ? 'ring-4 ring-cyan-300 ring-opacity-50' : ''
-    }`}>
-      <button
-        onClick={onClick}
-        disabled={isLocked}
-        className={`w-full p-8 text-left transition-all duration-300 ${
-          isLocked 
-            ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' 
-            : `bg-gradient-to-r ${color} hover:scale-[1.02] cursor-pointer`
-        }`}
-      >
-        <div className="flex items-center justify-between text-white">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              {isLocked ? <Lock size={32} /> : icon}
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-2">{title}</h3>
-              <p className="text-lg opacity-90">{subtitle}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {isCompleted && (
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <CheckCircle size={24} />
-              </div>
-            )}
-            {isLocked ? (
-              <Lock size={24} />
-            ) : (
-              <ChevronDown className={`transition-transform duration-300 ${isActive ? 'rotate-180' : ''}`} size={24} />
-            )}
-          </div>
-        </div>
-      </button>
-      
-      {isActive && !isLocked && (
-        <div className="bg-white animate-in slide-in-from-top duration-500">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-
-  const ScriptureReference = ({ reference }) => {
-    const [showVerse, setShowVerse] = useState(false);
-    
-    return (
-      <div className="relative inline-block">
-        <button 
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105"
-          onClick={() => setShowVerse(!showVerse)}
-        >
-          📖 {reference}
-        </button>
-        {showVerse && (
-          <div className="absolute z-50 w-96 p-6 bg-white border-2 border-cyan-200 rounded-2xl shadow-2xl -top-2 left-full ml-4 transform transition-all duration-300">
-            <div className="absolute -left-2 top-6 w-4 h-4 bg-white border-l-2 border-t-2 border-cyan-200 transform rotate-45"></div>
-            <p className="text-sm font-bold mb-3 text-slate-700 border-b border-cyan-100 pb-2">📖 {reference} (ESV)</p>
-            <p className="text-sm leading-relaxed text-slate-600">{scriptureVerses[reference] || 'Scripture text loading...'}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Initialize functions
   useEffect(() => {
     checkUserAuth();
     loadSessionData();
@@ -332,7 +177,6 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
 
   const saveProgress = async (updates) => {
     if (!user) return;
-
     try {
       await fetch('/api/progress', {
         method: 'POST',
@@ -377,7 +221,6 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
 
   const saveDiscipleshipResponses = async () => {
     if (!user) return;
-
     try {
       await fetch('/api/discipleship', {
         method: 'POST',
@@ -395,134 +238,210 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
     }
   };
 
-  const saveSessionData = async () => {
-    if (!isAdmin) return;
-
-    try {
-      const response = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sessionData)
-      });
-      
-      if (response.ok) {
-        setEditMode(false);
-        alert('✅ Session updated successfully!');
-      }
-    } catch (error) {
-      console.error('Failed to save session:', error);
-      alert('Failed to save changes. Please try again.');
-    }
+  const ScriptureReference = ({ reference }) => {
+    const [showVerse, setShowVerse] = useState(false);
+    
+    return (
+      <div className="relative inline-block">
+        <button 
+          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          onClick={() => setShowVerse(!showVerse)}
+        >
+          📖 {reference}
+        </button>
+        {showVerse && (
+          <div className="absolute z-50 w-96 p-6 bg-white border-2 border-cyan-300 rounded-xl shadow-2xl -top-2 left-full ml-4">
+            <p className="text-sm font-bold mb-3 text-gray-800">📖 {reference} (ESV)</p>
+            <p className="text-sm leading-relaxed text-gray-700">{scriptureVerses[reference] || 'Scripture text loading...'}</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-      {/* Modern Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 text-white shadow-2xl">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      {/* STUNNING HEADER */}
+      <div className="bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 text-white shadow-2xl">
+        <div className="max-w-7xl mx-auto px-8 py-12">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <IBAMLogo size={100} />
+              <img 
+                src="https://images.squarespace-cdn.com/content/v1/5d3f8b5e4b49e10001d5f3e1/1625851877786-QR3ZXJV8Y1OYXQHQXZJY/IBAM+Logo+Horizontal+Reverse.png" 
+                alt="IBAM - Designed to Thrive"
+                className="h-20 w-auto drop-shadow-lg"
+              />
               <div>
-                <h1 className="text-4xl font-bold mb-2">{sessionData.title}</h1>
-                <p className="text-xl text-indigo-100">{sessionData.subtitle}</p>
+                <h1 className="text-5xl font-black mb-3">{sessionData.title}</h1>
+                <p className="text-2xl text-purple-200 font-semibold">{sessionData.subtitle}</p>
               </div>
             </div>
             
             {isAdmin && (
-              <button
-                onClick={() => setEditMode(!editMode)}
-                className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-full font-semibold transition-all duration-300 backdrop-blur-sm"
-              >
-                <Edit size={18} />
+              <button className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-full font-bold transition-all duration-300 backdrop-blur-sm">
+                <Edit size={20} />
                 Admin
               </button>
             )}
           </div>
           
-          <div className="flex items-center gap-8 mt-6 text-indigo-100">
-            <div className="flex items-center gap-2">
-              <Award size={18} />
-              <span className="font-semibold">Module 1 • Session 1.1</span>
+          <div className="flex items-center gap-8 mt-8 text-purple-200">
+            <div className="flex items-center gap-3">
+              <Award size={24} />
+              <span className="text-xl font-bold">Module 1 • Session 1.1</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock size={18} />
-              <span className="font-semibold">{sessionData.duration}</span>
+            <div className="flex items-center gap-3">
+              <Clock size={24} />
+              <span className="text-xl font-bold">{sessionData.duration}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Scripture Study:</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-bold">Scripture Study:</span>
               <ScriptureReference reference={sessionData.scripture_reference} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Progress Overview */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <ProgressCard
-            completed={videoCompleted}
-            title="Watch Video"
-            description="Complete the session content"
-            icon={<Play size={20} className="text-gray-500" />}
-          />
-          <ProgressCard
-            completed={quizCompleted}
-            title={`Knowledge Quiz ${quizCompleted ? `(${quizScore}%)` : ''}`}
-            description="Test your understanding"
-            icon={<Trophy size={20} className="text-gray-500" />}
-          />
-          <ProgressCard
-            completed={discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward}
-            title="3/3 Discipleship"
-            description="Reflect and apply learning"
-            icon={<Heart size={20} className="text-gray-500" />}
-          />
-        </div>
-
-        {/* Learning Objective Card */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-8 mb-12 shadow-2xl">
-          <div className="flex items-start gap-6 text-white">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              <Target size={32} />
+      <div className="max-w-7xl mx-auto px-8 py-16">
+        {/* MODERN PROGRESS CARDS */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className={`p-8 rounded-3xl shadow-2xl transform transition-all duration-500 hover:scale-105 ${
+            videoCompleted 
+              ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white' 
+              : 'bg-white border-4 border-gray-200'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+                videoCompleted ? 'bg-white/20' : 'bg-gray-100'
+              }`}>
+                {videoCompleted ? (
+                  <CheckCircle className="text-white" size={32} />
+                ) : (
+                  <Video className="text-gray-500" size={32} />
+                )}
+              </div>
+              <div>
+                <h4 className={`text-xl font-bold ${videoCompleted ? 'text-white' : 'text-gray-700'}`}>
+                  Watch Video
+                </h4>
+                <p className={`${videoCompleted ? 'text-green-100' : 'text-gray-500'}`}>
+                  Complete the session content
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-3xl font-bold mb-4">🎯 Learning Objective</h3>
-              <p className="text-xl leading-relaxed opacity-95">{sessionData.learning_objective}</p>
+          </div>
+
+          <div className={`p-8 rounded-3xl shadow-2xl transform transition-all duration-500 hover:scale-105 ${
+            quizCompleted 
+              ? 'bg-gradient-to-br from-orange-400 to-red-600 text-white' 
+              : 'bg-white border-4 border-gray-200'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+                quizCompleted ? 'bg-white/20' : 'bg-gray-100'
+              }`}>
+                {quizCompleted ? (
+                  <CheckCircle className="text-white" size={32} />
+                ) : (
+                  <Brain className="text-gray-500" size={32} />
+                )}
+              </div>
+              <div>
+                <h4 className={`text-xl font-bold ${quizCompleted ? 'text-white' : 'text-gray-700'}`}>
+                  Knowledge Quiz {quizCompleted && `(${quizScore}%)`}
+                </h4>
+                <p className={`${quizCompleted ? 'text-orange-100' : 'text-gray-500'}`}>
+                  Test your understanding
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`p-8 rounded-3xl shadow-2xl transform transition-all duration-500 hover:scale-105 ${
+            discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward
+              ? 'bg-gradient-to-br from-blue-400 to-purple-600 text-white' 
+              : 'bg-white border-4 border-gray-200'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+                discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'bg-white/20' : 'bg-gray-100'
+              }`}>
+                {discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? (
+                  <CheckCircle className="text-white" size={32} />
+                ) : (
+                  <MessageCircle className="text-gray-500" size={32} />
+                )}
+              </div>
+              <div>
+                <h4 className={`text-xl font-bold ${discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'text-white' : 'text-gray-700'}`}>
+                  3/3 Discipleship
+                </h4>
+                <p className={`${discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward ? 'text-blue-100' : 'text-gray-500'}`}>
+                  Reflect and apply learning
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Interactive Learning Sections */}
-        <div className="space-y-8">
-          {/* Video Section */}
-          <SectionCard
-            id="video"
-            title="🎥 Session Video"
-            subtitle="Watch and engage with today's content"
-            icon={<Play size={32} />}
-            isLocked={false}
-            isCompleted={videoCompleted}
-            isActive={activeSection === 'video'}
-            color="from-green-500 to-emerald-600"
+        {/* LEARNING OBJECTIVE */}
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-3xl p-12 mb-16 shadow-2xl transform hover:scale-[1.02] transition-all duration-500">
+          <div className="flex items-start gap-8 text-white">
+            <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+              <Target size={40} />
+            </div>
+            <div>
+              <h3 className="text-4xl font-black mb-6">🎯 Learning Objective</h3>
+              <p className="text-2xl leading-relaxed opacity-95 font-semibold">{sessionData.learning_objective}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* VIDEO SECTION */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-16 transform hover:scale-[1.01] transition-all duration-500">
+          <button
             onClick={() => setActiveSection(activeSection === 'video' ? '' : 'video')}
+            className="w-full p-12 bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600 text-white hover:from-green-600 hover:via-emerald-700 hover:to-teal-700 transition-all duration-300"
           >
-            <div className="p-12">
-              <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-700" style={{ minHeight: '500px' }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-8">
+                <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                  <Play size={40} />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-4xl font-black mb-2">🎥 Session Video</h3>
+                  <p className="text-2xl opacity-90 font-semibold">Watch and engage with today's content</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                {videoCompleted && (
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                    <CheckCircle size={32} />
+                  </div>
+                )}
+                <ChevronDown className={`transition-transform duration-300 ${activeSection === 'video' ? 'rotate-180' : ''}`} size={32} />
+              </div>
+            </div>
+          </button>
+          
+          {activeSection === 'video' && (
+            <div className="p-12 animate-in slide-in-from-top duration-500">
+              <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl overflow-hidden shadow-2xl border-8 border-gray-800" style={{ minHeight: '600px' }}>
                 {sessionData.video_url ? (
                   <iframe
                     src={sessionData.video_url.replace('vimeo.com/', 'player.vimeo.com/video/').replace(/\/[a-zA-Z0-9]+$/, '')}
                     className="w-full h-full"
+                    style={{ minHeight: '600px' }}
                     frameBorder="0"
                     allow="autoplay; fullscreen; picture-in-picture"
                     allowFullScreen
                     onEnded={handleVideoComplete}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-white">
-                      <Play className="mx-auto mb-6" size={80} />
-                      <p className="text-2xl">Video will be available soon</p>
+                  <div className="flex items-center justify-center h-full text-white">
+                    <div className="text-center">
+                      <Play className="mx-auto mb-8" size={100} />
+                      <p className="text-3xl font-bold">Video will be available soon</p>
                     </div>
                   </div>
                 )}
@@ -532,288 +451,329 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
                 <div className="mt-12 text-center">
                   <button
                     onClick={handleVideoComplete}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-16 py-6 rounded-full font-bold text-xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-16 py-6 rounded-full font-black text-2xl transition-all duration-300 shadow-2xl hover:shadow-green-500/25 transform hover:-translate-y-2 hover:scale-110"
                   >
                     ✅ Mark Video as Complete
                   </button>
                 </div>
               )}
             </div>
-          </SectionCard>
+          )}
+        </div>
 
-          {/* Biblical Principles Section */}
-          <SectionCard
-            id="principles"
-            title="📚 Seven Biblical Principles"
-            subtitle="Why Business is God's Good Gift"
-            icon={<Book size={32} />}
-            isLocked={!videoCompleted}
-            isCompleted={videoCompleted}
-            isActive={activeSection === 'principles'}
-            color="from-purple-500 to-purple-700"
-            onClick={() => videoCompleted && setActiveSection(activeSection === 'principles' ? '' : 'principles')}
-          >
-            <div className="p-8">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {biblicalPrinciples.map((principle, index) => (
-                  <div
-                    key={index}
-                    className="group hover:scale-105 transition-all duration-300 cursor-pointer"
-                  >
-                    <div className={`h-full rounded-2xl p-6 bg-gradient-to-br ${principle.color} text-white shadow-xl hover:shadow-2xl transition-all duration-300`}>
-                      <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">
-                          {principle.icon}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center font-bold text-sm backdrop-blur-sm">
-                              {index + 1}
-                            </span>
-                            <h3 className="font-bold text-xl">{principle.title}</h3>
+        {/* BIBLICAL PRINCIPLES */}
+        {videoCompleted && (
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-16 transform hover:scale-[1.01] transition-all duration-500">
+            <button
+              onClick={() => setActiveSection(activeSection === 'principles' ? '' : 'principles')}
+              className="w-full p-12 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white hover:from-purple-700 hover:via-purple-800 hover:to-indigo-800 transition-all duration-300"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                  <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                    <Book size={40} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-4xl font-black mb-2">📚 Seven Biblical Principles</h3>
+                    <p className="text-2xl opacity-90 font-semibold">Why Business is God's Good Gift</p>
+                  </div>
+                </div>
+                <ChevronDown className={`transition-transform duration-300 ${activeSection === 'principles' ? 'rotate-180' : ''}`} size={32} />
+              </div>
+            </button>
+
+            {activeSection === 'principles' && (
+              <div className="p-12 animate-in slide-in-from-top duration-500">
+                <div className="grid lg:grid-cols-2 gap-8">
+                  {biblicalPrinciples.map((principle, index) => (
+                    <div
+                      key={index}
+                      className="group hover:scale-105 transition-all duration-500 cursor-pointer"
+                    >
+                      <div className={`h-full rounded-3xl p-8 bg-gradient-to-br ${principle.color} text-white shadow-2xl hover:shadow-3xl transition-all duration-500 border-4 border-white/20`}>
+                        <div className="flex items-start gap-6">
+                          <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center text-3xl backdrop-blur-sm font-bold">
+                            {principle.icon}
                           </div>
-                          <p className="text-white/90 mb-4 leading-relaxed">{principle.description}</p>
-                          <ScriptureReference reference={principle.scripture} />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-4">
+                              <span className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center font-black text-lg backdrop-blur-sm">
+                                {index + 1}
+                              </span>
+                              <h3 className="font-black text-2xl">{principle.title}</h3>
+                            </div>
+                            <p className="text-white/90 mb-6 leading-relaxed text-lg font-semibold">{principle.description}</p>
+                            <ScriptureReference reference={principle.scripture} />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              
-              {videoCompleted && (
-                <div className="mt-8 text-center">
+                  ))}
+                </div>
+                
+                <div className="mt-12 text-center">
                   <button
                     onClick={() => setActiveSection('quiz')}
-                    className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-12 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
+                    className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-16 py-6 rounded-full font-black text-2xl transition-all duration-300 shadow-2xl hover:shadow-orange-500/25 transform hover:-translate-y-2 hover:scale-110"
                   >
                     🧠 Ready for the Quiz? Test Your Knowledge!
                   </button>
                 </div>
-              )}
-            </div>
-          </SectionCard>
+              </div>
+            )}
+          </div>
+        )}
 
-          {/* Quiz Section */}
-          <SectionCard
-            id="quiz"
-            title="🧠 Knowledge Check Quiz"
-            subtitle="Test your understanding of today's content"
-            icon={<Trophy size={32} />}
-            isLocked={!videoCompleted}
-            isCompleted={quizCompleted}
-            isActive={activeSection === 'quiz'}
-            color="from-orange-500 to-red-600"
-            onClick={() => videoCompleted && setActiveSection(activeSection === 'quiz' ? '' : 'quiz')}
-          >
-            <div className="p-8">
-              {!quizCompleted ? (
-                <div>
-                  {currentQuizQuestion < quizQuestions.length ? (
-                    <div className="space-y-8">
-                      <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold text-gray-700">
-                          Question {currentQuizQuestion + 1} of {quizQuestions.length}
-                        </span>
-                        <div className="w-64 bg-gray-200 rounded-full h-4 shadow-inner">
-                          <div 
-                            className="bg-gradient-to-r from-orange-500 to-red-600 h-4 rounded-full transition-all duration-500 shadow-lg"
-                            style={{ width: `${((currentQuizQuestion + 1) / quizQuestions.length) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="bg-gradient-to-br from-slate-50 to-gray-100 p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
-                        <h3 className="font-bold text-2xl mb-8 text-gray-800">
-                          {quizQuestions[currentQuizQuestion].question}
-                        </h3>
-                        
-                        <div className="space-y-4">
-                          {quizQuestions[currentQuizQuestion].options.map((option, index) => (
-                            <label key={index} className="flex items-center gap-4 p-6 border-2 border-gray-200 rounded-2xl hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 hover:border-cyan-300 cursor-pointer transition-all duration-300 group shadow-sm hover:shadow-md">
-                              <input
-                                type="radio"
-                                name={`question-${currentQuizQuestion}`}
-                                value={index}
-                                onChange={() => handleQuizAnswer(currentQuizQuestion, index)}
-                                className="w-6 h-6 text-cyan-600 focus:ring-cyan-500 focus:ring-2"
-                              />
-                              <span className="text-lg group-hover:text-cyan-700 transition-colors duration-300 font-medium">{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <button
-                          onClick={() => setCurrentQuizQuestion(Math.max(0, currentQuizQuestion - 1))}
-                          disabled={currentQuizQuestion === 0}
-                          className="px-8 py-4 border-2 border-gray-300 rounded-full hover:bg-gray-50 disabled:opacity-50 font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                          ← Previous
-                        </button>
-                        
-                        {currentQuizQuestion === quizQuestions.length - 1 ? (
-                          <button
-                            onClick={submitQuiz}
-                            disabled={Object.keys(quizAnswers).length < quizQuestions.length}
-                            className="px-12 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full font-bold text-lg disabled:opacity-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:transform-none"
-                          >
-                            🎯 Submit Quiz
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setCurrentQuizQuestion(currentQuizQuestion + 1)}
-                            disabled={quizAnswers[currentQuizQuestion] === undefined}
-                            className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-full font-bold text-lg disabled:opacity-50 flex items-center gap-2 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:transform-none"
-                          >
-                            Next <ArrowRight size={20} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="mb-8">
-                    <div className={`text-8xl font-bold mb-4 ${quizScore >= 70 ? 'text-green-500' : 'text-red-500'}`}>
-                      {quizScore}%
-                    </div>
-                    <p className="text-2xl font-bold text-gray-700">
-                      {quizScore >= 70 ? '🎉 Outstanding! You passed the quiz!' : '📚 Please review the material and try again.'}
-                    </p>
+        {/* QUIZ SECTION */}
+        {videoCompleted && (
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-16 transform hover:scale-[1.01] transition-all duration-500">
+            <button
+              onClick={() => setActiveSection(activeSection === 'quiz' ? '' : 'quiz')}
+              className="w-full p-12 bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 text-white hover:from-orange-600 hover:via-red-600 hover:to-pink-700 transition-all duration-300"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                  <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                    <Trophy size={40} />
                   </div>
-                  
-                  {quizScore >= 70 && (
-                    <button
-                      onClick={() => setActiveSection('discipleship')}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-12 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
-                    >
-                      🤝 Continue to Discipleship Reflection
-                    </button>
+                  <div className="text-left">
+                    <h3 className="text-4xl font-black mb-2">🧠 Knowledge Check Quiz</h3>
+                    <p className="text-2xl opacity-90 font-semibold">Test your understanding of today's content</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  {quizCompleted && (
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                      <span className="font-black text-lg">{quizScore}%</span>
+                    </div>
                   )}
+                  <ChevronDown className={`transition-transform duration-300 ${activeSection === 'quiz' ? 'rotate-180' : ''}`} size={32} />
                 </div>
-              )}
-            </div>
-          </SectionCard>
+              </div>
+            </button>
 
-          {/* 3/3 Discipleship Section */}
-          <SectionCard
-            id="discipleship"
-            title="🤝 3/3 Discipleship Process"
-            subtitle="Reflect, Learn, and Apply God's Truth"
-            icon={<Users size={32} />}
-            isLocked={!quizCompleted || quizScore < 70}
-            isCompleted={discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward}
-            isActive={activeSection === 'discipleship'}
-            color="from-emerald-500 to-teal-600"
-            onClick={() => (quizCompleted && quizScore >= 70) && setActiveSection(activeSection === 'discipleship' ? '' : 'discipleship')}
-          >
-            <div className="p-8 space-y-8">
-              <div className="bg-gradient-to-br from-red-50 to-pink-50 p-8 rounded-2xl border-2 border-red-200 shadow-lg">
-                <h3 className="font-bold text-2xl text-red-700 mb-6 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Heart size={24} className="text-white" />
+            {activeSection === 'quiz' && (
+              <div className="p-12 animate-in slide-in-from-top duration-500">
+                {!quizCompleted ? (
+                  <div>
+                    {currentQuizQuestion < quizQuestions.length ? (
+                      <div className="space-y-8">
+                        <div className="flex justify-between items-center">
+                          <span className="text-3xl font-black text-gray-700">
+                            Question {currentQuizQuestion + 1} of {quizQuestions.length}
+                          </span>
+                          <div className="w-80 bg-gray-200 rounded-full h-6 shadow-inner">
+                            <div 
+                              className="bg-gradient-to-r from-orange-500 to-red-600 h-6 rounded-full transition-all duration-500 shadow-lg"
+                              style={{ width: `${((currentQuizQuestion + 1) / quizQuestions.length) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gradient-to-br from-gray-50 to-white p-12 rounded-3xl border-4 border-gray-200 shadow-xl">
+                          <h3 className="font-black text-3xl mb-12 text-gray-800">
+                            {quizQuestions[currentQuizQuestion].question}
+                          </h3>
+                          
+                          <div className="space-y-6">
+                            {quizQuestions[currentQuizQuestion].options.map((option, index) => (
+                              <label key={index} className="flex items-center gap-6 p-8 border-4 border-gray-200 rounded-3xl hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 hover:border-cyan-400 cursor-pointer transition-all duration-500 group shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <input
+                                  type="radio"
+                                  name={`question-${currentQuizQuestion}`}
+                                  value={index}
+                                  onChange={() => handleQuizAnswer(currentQuizQuestion, index)}
+                                  className="w-8 h-8 text-cyan-600 focus:ring-cyan-500 focus:ring-4"
+                                />
+                                <span className="text-2xl group-hover:text-cyan-700 transition-colors duration-300 font-bold">{option}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <button
+                            onClick={() => setCurrentQuizQuestion(Math.max(0, currentQuizQuestion - 1))}
+                            disabled={currentQuizQuestion === 0}
+                            className="px-12 py-6 border-4 border-gray-300 rounded-full hover:bg-gray-50 disabled:opacity-50 font-black text-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none"
+                          >
+                            ← Previous
+                          </button>
+                          
+                          {currentQuizQuestion === quizQuestions.length - 1 ? (
+                            <button
+                              onClick={submitQuiz}
+                              disabled={Object.keys(quizAnswers).length < quizQuestions.length}
+                              className="px-16 py-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full font-black text-2xl disabled:opacity-50 transition-all duration-300 shadow-2xl hover:shadow-green-500/25 transform hover:-translate-y-2 hover:scale-110 disabled:transform-none"
+                            >
+                              🎯 Submit Quiz
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setCurrentQuizQuestion(currentQuizQuestion + 1)}
+                              disabled={quizAnswers[currentQuizQuestion] === undefined}
+                              className="px-12 py-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-full font-black text-2xl disabled:opacity-50 flex items-center gap-4 transition-all duration-300 shadow-2xl hover:shadow-orange-500/25 transform hover:-translate-y-2 hover:scale-110 disabled:transform-none"
+                            >
+                              Next <ArrowRight size={24} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                  Look Back: How did God work in your life this week?
-                </h3>
-                <textarea
-                  value={discipleshipResponses.lookBack}
-                  onChange={(e) => setDiscipleshipResponses({
-                    ...discipleshipResponses,
-                    lookBack: e.target.value
-                  })}
-                  className="w-full p-6 border-2 border-red-200 rounded-2xl focus:border-red-400 focus:ring-4 focus:ring-red-100 transition-all duration-300 text-lg"
-                  rows="4"
-                  placeholder="Reflect on God's faithfulness, answers to prayer, challenges overcome..."
-                />
-              </div>
-
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-8 rounded-2xl border-2 border-cyan-200 shadow-lg">
-                <h3 className="font-bold text-2xl text-cyan-700 mb-6 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Lightbulb size={24} className="text-white" />
+                ) : (
+                  <div className="text-center">
+                    <div className="mb-12">
+                      <div className={`text-9xl font-black mb-6 ${quizScore >= 70 ? 'text-green-500' : 'text-red-500'}`}>
+                        {quizScore}%
+                      </div>
+                      <p className="text-3xl font-black text-gray-700">
+                        {quizScore >= 70 ? '🎉 Outstanding! You passed the quiz!' : '📚 Please review the material and try again.'}
+                      </p>
+                    </div>
+                    
+                    {quizScore >= 70 && (
+                      <button
+                        onClick={() => setActiveSection('discipleship')}
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-16 py-6 rounded-full font-black text-2xl transition-all duration-300 shadow-2xl hover:shadow-cyan-500/25 transform hover:-translate-y-2 hover:scale-110"
+                      >
+                        🤝 Continue to Discipleship Reflection
+                      </button>
+                    )}
                   </div>
-                  Look Up: What did you learn from today's session?
-                </h3>
-                <textarea
-                  value={discipleshipResponses.lookUp}
-                  onChange={(e) => setDiscipleshipResponses({
-                    ...discipleshipResponses,
-                    lookUp: e.target.value
-                  })}
-                  className="w-full p-6 border-2 border-cyan-200 rounded-2xl focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-300 text-lg"
-                  rows="4"
-                  placeholder="Key insights, scripture that spoke to you, business principles..."
-                />
+                )}
               </div>
+            )}
+          </div>
+        )}
 
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl border-2 border-green-200 shadow-lg">
-                <h3 className="font-bold text-2xl text-green-700 mb-6 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Zap size={24} className="text-white" />
+        {/* DISCIPLESHIP SECTION */}
+        {quizCompleted && quizScore >= 70 && (
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-16 transform hover:scale-[1.01] transition-all duration-500">
+            <button
+              onClick={() => setActiveSection(activeSection === 'discipleship' ? '' : 'discipleship')}
+              className="w-full p-12 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-white hover:from-emerald-600 hover:via-teal-700 hover:to-cyan-700 transition-all duration-300"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                  <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                    <Users size={40} />
                   </div>
-                  Look Forward: How will you apply this in your business/life?
-                </h3>
-                <textarea
-                  value={discipleshipResponses.lookForward}
-                  onChange={(e) => setDiscipleshipResponses({
-                    ...discipleshipResponses,
-                    lookForward: e.target.value
-                  })}
-                  className="w-full p-6 border-2 border-green-200 rounded-2xl focus:border-green-400 focus:ring-4 focus:ring-green-100 transition-all duration-300 text-lg"
-                  rows="4"
-                  placeholder="Specific actions, people to share with, business practices to change..."
-                />
+                  <div className="text-left">
+                    <h3 className="text-4xl font-black mb-2">🤝 3/3 Discipleship Process</h3>
+                    <p className="text-2xl opacity-90 font-semibold">Reflect, Learn, and Apply God's Truth</p>
+                  </div>
+                </div>
+                <ChevronDown className={`transition-transform duration-300 ${activeSection === 'discipleship' ? 'rotate-180' : ''}`} size={32} />
               </div>
+            </button>
 
-              <div className="text-center">
-                <button
-                  onClick={saveDiscipleshipResponses}
-                  className="px-12 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
-                >
-                  💾 Save My Responses
-                </button>
+            {activeSection === 'discipleship' && (
+              <div className="p-12 space-y-12 animate-in slide-in-from-top duration-500">
+                <div className="bg-gradient-to-br from-red-100 to-pink-100 p-12 rounded-3xl border-4 border-red-300 shadow-xl">
+                  <h3 className="font-black text-3xl text-red-700 mb-8 flex items-center gap-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-3xl flex items-center justify-center shadow-xl">
+                      <Heart size={32} className="text-white" />
+                    </div>
+                    Look Back: How did God work in your life this week?
+                  </h3>
+                  <textarea
+                    value={discipleshipResponses.lookBack}
+                    onChange={(e) => setDiscipleshipResponses({
+                      ...discipleshipResponses,
+                      lookBack: e.target.value
+                    })}
+                    className="w-full p-8 border-4 border-red-300 rounded-3xl focus:border-red-500 focus:ring-8 focus:ring-red-200 transition-all duration-300 text-xl font-semibold"
+                    rows="5"
+                    placeholder="Reflect on God's faithfulness, answers to prayer, challenges overcome..."
+                  />
+                </div>
+
+                <div className="bg-gradient-to-br from-cyan-100 to-blue-100 p-12 rounded-3xl border-4 border-cyan-300 shadow-xl">
+                  <h3 className="font-black text-3xl text-cyan-700 mb-8 flex items-center gap-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-3xl flex items-center justify-center shadow-xl">
+                      <Lightbulb size={32} className="text-white" />
+                    </div>
+                    Look Up: What did you learn from today's session?
+                  </h3>
+                  <textarea
+                    value={discipleshipResponses.lookUp}
+                    onChange={(e) => setDiscipleshipResponses({
+                      ...discipleshipResponses,
+                      lookUp: e.target.value
+                    })}
+                    className="w-full p-8 border-4 border-cyan-300 rounded-3xl focus:border-cyan-500 focus:ring-8 focus:ring-cyan-200 transition-all duration-300 text-xl font-semibold"
+                    rows="5"
+                    placeholder="Key insights, scripture that spoke to you, business principles..."
+                  />
+                </div>
+
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-12 rounded-3xl border-4 border-green-300 shadow-xl">
+                  <h3 className="font-black text-3xl text-green-700 mb-8 flex items-center gap-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-3xl flex items-center justify-center shadow-xl">
+                      <Zap size={32} className="text-white" />
+                    </div>
+                    Look Forward: How will you apply this in your business/life?
+                  </h3>
+                  <textarea
+                    value={discipleshipResponses.lookForward}
+                    onChange={(e) => setDiscipleshipResponses({
+                      ...discipleshipResponses,
+                      lookForward: e.target.value
+                    })}
+                    className="w-full p-8 border-4 border-green-300 rounded-3xl focus:border-green-500 focus:ring-8 focus:ring-green-200 transition-all duration-300 text-xl font-semibold"
+                    rows="5"
+                    placeholder="Specific actions, people to share with, business practices to change..."
+                  />
+                </div>
+
+                <div className="text-center">
+                  <button
+                    onClick={saveDiscipleshipResponses}
+                    className="px-16 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full font-black text-2xl transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25 transform hover:-translate-y-2 hover:scale-110"
+                  >
+                    💾 Save My Responses
+                  </button>
+                </div>
               </div>
-            </div>
-          </SectionCard>
-        </div>
+            )}
+          </div>
+        )}
 
-        {/* Completion Celebration */}
+        {/* COMPLETION CELEBRATION */}
         {videoCompleted && quizCompleted && discipleshipResponses.lookBack && discipleshipResponses.lookUp && discipleshipResponses.lookForward && (
-          <div className="mt-12 p-12 bg-gradient-to-br from-green-100 to-emerald-100 border-4 border-green-300 rounded-3xl text-center shadow-2xl">
-            <div className="text-8xl mb-6">🎉</div>
-            <h2 className="text-4xl font-bold text-green-800 mb-4">Congratulations!</h2>
-            <p className="text-2xl text-green-700 mb-8">You've completed Session 1.1 with excellence!</p>
-            <div className="bg-white p-8 rounded-2xl border-2 border-green-200 shadow-lg">
-              <p className="text-green-600 font-bold text-xl mb-2">🚀 Ready for Session 1.2:</p>
-              <p className="text-green-600 text-lg">"Business Leaders Work Together with Church/Spiritual Leaders"</p>
+          <div className="p-16 bg-gradient-to-br from-green-200 to-emerald-200 border-8 border-green-400 rounded-3xl text-center shadow-2xl transform hover:scale-105 transition-all duration-500">
+            <div className="text-9xl mb-8">🎉</div>
+            <h2 className="text-5xl font-black text-green-800 mb-6">Congratulations!</h2>
+            <p className="text-3xl text-green-700 mb-12 font-bold">You've completed Session 1.1 with excellence!</p>
+            <div className="bg-white p-12 rounded-3xl border-4 border-green-300 shadow-xl">
+              <p className="text-green-600 font-black text-2xl mb-4">🚀 Ready for Session 1.2:</p>
+              <p className="text-green-600 text-xl font-bold">"Business Leaders Work Together with Church/Spiritual Leaders"</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Modern Footer */}
-      <footer className="bg-gradient-to-r from-slate-800 via-slate-900 to-cyan-900 text-white mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid md:grid-cols-3 gap-12">
+      {/* FOOTER */}
+      <footer className="bg-gradient-to-r from-slate-900 via-gray-900 to-indigo-900 text-white py-20">
+        <div className="max-w-7xl mx-auto px-8 py-16">
+          <div className="grid md:grid-cols-3 gap-16">
             <div>
-              <div className="flex items-center gap-4 mb-6">
-                <IBAMLogo size={64} />
-                <div>
-                  <h3 className="font-bold text-2xl">IBAM</h3>
-                  <p className="text-cyan-300 font-semibold">DESIGNED TO THRIVE</p>
-                </div>
+              <div className="mb-8">
+                <img 
+                  src="https://images.squarespace-cdn.com/content/v1/5d3f8b5e4b49e10001d5f3e1/1625851877786-QR3ZXJV8Y1OYXQHQXZJY/IBAM+Logo+Horizontal+Reverse.png" 
+                  alt="IBAM - Designed to Thrive"
+                  className="h-16 w-auto drop-shadow-lg"
+                />
               </div>
-              <p className="text-gray-300 leading-relaxed text-lg">
+              <p className="text-gray-300 leading-relaxed text-xl font-semibold">
                 Empowering faith-driven business leaders to see their work as worship and their businesses as platforms for discipleship.
               </p>
             </div>
             
             <div>
-              <h4 className="font-semibold text-xl mb-6 text-cyan-300">Our Mission</h4>
-              <ul className="space-y-3 text-gray-300 text-lg">
+              <h4 className="font-black text-2xl mb-8 text-cyan-300">Our Mission</h4>
+              <ul className="space-y-4 text-gray-300 text-xl font-semibold">
                 <li>• Integrate faith and business</li>
                 <li>• Multiply disciples through marketplace ministry</li>
                 <li>• Build God-honoring businesses</li>
@@ -822,8 +782,8 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
             </div>
             
             <div>
-              <h4 className="font-semibold text-xl mb-6 text-cyan-300">Learning Modules</h4>
-              <ul className="space-y-3 text-gray-300 text-lg">
+              <h4 className="font-black text-2xl mb-8 text-cyan-300">Learning Modules</h4>
+              <ul className="space-y-4 text-gray-300 text-xl font-semibold">
                 <li>• Biblical Business Foundations</li>
                 <li>• Leadership & Discipleship</li>
                 <li>• Marketplace Ministry</li>
@@ -832,8 +792,8 @@ const Session1_1_Complete = ({ sessionId = 1 }) => {
             </div>
           </div>
           
-          <div className="border-t border-gray-700 mt-12 pt-8 text-center">
-            <p className="text-gray-400 text-lg">
+          <div className="border-t border-gray-700 mt-16 pt-12 text-center">
+            <p className="text-gray-400 text-xl font-semibold">
               © 2025 IBAM Learning Platform. All rights reserved. | 
               <span className="text-cyan-400"> Transforming business through faith-driven leadership</span>
             </p>
