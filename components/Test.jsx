@@ -4,3 +4,4 @@ export default function Test() {
       INLINE STYLE TEST
     </div>
   ); 
+}
