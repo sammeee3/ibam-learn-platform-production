@@ -1,1 +1,6 @@
-export default function Test() { return <div className="bg-red-500 text-white p-4">TAILWIND TEST</div>; }
+export default function Test() { 
+  return (
+    <div style={{backgroundColor: 'red', color: 'white', padding: '16px'}}>
+      INLINE STYLE TEST
+    </div>
+  ); 
