@@ -1,3 +1,6 @@
+javascript
+"use client";
+
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Play, Pause, CheckCircle, Circle, BookOpen, Target, Lightbulb, Heart, ArrowRight, Clock, Users } from 'lucide-react';
 
