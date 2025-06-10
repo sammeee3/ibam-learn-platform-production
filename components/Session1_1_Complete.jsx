@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Play, Pause, CheckCircle, Circle, BookOpen, Target, Lightbulb, Heart, ArrowRight, Clock, Users } from 'lucide-react';
 
-const Session11Component = () => {
+const Session1_1Component = () => {
   const [currentSection, setCurrentSection] = useState(0);
   const [completedSections, setCompletedSections] = useState(new Set());
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -540,4 +540,4 @@ const Session11Component = () => {
   );
 };
 
-export default Session11Component;
+export default Session1_1Component;
