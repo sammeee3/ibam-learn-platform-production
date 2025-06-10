@@ -1,5 +1,11 @@
 import Session1_1_Complete from '@/components/Session1_1_Complete';
+import Test from '@/components/Test';
 
 export default function SessionPage({ params }) {
-  return <Session1_1_Complete sessionId={params.id} />;
+  return (
+    <div>
+      <Test />
+      <Session1_1_Complete sessionId={params.id} />
+    </div>
+  );
 }
