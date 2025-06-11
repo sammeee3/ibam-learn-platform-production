@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.49.10",
+    "@supabase/supabase-js": "2.39.0",
     "@types/jsonwebtoken": "^9.0.9",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.513.0",
