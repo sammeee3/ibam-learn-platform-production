@@ -1,6 +1,6 @@
 'use client';
 
-// app/modules/module1/page.tsx - NUCLEAR DATABASE VERSION
+// app/modules/module1/page.tsx - NUCLEAR DATABASE VERSION (SYNTAX FIXED)
 import { useState, useEffect } from 'react';
 import { dbHelpers } from '../../../lib/supabase';
 
@@ -84,7 +84,7 @@ export default function Module1Page() {
             
         } catch (error) {
             console.error('Error loading demo user:', error);
-            setDatabaseStatus(`Error: ${error.message}`);
+            setDatabaseStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setLoading(false);
         }
@@ -105,7 +105,7 @@ export default function Module1Page() {
             setDatabaseStatus(`Progress saved for Session ${sessionId}!`);
         } catch (error) {
             console.error('Error updating progress:', error);
-            setDatabaseStatus(`Error saving progress: ${error.message}`);
+            setDatabaseStatus(`Error saving progress: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
