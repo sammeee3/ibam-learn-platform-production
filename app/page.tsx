@@ -6,7 +6,7 @@ export default function Home() {
           IBAM Learning Platform
         </h1>
         <div className="text-center mt-8">
-          <a href="/auth/signup" className="bg-blue-600 text-white px-6 py-3 rounded">
+          <a href="/modules/module1" className="bg-blue-600 text-white px-6 py-3 rounded">
             Get Started
           </a>
         </div>
