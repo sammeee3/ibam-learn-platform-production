@@ -195,7 +195,7 @@ export default function Module1Page() {
 
     // Session Detail View
     if (currentView === 'session' && currentSession) {
-        const session = sessionData[currentSession];
+        const session = sessionData[currentSession as keyof typeof sessionData];
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
                 <div className="container mx-auto px-4 py-8 max-w-4xl">
