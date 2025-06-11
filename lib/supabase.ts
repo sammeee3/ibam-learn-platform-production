@@ -167,7 +167,7 @@ export const dbHelpers = {
             if (error) throw error
             return { success: true, message: 'Database connection successful!' }
         } catch (error) {
-            return { success: false, message: `Database error: ${error.message}` }
+            return { success: false, message: `Database error: ${error instanceof Error ? error.message : 'Unknown error'}` }
         }
     }
 }
