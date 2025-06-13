@@ -1,552 +1,651 @@
 "use client";
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Play, Pause, CheckCircle, Circle, BookOpen, Target, Lightbulb, Heart, ArrowRight, Clock, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, Play, Download, Save, Trash2, CheckCircle, BookOpen, Target, Users, Clock, Star, Trophy } from 'lucide-react';
 
-const Session11Component = () => {
-  const [currentSection, setCurrentSection] = useState(0);
-  const [completedSections, setCompletedSections] = useState(new Set());
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [reflectionAnswers, setReflectionAnswers] = useState({});
+// Scripture Reference Component with ESV Hover
+const ScriptureReference = ({ reference, children, className = "" }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const sections = [
-    {
-      id: 'welcome',
-      title: 'Welcome to Your Journey',
-      icon: <Heart className="w-6 h-6" />,
-      type: 'intro'
-    },
-    {
-      id: 'objectives',
-      title: 'Learning Objectives',
-      icon: <Target className="w-6 h-6" />,
-      type: 'objectives'
-    },
-    {
-      id: 'video',
-      title: 'Core Teaching',
-      icon: <Play className="w-6 h-6" />,
-      type: 'video'
-    },
-    {
-      id: 'principles',
-      title: 'Biblical Principles',
-      icon: <BookOpen className="w-6 h-6" />,
-      type: 'content'
-    },
-    {
-      id: 'reflection',
-      title: 'Personal Reflection',
-      icon: <Lightbulb className="w-6 h-6" />,
-      type: 'interactive'
-    },
-    {
-      id: 'application',
-      title: 'Practical Application',
-      icon: <CheckCircle className="w-6 h-6" />,
-      type: 'application'
-    }
-  ];
-
-  const markSectionComplete = (sectionIndex) => {
-    setCompletedSections(prev => new Set([...prev, sectionIndex]));
+  // ESV Scripture Database
+  const scriptureTexts = {
+    "Genesis 1:26-27": "Then God said, \"Let us make man in our image, after our likeness. And let them have dominion over the fish of the sea and the birds of the heavens and over the livestock and over all the earth and over every creeping thing that creeps on the earth.\" So God created man in his own image, in the image of God he created him; male and female he created them.",
+    
+    "Genesis 1:26-31": "Then God said, \"Let us make man in our image, after our likeness. And let them have dominion over the fish of the sea and the birds of the heavens and over the livestock and over all the earth and over every creeping thing that creeps on the earth.\" So God created man in his own image, in the image of God he created him; male and female he created them. And God blessed them. And God said to them, \"Be fruitful and multiply and fill the earth and subdue it, and have dominion over the fish of the sea and the birds of the heavens and over every living creature that moves on the earth.\" And God said, \"Behold, I have given you every plant yielding seed that is on the face of all the earth, and every tree with seed in its fruit. You shall have them for food. And to every beast of the earth and to every bird of the heavens and to everything that creeps on the earth, everything that has the breath of life, I have given every green plant for food.\" And it was so. And God saw everything that he had made, and behold, it was very good. And there was evening and there was morning, the sixth day.",
+    
+    "Genesis 1:28": "And God blessed them. And God said to them, \"Be fruitful and multiply and fill the earth and subdue it, and have dominion over the fish of the sea and the birds of the heavens and over every living creature that moves on the earth.\"",
+    
+    "Acts 16:14": "One who heard us was a woman named Lydia, from the city of Thyatira, a seller of purple goods, who was a worshiper of God. The Lord opened her heart to pay attention to what was said by Paul.",
+    
+    "Acts 18:2-3": "And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla, because Claudius had commanded all the Jews to leave Rome. And he went to see them, and because he was of the same trade he stayed with them and worked, for they were tentmakers by trade.",
+    
+    "Ephesians 2:10": "For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we should walk in them.",
+    
+    "Proverbs 16:1-9": "The plans of the heart belong to man, but the answer of the tongue is from the Lord. All the ways of a man are pure in his own eyes, but the Lord weighs the spirit. Commit your work to the Lord, and your plans will be established. The Lord has made everything for its purpose, even the wicked for the day of trouble. Everyone who is arrogant in heart is an abomination to the Lord; be assured, he will not go unpunished. By steadfast love and faithfulness iniquity is atoned for, and by the fear of the Lord one turns away from evil. When a man's ways please the Lord, he makes even his enemies to be at peace with him. Better is a little with righteousness than great revenues with injustice. The heart of man plans his way, but the Lord establishes his steps.",
+    
+    "Colossians 3:23": "Whatever you do, work heartily, as for the Lord and not for men.",
+    
+    "Matthew 25:21": "His master said to him, 'Well done, good and faithful servant. You were faithful over a little; I will set you over much. Enter into the joy of your master.'",
+    
+    "Proverbs 16:3": "Commit your work to the Lord, and your plans will be established."
   };
 
-  const goToNextSection = () => {
-    if (currentSection < sections.length - 1) {
-      markSectionComplete(currentSection);
-      setCurrentSection(currentSection + 1);
-    }
-  };
-
-  const goToPreviousSection = () => {
-    if (currentSection > 0) {
-      setCurrentSection(currentSection - 1);
-    }
-  };
-
-  const handleReflectionChange = (question, answer) => {
-    setReflectionAnswers(prev => ({
-      ...prev,
-      [question]: answer
-    }));
-  };
-
-  const renderWelcomeSection = () => (
-    <div className="space-y-10">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-8">
-          <Heart className="w-12 h-12 text-white" />
-        </div>
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          Business is a Good Gift from God
-        </h1>
-        <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Discover how God designed business as a vehicle for His purposes and your calling to multiply disciples through the marketplace.
-        </p>
-      </div>
-      
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="bg-blue-50 p-8 rounded-xl border border-blue-100">
-          <Clock className="w-10 h-10 text-blue-600 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Session Length</h3>
-          <p className="text-base text-gray-600">15-20 minutes</p>
-        </div>
-        <div className="bg-green-50 p-8 rounded-xl border border-green-100">
-          <Users className="w-10 h-10 text-green-600 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Module 1 of 5</h3>
-          <p className="text-base text-gray-600">Foundational Principles</p>
-        </div>
-        <div className="bg-purple-50 p-8 rounded-xl border border-purple-100">
-          <Target className="w-10 h-10 text-purple-600 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Session 1.1</h3>
-          <p className="text-base text-gray-600">Biblical Business Foundation</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderObjectivesSection = () => (
-    <div className="space-y-10">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mb-8">
-          <Target className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="text-4xl font-bold text-gray-900 mb-6">
-          What You'll Learn Today
-        </h2>
-      </div>
-
-      <div className="grid gap-6">
-        {[
-          {
-            title: "God's Original Design for Business",
-            description: "Understand how business was part of God's plan from the beginning",
-            verse: "Genesis 1:28",
-            verseText: "God blessed them and said to them, 'Be fruitful and increase in number; fill the earth and subdue it. Rule over the fish in the sea and the birds in the sky and over every living creature that moves on the ground.'"
-          },
-          {
-            title: "Business as Kingdom Work",
-            description: "See how your business can advance God's kingdom purposes",
-            verse: "Colossians 3:23",
-            verseText: "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."
-          },
-          {
-            title: "Stewardship and Multiplication",
-            description: "Learn your role as a faithful steward of God's resources",
-            verse: "Matthew 25:21",
-            verseText: "His master replied, 'Well done, good and faithful servant! You have been faithful with a few things; I will put you in charge of many things. Come and share your master's happiness!'"
-          },
-          {
-            title: "Faith-Driven Business Principles",
-            description: "Apply biblical principles to your business practices",
-            verse: "Proverbs 16:3",
-            verseText: "Commit to the Lord whatever you do, and he will establish your plans."
-          }
-        ].map((objective, index) => (
-          <div key={index} className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all">
-            <div className="flex items-start space-x-6">
-              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-lg font-bold text-blue-600">{index + 1}</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{objective.title}</h3>
-                <p className="text-lg text-gray-700 mb-4 leading-relaxed">{objective.description}</p>
-                <div className="relative group cursor-pointer inline-block">
-                  <span className="inline-flex items-center px-4 py-2 rounded-full text-base bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-                    📖 {objective.verse}
-                  </span>
-                  <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-sm">
-                    "{objective.verseText}"
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderVideoSection = () => (
-    <div className="space-y-8">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full mb-6">
-          <Play className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="text-4xl font-bold text-gray-900 mb-6">
-          Core Teaching with Jeff
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Watch as Jeff shares 15 years of proven experience in biblical business principles
-        </p>
-      </div>
-
-      <div className="max-w-5xl mx-auto">
-        <div className="relative rounded-xl overflow-hidden aspect-video shadow-2xl">
-          <iframe
-            src="https://player.vimeo.com/video/491439739?h=02b67849d&badge=0&autopause=0&player_id=0&app_id=58479"
-            className="w-full h-full"
-            frameBorder="0"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            title="Business is a Good Gift from God"
-          ></iframe>
-        </div>
-
-        <div className="mt-8 bg-blue-50 p-6 rounded-xl border border-blue-200">
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold text-blue-900 mb-3">Key Teaching Points</h4>
-              <ul className="text-base text-blue-800 space-y-2">
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
-                  <span className="relative group cursor-pointer hover:text-blue-900 transition-colors">
-                    Genesis 1:28 - The cultural mandate for business
-                    <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                      "God blessed them and said to them, 'Be fruitful and increase in number; fill the earth and subdue it.'"
-                    </div>
-                  </span>
-                </li>
-                <li>• How entrepreneurship reflects God's creative nature</li>
-                <li>• Business as a platform for discipleship multiplication</li>
-                <li>• Stewardship principles for faithful business management</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPrinciplesSection = () => (
-    <div className="space-y-10">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full mb-8">
-          <BookOpen className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="text-4xl font-bold text-gray-900 mb-6">
-          Biblical Business Principles
-        </h2>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        {[
-          {
-            title: "God's Creative Nature",
-            verse: "Genesis 1:1",
-            verseText: "In the beginning God created the heavens and the earth.",
-            principle: "As image bearers, we are called to create value and solutions through business",
-            application: "Your business ideas reflect God's creativity working through you"
-          },
-          {
-            title: "The Cultural Mandate",
-            verse: "Genesis 1:28",
-            verseText: "God blessed them and said to them, 'Be fruitful and increase in number; fill the earth and subdue it.'",
-            principle: "God commanded humanity to subdue and steward creation",
-            application: "Business is a primary way we fulfill this divine calling"
-          },
-          {
-            title: "Faithful Stewardship",
-            verse: "Matthew 25:14-30",
-            verseText: "Again, it will be like a man going on a journey, who called his servants and entrusted his wealth to them.",
-            principle: "We are entrusted with resources to multiply for His kingdom",
-            application: "Profits should be reinvested in kingdom purposes and discipleship"
-          },
-          {
-            title: "Excellence in Work",
-            verse: "Colossians 3:23",
-            verseText: "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters.",
-            principle: "Whatever we do, work heartily as for the Lord",
-            application: "Quality products and services honor God and attract others to Him"
-          }
-        ].map((principle, index) => (
-          <div key={index} className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all">
-            <div className="mb-6">
-              <div className="relative group cursor-pointer inline-block mb-4">
-                <div className="inline-flex items-center px-4 py-2 rounded-full text-base bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors">
-                  📖 {principle.verse}
-                </div>
-                <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-sm">
-                  "{principle.verseText}"
-                </div>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{principle.title}</h3>
-            </div>
-            <p className="text-lg text-gray-700 mb-6 font-medium leading-relaxed">{principle.principle}</p>
-            <div className="bg-gray-50 p-6 rounded-xl">
-              <p className="text-base text-gray-700 leading-relaxed">
-                <span className="font-semibold text-gray-900">Application: </span>
-                {principle.application}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderReflectionSection = () => (
-    <div className="space-y-10">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full mb-8">
-          <Lightbulb className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="text-4xl font-bold text-gray-900 mb-6">
-          Personal Reflection
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Take a moment to reflect on how these principles apply to your business journey
-        </p>
-      </div>
-
-      <div className="space-y-8">
-        {[
-          {
-            question: "How do you currently see God's hand in your business or business ideas?",
-            placeholder: "Reflect on specific ways you've seen God's guidance, provision, or blessing..."
-          },
-          {
-            question: "What specific ways could your business multiply disciples and advance God's kingdom?",
-            placeholder: "Think about your customer relationships, employee discipleship, community impact..."
-          },
-          {
-            question: "What areas of your business need to be surrendered more fully to God's purposes?",
-            placeholder: "Consider financial decisions, hiring practices, business partnerships..."
-          }
-        ].map((item, index) => (
-          <div key={index} className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 leading-relaxed">{item.question}</h3>
-            <textarea
-              className="w-full p-5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base"
-              rows="5"
-              placeholder={item.placeholder}
-              value={reflectionAnswers[item.question] || ''}
-              onChange={(e) => handleReflectionChange(item.question, e.target.value)}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-blue-50 p-8 rounded-xl border border-blue-200">
-        <div className="flex items-start space-x-4">
-          <Heart className="w-8 h-8 text-blue-600 flex-shrink-0 mt-1" />
-          <div>
-            <h4 className="text-lg font-semibold text-blue-900 mb-3">Remember</h4>
-            <p className="text-base text-blue-800 leading-relaxed">
-              This is a journey of faith. God is not looking for perfection but for hearts willing to be shaped by His purposes. 
-              Be honest in your reflections and trust the Holy Spirit to guide your business decisions.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderApplicationSection = () => (
-    <div className="space-y-10">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-8">
-          <CheckCircle className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="text-4xl font-bold text-gray-900 mb-6">
-          Take Action This Week
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Transform today's learning into practical steps for your business
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <h3 className="text-2xl font-bold text-gray-900">This Week's Actions</h3>
-          {[
-            {
-              action: "Pray over your business",
-              detail: "Spend 15 minutes asking God to reveal His purposes for your business",
-              days: "Days 1-2"
-            },
-            {
-              action: "Review your business practices",
-              detail: "Identify one area where you can better align with biblical principles",
-              days: "Days 3-4"
-            },
-            {
-              action: "Share your vision",
-              detail: "Tell someone about how God might use your business for His kingdom",
-              days: "Days 5-7"
-            }
-          ].map((item, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold text-green-600">{index + 1}</span>
-                </div>
-                <div>
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="text-lg font-semibold text-gray-900">{item.action}</h4>
-                    <span className="text-sm px-3 py-1 bg-gray-100 text-gray-600 rounded-full">{item.days}</span>
-                  </div>
-                  <p className="text-base text-gray-600 leading-relaxed">{item.detail}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-8 rounded-xl border border-purple-200">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Next Session Preview</h3>
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-purple-900">Session 1.2: Business Leaders Work Together with Church Leaders</h4>
-            <p className="text-purple-800 text-base leading-relaxed">
-              Discover the powerful synergy between marketplace and ministry leadership, and how they can work together to multiply disciples.
-            </p>
-            <div className="flex items-center space-x-3 text-base text-purple-700">
-              <Clock className="w-5 h-5" />
-              <span>15 minutes • Video + Interactive Elements</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center">
-        <button className="inline-flex items-center px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg">
-          Complete Session & Continue
-          <ArrowRight className="w-6 h-6 ml-3" />
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderCurrentSection = () => {
-    switch (sections[currentSection].id) {
-      case 'welcome': return renderWelcomeSection();
-      case 'objectives': return renderObjectivesSection();
-      case 'video': return renderVideoSection();
-      case 'principles': return renderPrinciplesSection();
-      case 'reflection': return renderReflectionSection();
-      case 'application': return renderApplicationSection();
-      default: return renderWelcomeSection();
-    }
-  };
-
-  const progressPercentage = ((currentSection + 1) / sections.length) * 100;
+  const scriptureText = scriptureTexts[reference] || "Scripture text not available";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with Progress */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+    <span 
+      className={`relative inline-block ${className}`}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <span className="text-blue-600 font-semibold underline cursor-pointer hover:text-blue-800 transition-colors">
+        {children || reference}
+      </span>
+      
+      {showTooltip && (
+        <div 
+          className="absolute z-50 w-80 p-4 bg-white border-2 border-blue-200 rounded-lg shadow-2xl text-sm leading-relaxed"
+          style={{
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: '8px',
+            maxWidth: '90vw'
+          }}
+        >
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+            <div className="font-bold text-blue-900 mb-2">{reference} (ESV)</div>
+            <div className="text-gray-800 italic">"{scriptureText}"</div>
+          </div>
+          {/* Tooltip Arrow */}
+          <div 
+            className="absolute w-3 h-3 bg-white border-r-2 border-b-2 border-blue-200 transform rotate-45"
+            style={{
+              top: '100%',
+              left: '50%',
+              marginLeft: '-6px',
+              marginTop: '-7px'
+            }}
+          ></div>
+        </div>
+      )}
+    </span>
+  );
+};
+
+const Session1_1_Complete = ({ sessionData, userProgress, onProgress, onSave }) => {
+  // State management
+  const [activeSections, setActiveSections] = useState(new Set(['looking-back', 'warm-up']));
+  const [activeTab, setActiveTab] = useState('video');
+  const [answers, setAnswers] = useState({});
+  const [quizAnswers, setQuizAnswers] = useState({});
+  const [confidenceRating, setConfidenceRating] = useState(0);
+  const [saveStatuses, setSaveStatuses] = useState({});
+  const [videoWatched, setVideoWatched] = useState(false);
+  const [completedSections, setCompletedSections] = useState(new Set());
+
+  // Session configuration - will be dynamic from props
+  const sessionConfig = sessionData || {
+    session_id: '1.1',
+    session_title: 'Business is a Good Gift from God',
+    module: 'Biblical Foundations for Business',
+    video_url: 'https://player.vimeo.com/video/491439739?h=02b678490d&badge=0&autopause=0&player_id=0&app_id=58479',
+    discipleship_video_url: 'https://player.vimeo.com/video/1071429083?h=c59adff869&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479',
+    duration: '25 minutes',
+    learning_objective: 'Understand that business is part of God\'s original design and calling for humanity.'
+  };
+
+  // Load saved data on component mount
+  useEffect(() => {
+    loadSavedData();
+    if (userProgress) {
+      setAnswers(userProgress.answers || {});
+      setVideoWatched(userProgress.videoWatched || false);
+      setCompletedSections(new Set(userProgress.completedSections || []));
+    }
+  }, [userProgress]);
+
+  const loadSavedData = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        // Load answers
+        const savedAnswers = JSON.parse(localStorage.getItem('ibam_answers') || '{}');
+        setAnswers(savedAnswers);
+
+        // Load quiz answers
+        const savedQuizAnswers = JSON.parse(localStorage.getItem('ibam_quiz_answers') || '{}');
+        setQuizAnswers(savedQuizAnswers);
+
+        // Load confidence rating
+        const savedRating = localStorage.getItem('ibam_confidence_poll');
+        if (savedRating) {
+          setConfidenceRating(parseInt(savedRating));
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error);
+      }
+    }
+  };
+
+  const toggleSection = (sectionId) => {
+    setActiveSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
+
+  const showTab = (tabName) => {
+    setActiveTab(tabName);
+  };
+
+  const saveAnswer = (answerId) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ibam_answers', JSON.stringify(answers));
+        setSaveStatuses(prev => ({ ...prev, [answerId]: true }));
+        
+        // Call parent save function if provided
+        if (onSave) {
+          onSave({
+            answerId,
+            answer: answers[answerId],
+            sessionId: sessionConfig.session_id
+          });
+        }
+        
+        setTimeout(() => {
+          setSaveStatuses(prev => ({ ...prev, [answerId]: false }));
+        }, 2000);
+      } catch (error) {
+        console.error('Error saving answer:', error);
+      }
+    }
+  };
+
+  const downloadAnswer = (answerId, filename) => {
+    const answerText = answers[answerId];
+    if (!answerText?.trim()) {
+      alert('Please write something before downloading!');
+      return;
+    }
+
+    const content = `IBAM Session ${sessionConfig.session_id} - ${sessionConfig.session_title}\n${filename}\nDate: ${new Date().toLocaleDateString()}\n\n${answerText}\n\n---\nThis is part of my IBAM Faith-Driven Business Training journey.`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const clearAnswer = (answerId) => {
+    if (confirm('Are you sure you want to clear this answer? This cannot be undone.')) {
+      setAnswers(prev => ({ ...prev, [answerId]: '' }));
+    }
+  };
+
+  const updateAnswer = (answerId, value) => {
+    setAnswers(prev => ({ ...prev, [answerId]: value }));
+  };
+
+  const setRating = (rating) => {
+    setConfidenceRating(rating);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ibam_confidence_poll', rating.toString());
+      } catch (error) {
+        console.error('Error saving confidence rating:', error);
+      }
+    }
+  };
+
+  const markVideoWatched = () => {
+    setVideoWatched(true);
+    setCompletedSections(prev => new Set([...prev, 'video']));
+    if (onProgress) {
+      onProgress({
+        sessionId: sessionConfig.session_id,
+        videoWatched: true,
+        completedSections: Array.from(completedSections)
+      });
+    }
+  };
+
+  const ratingLabels = {
+    1: "Not Confident",
+    2: "Slightly Confident", 
+    3: "Moderately Confident",
+    4: "Very Confident",
+    5: "Extremely Confident"
+  };
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto p-5 bg-white shadow-xl rounded-lg">
+        {/* Session Header */}
+        <div 
+          className="text-white p-8 rounded-lg mb-8 text-left"
+          style={{ background: 'linear-gradient(135deg, #2c5aa0, #4a7bc8)' }}
+        >
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </button>
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Module 1: Foundational Principles</h1>
-                <p className="text-sm text-gray-500">Session 1.1 • Business is a Good Gift from God</p>
+                <div className="text-sm opacity-90">Module 1 • Session 1</div>
+                <h1 className="text-3xl font-bold leading-tight">
+                  {sessionConfig.session_title}
+                </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{Math.round(progressPercentage)}% Complete</p>
-                <p className="text-xs text-gray-500">Section {currentSection + 1} of {sections.length}</p>
+            
+            {/* Progress Indicator */}
+            <div className="text-right">
+              <div className="text-sm opacity-90">Progress</div>
+              <div className="text-2xl font-bold">
+                {Math.round((completedSections.size / 8) * 100)}%
               </div>
             </div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-            <div 
-              className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section Navigation */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 overflow-x-auto py-2">
-            {sections.map((section, index) => (
-              <button
-                key={section.id}
-                onClick={() => setCurrentSection(index)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  index === currentSection
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                    : completedSections.has(index)
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {completedSections.has(index) ? (
-                  <CheckCircle className="w-4 h-4" />
-                ) : index === currentSection ? (
-                  React.cloneElement(section.icon, { className: "w-4 h-4" })
-                ) : (
-                  <Circle className="w-4 h-4" />
-                )}
-                <span>{section.title}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          {renderCurrentSection()}
-        </div>
-      </div>
-
-      {/* Navigation Footer */}
-      <div className="bg-white border-t border-gray-200 sticky bottom-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={goToPreviousSection}
-              disabled={currentSection === 0}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                currentSection === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Previous</span>
-            </button>
-
-            <div className="flex space-x-2">
-              {sections.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentSection
-                      ? 'bg-blue-600'
-                      : completedSections.has(index)
-                      ? 'bg-green-500'
-                      : 'bg-gray-300'
-                  }`}
-                />
-              ))}
+          <div className="flex flex-wrap gap-6 text-sm opacity-90">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span>{sessionConfig.duration}</span>
             </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              <span>Faith-Driven Foundations</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span>Individual & Group</span>
+            </div>
+          </div>
+        </div>
 
-            <button
-              onClick={goToNextSection}
-              disabled={currentSection === sections.length - 1}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                currentSection === sections.length - 1
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-white bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              <span>Continue</span>
-              <ChevronRight className="w-4 h-4" />
+        {/* Learning Objectives */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 p-6 rounded-lg mb-6">
+          <div className="flex items-start space-x-3">
+            <Target className="w-6 h-6 text-green-600 mt-1" />
+            <div>
+              <h4 className="text-lg font-bold text-green-900 mb-2">Learning Objective</h4>
+              <p className="text-green-800 leading-relaxed">
+                {sessionConfig.learning_objective}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Key Scripture Focus */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-6 rounded-lg mb-8">
+          <div className="flex items-start space-x-3">
+            <BookOpen className="w-6 h-6 text-blue-600 mt-1" />
+            <div>
+              <h4 className="text-lg font-bold text-blue-900 mb-2">Key Scripture</h4>
+              <p className="text-blue-800 italic leading-relaxed">
+                "Then God said, 'Let us make man in our image, after our likeness. And let them have dominion 
+                over the fish of the sea and over the birds of the heavens and over the livestock and over all 
+                the earth and over every creeping thing that creeps on the earth.'" - {' '}
+                <ScriptureReference reference="Genesis 1:26-27">
+                  <strong className="text-blue-900">Genesis 1:26-27</strong>
+                </ScriptureReference>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Three-Thirds Discipleship Structure */}
+        
+        {/* LOOKING BACK Section */}
+        <div className="mb-6">
+          <button
+            onClick={() => toggleSection('looking-back')}
+            className="w-full text-left p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 flex justify-between items-center"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">👈</span>
+              </div>
+              <div>
+                <div className="text-xl font-bold">LOOKING BACK</div>
+                <div className="text-blue-100">Celebration & Reflection</div>
+              </div>
+            </div>
+            <ChevronDown 
+              className={`w-6 h-6 transition-transform duration-300 ${
+                activeSections.has('looking-back') ? 'rotate-180' : ''
+              }`} 
+            />
+          </button>
+          
+          {activeSections.has('looking-back') && (
+            <div className="bg-white border-2 border-blue-200 border-t-0 rounded-b-lg p-6">
+              {/* Warm-Up Section */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+                  🔥 Warm-Up & Opening Prayer
+                </h3>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
+                  <p className="text-blue-900 mb-4">
+                    <strong>Opening Prayer:</strong> "Lord, open our hearts and minds to understand Your design 
+                    for work and business. Help us see entrepreneurship through Your eyes and discover how our 
+                    calling to create and serve can honor You and bless others. Amen."
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-gray-200 rounded-lg p-5">
+                    <h4 className="text-lg font-bold mb-3 flex items-center gap-2 text-blue-800">
+                      👥 For Groups
+                    </h4>
+                    <p className="mb-2"><strong>Quick Icebreaker:</strong> "Business Word Association"</p>
+                    <p className="mb-2 text-sm">
+                      Go around the circle and have each person share <strong>one word</strong> that comes to 
+                      mind when they hear "Faith-driven business owner."
+                    </p>
+                    <p className="text-sm"><strong>Follow-up:</strong> "What do you notice about our responses?"</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-gray-50 to-purple-50 border-2 border-gray-200 rounded-lg p-5">
+                    <h4 className="text-lg font-bold mb-3 flex items-center gap-2 text-purple-800">
+                      👤 For Individuals
+                    </h4>
+                    <p className="mb-2"><strong>Personal Reflection:</strong> Journal writing (3 minutes)</p>
+                    <p className="mb-2 text-sm">
+                      <strong>Prompt:</strong> "When I think about starting my own business, I feel..." 
+                    </p>
+                    <p className="text-sm"><strong>Consider:</strong> What emotions came up? Excitement? Fear? Guilt?</p>
+                  </div>
+                </div>
+
+                {/* Confidence Rating */}
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-lg p-6 text-center">
+                  <h4 className="text-lg font-bold text-yellow-800 mb-3 flex items-center justify-center gap-2">
+                    <Star className="w-5 h-5" />
+                    Quick Confidence Poll
+                  </h4>
+                  <p className="mb-4 text-yellow-800"><strong>Rate yourself (1-5 scale):</strong></p>
+                  <p className="mb-4 text-yellow-900">"How confident do I feel about starting a Faith-Driven business that honors God?"</p>
+                  
+                  <div className="flex justify-center items-center gap-2 mb-4">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        onClick={() => setRating(rating)}
+                        className={`text-4xl transition-all duration-200 hover:scale-110 ${
+                          rating <= confidenceRating 
+                            ? 'text-yellow-400 scale-110 drop-shadow-lg' 
+                            : 'text-gray-300 hover:text-yellow-300'
+                        }`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {confidenceRating > 0 && (
+                    <div className="bg-white/50 rounded-lg p-3">
+                      <p className="font-bold text-yellow-800">
+                        {ratingLabels[confidenceRating]}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* LOOKING UP Section */}
+        <div className="mb-6">
+          <button
+            onClick={() => toggleSection('looking-up')}
+            className="w-full text-left p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex justify-between items-center"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">☝️</span>
+              </div>
+              <div>
+                <div className="text-xl font-bold">LOOKING UP</div>
+                <div className="text-green-100">Learning from God's Word</div>
+              </div>
+            </div>
+            <ChevronDown 
+              className={`w-6 h-6 transition-transform duration-300 ${
+                activeSections.has('looking-up') ? 'rotate-180' : ''
+              }`} 
+            />
+          </button>
+          
+          {activeSections.has('looking-up') && (
+            <div className="bg-white border-2 border-green-200 border-t-0 rounded-b-lg p-6">
+              {/* Video Section */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-green-900 mb-4 flex items-center gap-2">
+                  🎥 Teaching Video: "Business is a Good Gift from God"
+                </h3>
+                
+                <div className="bg-black rounded-lg overflow-hidden mb-4">
+                  <div className="relative pb-[56.25%] h-0">
+                    <iframe
+                      src={sessionConfig.video_url}
+                      className="absolute top-0 left-0 w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                      title={sessionConfig.session_title}
+                    ></iframe>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {sessionConfig.duration}
+                    </span>
+                  </div>
+                  <button
+                    onClick={markVideoWatched}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      videoWatched 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    {videoWatched ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4" />
+                        Mark as Watched
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Scripture Study */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h4 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                  📖 Scripture Study & Reflection
+                </h4>
+                
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <h5 className="font-semibold text-blue-800 mb-2">Key Passages:</h5>
+                    <ul className="space-y-2 text-sm">
+                      <li>• <ScriptureReference reference="Genesis 1:26-31">Genesis 1:26-31</ScriptureReference> - God's original design for work</li>
+                      <li>• <ScriptureReference reference="Acts 16:14">Acts 16:14</ScriptureReference> - Lydia the businesswoman</li>
+                      <li>• <ScriptureReference reference="Acts 18:2-3">Acts 18:2-3</ScriptureReference> - Aquila and Priscilla's business</li>
+                      <li>• <ScriptureReference reference="Ephesians 2:10">Ephesians 2:10</ScriptureReference> - Created for good works</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <textarea
+                  className="w-full min-h-32 p-4 border border-blue-300 rounded-lg resize-y text-sm"
+                  placeholder="What do these scriptures teach you about business and calling?
+
+Genesis 1:26-31:
+
+Acts 16:14 (Lydia):
+
+Acts 18:2-3 (Aquila & Priscilla):
+
+Ephesians 2:10:
+
+How do these apply to your life?"
+                  value={answers['scripture-reflections'] || ''}
+                  onChange={(e) => updateAnswer('scripture-reflections', e.target.value)}
+                />
+                
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <button
+                    onClick={() => saveAnswer('scripture-reflections')}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Save className="w-4 h-4" />
+                    Save
+                  </button>
+                  <button
+                    onClick={() => downloadAnswer('scripture-reflections', 'Scripture-Reflections')}
+                    className="flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                  {saveStatuses['scripture-reflections'] && (
+                    <span className="flex items-center gap-1 text-green-600 font-medium text-sm">
+                      <CheckCircle className="w-4 h-4" />
+                      Saved!
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* LOOKING FORWARD Section */}
+        <div className="mb-6">
+          <button
+            onClick={() => toggleSection('looking-forward')}
+            className="w-full text-left p-6 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 flex justify-between items-center"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">👉</span>
+              </div>
+              <div>
+                <div className="text-xl font-bold">LOOKING FORWARD</div>
+                <div className="text-purple-100">Action Steps & Commitments</div>
+              </div>
+            </div>
+            <ChevronDown 
+              className={`w-6 h-6 transition-transform duration-300 ${
+                activeSections.has('looking-forward') ? 'rotate-180' : ''
+              }`} 
+            />
+          </button>
+          
+          {activeSections.has('looking-forward') && (
+            <div className="bg-white border-2 border-purple-200 border-t-0 rounded-b-lg p-6">
+              {/* Business Planner */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                  🚀 Faith-Driven Business Planner
+                </h3>
+                
+                <p className="text-indigo-700 mb-6">
+                  Begin developing your business concept using biblical principles. Your answers will build 
+                  into a complete Faith-Driven Business Plan as you progress through all sessions.
+                </p>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Business Vision */}
+                  <div className="bg-white border border-indigo-200 rounded-lg p-5">
+                    <h4 className="text-lg font-bold text-indigo-600 mb-3 flex items-center gap-2">
+                      🎯 Your Faith-Driven Business Vision
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-3">
+                      How will your business honor God and serve others? What's your "why" beyond profit?
+                    </p>
+                    <textarea
+                      className="w-full min-h-24 p-3 border border-gray-300 rounded-lg text-sm resize-y"
+                      placeholder="Example: 'To create a house cleaning service that serves busy families with excellence while creating opportunities to build authentic relationships and demonstrate Christ's love through exceptional service.'"
+                      value={answers['business-vision'] || ''}
+                      onChange={(e) => updateAnswer('business-vision', e.target.value)}
+                    />
+                  </div>
+
+                  {/* Problem to Solve */}
+                  <div className="bg-white border border-indigo-200 rounded-lg p-5">
+                    <h4 className="text-lg font-bold text-indigo-600 mb-3 flex items-center gap-2">
+                      💡 Problem You Want to Solve
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-3">
+                      What specific problem or need do you see in your community? How can business solve it?
+                    </p>
+                    <textarea
+                      className="w-full min-h-24 p-3 border border-gray-300 rounded-lg text-sm resize-y"
+                      placeholder="Example: 'Busy working parents struggle to maintain clean homes and feel overwhelmed by household tasks, leading to family stress and reduced quality time together.'"
+                      value={answers['problem-to-solve'] || ''}
+                      onChange={(e) => updateAnswer('problem-to-solve', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Save Business Planner */}
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => {
+                      saveAnswer('business-vision');
+                      saveAnswer('problem-to-solve');
+                      alert('Business planner saved! ✓');
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium mx-auto"
+                  >
+                    <Save className="w-5 h-5" />
+                    Save My Business Planner
+                  </button>
+                  <p className="mt-3 text-sm text-indigo-600">
+                    💡 Your business planner will expand as you complete more sessions!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Session Complete */}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-8 rounded-lg text-center">
+          <Trophy className="w-12 h-12 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold mb-4">Session Complete!</h3>
+          <p className="text-green-100 mb-6">
+            You've taken the first step in your Faith-Driven Business journey. 
+            Remember: God has called you to use business as a platform for His glory.
+          </p>
+          <div className="flex justify-center gap-4">
+            <button className="bg-white text-green-600 px-6 py-3 rounded-lg font-medium hover:bg-green-50 transition-colors">
+              Next Session
+            </button>
+            <button className="border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-green-600 transition-colors">
+              Dashboard
             </button>
           </div>
         </div>
@@ -555,4 +654,4 @@ const Session11Component = () => {
   );
 };
 
-export default Session11Component;
+export default Session1_1_Complete;

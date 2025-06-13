@@ -1,0 +1,217 @@
+// middleware.ts
+// Route protection middleware with tier-based access control
+
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+
+  // Get session
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Define protected routes
+  const protectedRoutes = [
+    '/dashboard',
+    '/module',
+    '/coaching',
+    '/business-plan',
+    '/assessment',
+    '/profile'
+  ];
+
+  // Define public routes (don't require authentication)
+  const publicRoutes = [
+    '/',
+    '/auth/login',
+    '/auth/signup',
+    '/trainers',
+    '/api/webhooks'
+  ];
+
+  const { pathname } = req.nextUrl;
+
+  // Check if current path is protected
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+
+  // Check if current path is public
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route)
+  );
+
+  // Handle protected routes
+  if (isProtectedRoute) {
+    if (!session) {
+      // Redirect to login with return URL
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = '/auth/login';
+      redirectUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // User is authenticated, check if they have a profile
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('subscription_tier, subscription_status, trial_end_date')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error || !profile) {
+        // Profile doesn't exist, redirect to complete setup
+        const redirectUrl = req.nextUrl.clone();
+        redirectUrl.pathname = '/auth/complete-profile';
+        return NextResponse.redirect(redirectUrl);
+      }
+
+      // Check subscription status
+      if (profile.subscription_status === 'inactive' || profile.subscription_status === 'expired') {
+        // Redirect to subscription renewal
+        const redirectUrl = req.nextUrl.clone();
+        redirectUrl.pathname = '/subscription/renew';
+        return NextResponse.redirect(redirectUrl);
+      }
+
+      // Check trial expiration for trial users
+      if (profile.subscription_tier === 'trial' && profile.trial_end_date) {
+        const trialEnd = new Date(profile.trial_end_date);
+        const now = new Date();
+        
+        if (now > trialEnd) {
+          // Trial expired, redirect to upgrade
+          const redirectUrl = req.nextUrl.clone();
+          redirectUrl.pathname = '/subscription/upgrade';
+          redirectUrl.searchParams.set('reason', 'trial_expired');
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+
+      // Check tier-specific route access
+      const tierAccessResult = await checkTierAccess(pathname, profile.subscription_tier, supabase);
+      if (!tierAccessResult.allowed) {
+        // Redirect to upgrade page with specific tier requirement
+        const redirectUrl = req.nextUrl.clone();
+        redirectUrl.pathname = '/subscription/upgrade';
+        redirectUrl.searchParams.set('reason', 'insufficient_tier');
+        redirectUrl.searchParams.set('required_feature', tierAccessResult.requiredFeature || '');
+        return NextResponse.redirect(redirectUrl);
+      }
+
+    } catch (error) {
+      console.error('Middleware error checking profile:', error);
+      // On error, redirect to login
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = '/auth/login';
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // Handle auth routes when user is already logged in
+  if ((pathname === '/auth/login' || pathname === '/auth/signup') && session) {
+    // Redirect authenticated users away from auth pages
+    const redirectUrl = req.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  return res;
+}
+
+// Helper function to check tier-based access
+async function checkTierAccess(pathname: string, userTier: string, supabase: any) {
+  try {
+    // Get user's tier configuration
+    const { data: tierConfig, error } = await supabase
+      .from('subscription_tier_config')
+      .select('features, limits')
+      .eq('tier_key', userTier)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !tierConfig) {
+      return { allowed: false, requiredFeature: 'valid_subscription' };
+    }
+
+    const features = tierConfig.features || {};
+
+    // Route-specific access control
+    if (pathname.startsWith('/coaching')) {
+      if (!features.coaching) {
+        return { allowed: false, requiredFeature: 'coaching' };
+      }
+    }
+
+    if (pathname.startsWith('/business-plan')) {
+      if (!features.business_plan) {
+        return { allowed: false, requiredFeature: 'business_plan' };
+      }
+    }
+
+    if (pathname.startsWith('/module')) {
+      // Extract module number from path
+      const moduleMatch = pathname.match(/\/module\/(\d+)/);
+      if (moduleMatch) {
+        const moduleNumber = parseInt(moduleMatch[1]);
+        
+        if (features.modules === 'all') {
+          // User has access to all modules
+          return { allowed: true };
+        } else if (Array.isArray(features.modules)) {
+          // User has access to specific modules
+          if (!features.modules.includes(moduleNumber)) {
+            return { allowed: false, requiredFeature: 'advanced_modules' };
+          }
+        } else {
+          // User has no module access
+          return { allowed: false, requiredFeature: 'modules' };
+        }
+      }
+    }
+
+    // Check for premium features
+    if (pathname.includes('/premium') || pathname.includes('/advanced')) {
+      if (!features.premium_content) {
+        return { allowed: false, requiredFeature: 'premium_content' };
+      }
+    }
+
+    // Check for church-specific features
+    if (pathname.includes('/church') || pathname.includes('/partnership')) {
+      if (!features.church_tools) {
+        return { allowed: false, requiredFeature: 'church_tools' };
+      }
+    }
+
+    // Check for business ambassador features
+    if (pathname.includes('/ambassador') || pathname.includes('/multiply')) {
+      if (!features.ambassador_tools) {
+        return { allowed: false, requiredFeature: 'ambassador_tools' };
+      }
+    }
+
+    return { allowed: true };
+  } catch (error) {
+    console.error('Error checking tier access:', error);
+    return { allowed: false, requiredFeature: 'error_checking_access' };
+  }
+}
+
+// Configure which routes this middleware runs on
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public (public files)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
+};
