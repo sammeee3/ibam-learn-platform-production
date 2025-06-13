@@ -5,7 +5,7 @@ export interface SessionTemplateProps {
   sessionId: number;
 }
 
-export function SessionTemplate({ moduleId, sessionId }: SessionTemplateProps) {
+export default function SessionTemplate({ moduleId, sessionId }: SessionTemplateProps) {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">
