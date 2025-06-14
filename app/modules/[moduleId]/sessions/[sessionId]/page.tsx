@@ -1,5 +1,3 @@
-# Create the missing page.tsx file with your session template
-cat > "app/modules/[moduleId]/sessions/[sessionId]/page.tsx" << 'EOF'
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -19,7 +17,7 @@ export default function SessionPage() {
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800">
-              🚧 Session content loading... Your complete session template will be integrated here.
+              🚧 Session content loading...
             </p>
           </div>
         </div>
