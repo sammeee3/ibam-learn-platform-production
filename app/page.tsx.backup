@@ -25,26 +25,36 @@ export default function LandingPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   {/* IBAM Logo */}
                   <div style={{ height: '48px', width: '48px' }}>
-                    <img
-                      src="/images/branding/mini-logo.png"
-                      alt="IBAM - International Business As Mission"
-                      style={{
-                        width: "48px",
-                        height: "48px",
-                        objectFit: "contain"
-                      }}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        if (target.src.includes("mini-logo.png")) {
-                          target.src = "/images/branding/ibam-logo.png";
-                        } else if (target.src.includes("ibam-logo.png")) {
-                          target.src = "/images/branding/ibam-logo-copy.jpg";
-                        } else {
-                          target.style.display = "none";
-                          target.parentElement!.innerHTML = `<div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;">IBAM</div>`;
-                        }
-                      }}
-                    />                  </div>
+                    <svg
+                      viewBox="0 0 80 80"
+                      style={{ width: '100%', height: '100%' }}
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle cx="40" cy="40" r="38" fill="#4ECDC4" stroke="white" strokeWidth="4"/>
+                      <path
+                        d="M25 25 C30 20, 45 20, 55 25 C50 30, 35 30, 25 25 Z"
+                        fill="white"
+                        stroke="#4ECDC4"
+                        strokeWidth="2"
+                      />
+                      <circle cx="45" cy="25" r="2" fill="#4ECDC4" />
+                      <path
+                        d="M20 40 C25 35, 40 35, 50 40 C45 45, 30 45, 20 40 Z"
+                        fill="white"
+                        stroke="#4ECDC4"
+                        strokeWidth="2"
+                      />
+                      <circle cx="40" cy="40" r="2" fill="#4ECDC4" />
+                      <path
+                        d="M25 55 C30 50, 45 50, 55 55 C50 60, 35 60, 25 55 Z"
+                        fill="white"
+                        stroke="#4ECDC4"
+                        strokeWidth="2"
+                      />
+                      <circle cx="45" cy="55" r="2" fill="#4ECDC4" />
+                    </svg>
+                  </div>
                   {/* Text Logo */}
                   <div style={{ 
                     display: 'flex',
@@ -121,7 +131,7 @@ export default function LandingPage() {
                   maxWidth: '42rem',
                   margin: '1rem auto'
                 }}>
-                  Transform your business into a vessel for Faith-Driven impact. Join thousands of entrepreneurs learning to thrive through biblical business principles.
+                  Transform your business into a vessel for Kingdom impact. Join thousands of entrepreneurs learning to thrive through biblical business principles.
                 </p>
                 <div style={{ 
                   marginTop: '2rem', 
@@ -256,7 +266,7 @@ export default function LandingPage() {
                 fontSize: '1rem', 
                 color: '#6b7280' 
               }}>
-                Provide start-up loans to kickstart your business journey with Faith-Driven principles.
+                Provide start-up loans to kickstart your business journey with Kingdom principles.
               </p>
             </div>
 
@@ -316,7 +326,7 @@ export default function LandingPage() {
                 fontSize: '1rem', 
                 color: '#6b7280' 
               }}>
-                Encourage discipleship multiplication to maximize Faith-Driven impact through business.
+                Encourage discipleship multiplication to maximize Kingdom impact through business.
               </p>
             </div>
           </div>
