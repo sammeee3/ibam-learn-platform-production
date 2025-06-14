@@ -17,7 +17,7 @@ export default function PostAssessmentPage() {
     <CourseAssessment 
       type="post" 
       onComplete={handleComplete}
-      existingData={preAssessmentData}
+      existingData={preAssessmentData || undefined}
     />
   )
 }
