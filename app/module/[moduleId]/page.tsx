@@ -86,4 +86,3 @@ export default async function ModulePage({ params }: PageProps) {
   );
 }
 export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
