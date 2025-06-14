@@ -523,7 +523,7 @@ export default function MainDashboard() {
                       color: '#22C55E',
                       marginBottom: '0.25rem'
                     }}>
-                      {user.postAssessmentScore?.toFixed(1)}
+                      {(user.postAssessmentScore || 0).toFixed(1)}
                     </div>
                     <div style={{
                       fontSize: '0.75rem',
@@ -730,9 +730,6 @@ export default function MainDashboard() {
         display: 'flex',
         justifyContent: 'space-around',
         boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-        '@media (min-width: 768px)': {
-          display: 'none'
-        }
       }}>
         {[
           { icon: '🏠', label: 'Home', href: '/dashboard', active: true },

@@ -51,8 +51,8 @@ export default function SessionPage() {
           .from('session_progress')
           .select('*')
           .eq('user_id', user.id)
-          .eq('module_id', params.moduleId)
-          .eq('session_id', params.sessionId)
+          .eq('module_id', params?.moduleId || 'unknown')
+          .eq('session_id', params?.sessionId || 'unknown')
           .single();
           
         if (progress) {
@@ -67,7 +67,7 @@ export default function SessionPage() {
     };
 
     initializeSession();
-  }, [params.moduleId, params.sessionId]);
+  }, [params?.moduleId, params?.sessionId]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -78,8 +78,8 @@ export default function SessionPage() {
         .from('session_progress')
         .upsert({
           user_id: user.id,
-          module_id: params.moduleId,
-          session_id: params.sessionId,
+          module_id: params?.moduleId || 'unknown',
+          session_id: params?.sessionId || 'unknown',
           completed_sections: completedSections,
           session_data: sessionData,
           progress_percentage: calculateProgress(),
@@ -131,8 +131,8 @@ export default function SessionPage() {
           .from('user_progress')
           .upsert({
             user_id: user.id,
-            module_id: params.moduleId,
-            session_id: params.sessionId,
+            module_id: params?.moduleId || 'unknown',
+            session_id: params?.sessionId || 'unknown',
             completed: true,
             completed_at: new Date().toISOString()
           });

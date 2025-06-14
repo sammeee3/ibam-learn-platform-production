@@ -10,10 +10,10 @@ export default function SessionPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
           <h1 className="text-4xl font-bold text-blue-900 mb-4">
-            Session: {params.sessionId}
+            Session: {params?.sessionId || "Loading..."}
           </h1>
           <p className="text-xl text-gray-600 mb-6">
-            Module: {params.moduleId}
+            Module: {params?.moduleId || "Loading..."}
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800">

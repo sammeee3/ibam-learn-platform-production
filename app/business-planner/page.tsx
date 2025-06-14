@@ -207,7 +207,7 @@ export default function BusinessPlannerPage() {
                 Discipleship Strategy
               </label>
               <textarea
-                value={planData.Faith-Driven}
+                value={planData.faithDriven}
                 onChange={(e) => handleInputChange('faithDriven', e.target.value)}
                 placeholder="How will you use your business to make disciples? What opportunities for spiritual conversations and mentoring will you create?"
                 rows={4}

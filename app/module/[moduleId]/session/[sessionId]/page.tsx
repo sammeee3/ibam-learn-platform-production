@@ -1,20 +1,22 @@
-import DynamicSessionTemplate from '@/components/DynamicSessionTemplate';
+'use client';
 
-interface SessionPageProps {
-  params: Promise<{
-    moduleId: string;
-    sessionId: string;
-  }>;
-}
+import { useParams } from 'next/navigation';
 
-export default async function SessionPage({ params }: SessionPageProps) {
-  // Await the params in Next.js 15
-  const { moduleId, sessionId } = await params;
+export default function SessionPage() {
+  const params = useParams();
   
   return (
-    <DynamicSessionTemplate 
-      sessionId={parseInt(sessionId)}
-      moduleId={parseInt(moduleId)}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+          <h1 className="text-4xl font-bold text-blue-900 mb-4">
+            Session: {params?.sessionId || "Loading..."}
+          </h1>
+          <p className="text-xl text-gray-600 mb-6">
+            Module: {params?.moduleId || "Loading..."}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
