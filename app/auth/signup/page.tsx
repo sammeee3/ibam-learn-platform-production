@@ -1,4 +1,5 @@
 'use client';
+'use client';
 
 // app/auth/signup/page.tsx
 // Enhanced signup page with tier system integration
@@ -307,3 +308,4 @@ export default function SignupPage() {
     </div>
   );
 }
+export const dynamic = 'force-dynamic';
