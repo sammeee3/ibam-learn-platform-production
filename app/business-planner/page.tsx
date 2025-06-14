@@ -16,7 +16,7 @@ export default function BusinessPlannerPage() {
     marketing: '',
     financials: '',
     operations: '',
-    Faith-Driven: ''
+    faithDriven: ''
   })
 
   const sections = [
