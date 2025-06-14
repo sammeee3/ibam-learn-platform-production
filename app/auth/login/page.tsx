@@ -1,4 +1,5 @@
 'use client';
+'use client';
 
 // app/auth/login/page.tsx
 // Enhanced login page with tier system integration
@@ -180,3 +181,4 @@ export default function LoginPage() {
     </div>
   );
 }
+export const dynamic = 'force-dynamic';
