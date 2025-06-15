@@ -1,474 +1,376 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import IBAMLogo from '@/components/IBAMLogo'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function BusinessPlannerPage() {
-  const [activeSection, setActiveSection] = useState('overview')
-  const [planData, setPlanData] = useState({
-    businessName: '',
-    mission: '',
-    vision: '',
-    values: '',
-    targetMarket: '',
-    products: '',
-    marketing: '',
-    financials: '',
-    operations: '',
-    faithDriven: ''
-  })
-
-  const sections = [
-    { id: 'overview', title: 'Business Overview', icon: '📋' },
-    { id: 'mission', title: 'Mission & Vision', icon: '🎯' },
-    { id: 'market', title: 'Target Market', icon: '👥' },
-    { id: 'products', title: 'Products/Services', icon: '📦' },
-    { id: 'marketing', title: 'Marketing Strategy', icon: '📢' },
-    { id: 'operations', title: 'Operations Plan', icon: '⚙️' },
-    { id: 'financials', title: 'Financial Projections', icon: '💰' },
-    { id: 'Faith-Driven', title: 'Faith-Driven Impact', icon: '👑' }
-  ]
-
-  const handleInputChange = (field: string, value: string) => {
-    setPlanData(prev => ({
-      ...prev,
-      [field]: value
-    }))
+// Sample business plan sections
+const businessPlanSections = [
+  {
+    id: 'vision',
+    title: 'Vision & Mission',
+    description: 'Define your God-given purpose and direction',
+    icon: '🎯',
+    questions: [
+      'How does your business reflect God\'s character and values?',
+      'What impact do you want your business to have on your community?',
+      'How can your business serve as a platform for spiritual conversations?'
+    ],
+    completed: false,
+    responses: ['', '', '']
+  },
+  {
+    id: 'market',
+    title: 'Market Analysis',
+    description: 'Understanding your customers and competition',
+    icon: '📊',
+    questions: [
+      'Who is your target customer and what are their needs?',
+      'How will you reach and serve your customers with excellence?',
+      'What makes your approach unique in the marketplace?'
+    ],
+    completed: false,
+    responses: ['', '', '']
+  },
+  {
+    id: 'operations',
+    title: 'Operations & Management',
+    description: 'How your business will function day-to-day',
+    icon: '⚙️',
+    questions: [
+      'What key processes will ensure quality and efficiency?',
+      'How will you build a team that shares your values?',
+      'What systems will support growth and sustainability?'
+    ],
+    completed: false,
+    responses: ['', '', '']
+  },
+  {
+    id: 'finances',
+    title: 'Financial Projections',
+    description: 'Stewarding resources and planning for growth',
+    icon: '💰',
+    questions: [
+      'What are your startup costs and funding sources?',
+      'How will you price your products/services competitively?',
+      'What financial milestones will indicate success?'
+    ],
+    completed: false,
+    responses: ['', '', '']
+  },
+  {
+    id: 'ministry',
+    title: 'Ministry Integration',
+    description: 'How business and ministry work together',
+    icon: '✝️',
+    questions: [
+      'How will you maintain Christian witness in daily operations?',
+      'What opportunities for discipleship exist in your business?',
+      'How will you partner with local church and ministry leaders?'
+    ],
+    completed: false,
+    responses: ['', '', '']
   }
+];
 
-  const renderSection = () => {
-    switch (activeSection) {
-      case 'overview':
-        return (
-          <div>
-            <h2 style={{ color: '#2C3E50', fontSize: '24px', marginBottom: '16px' }}>
-              📋 Business Overview
-            </h2>
-            <p style={{ color: '#666', marginBottom: '24px' }}>
-              Start with the basics of your faith-driven business concept.
-            </p>
-            
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                color: '#2C3E50',
-                fontWeight: '600',
-                marginBottom: '8px'
-              }}>
-                Business Name
-              </label>
-              <input
-                type="text"
-                value={planData.businessName}
-                onChange={(e) => handleInputChange('businessName', e.target.value)}
-                placeholder="Enter your business name..."
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
+export default function BusinessPlanner() {
+  const router = useRouter();
+  const [currentSection, setCurrentSection] = useState('vision');
+  const [sections, setSections] = useState(businessPlanSections);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
 
-            <div style={{
-              backgroundColor: '#f8f9fa',
-              padding: '20px',
-              borderRadius: '8px',
-              border: '1px solid #e9ecef'
-            }}>
-              <h3 style={{ color: '#2C3E50', marginBottom: '12px' }}>
-                💡 Biblical Business Principles
-              </h3>
-              <ul style={{ color: '#666', paddingLeft: '20px' }}>
-                <li>Stewardship - Managing resources faithfully</li>
-                <li>Integrity - Honest in all dealings</li>
-                <li>Service - Meeting genuine needs</li>
-                <li>Excellence - Doing work as unto the Lord</li>
-                <li>Generosity - Blessing others through success</li>
-              </ul>
-            </div>
-          </div>
-        )
+  const currentSectionData = sections.find(s => s.id === currentSection) || sections[0];
+  const completedSections = sections.filter(s => s.completed).length;
+  const progressPercentage = Math.round((completedSections / sections.length) * 100);
 
-      case 'mission':
-        return (
-          <div>
-            <h2 style={{ color: '#2C3E50', fontSize: '24px', marginBottom: '16px' }}>
-              🎯 Mission & Vision
-            </h2>
-            <p style={{ color: '#666', marginBottom: '24px' }}>
-              Define your God-given purpose and the impact you want to make.
-            </p>
+  // Auto-save functionality
+  useEffect(() => {
+    const saveTimer = setTimeout(() => {
+      setSaveStatus('saving');
+      // TODO: Save to Supabase
+      localStorage.setItem('ibam-business-plan', JSON.stringify(sections));
+      setSaveStatus('saved');
+    }, 1000);
 
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                color: '#2C3E50',
-                fontWeight: '600',
-                marginBottom: '8px'
-              }}>
-                Mission Statement
-              </label>
-              <textarea
-                value={planData.mission}
-                onChange={(e) => handleInputChange('mission', e.target.value)}
-                placeholder="Why does your business exist? How do you serve others and honor God?"
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
+    return () => clearTimeout(saveTimer);
+  }, [sections]);
 
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                color: '#2C3E50',
-                fontWeight: '600',
-                marginBottom: '8px'
-              }}>
-                Vision Statement
-              </label>
-              <textarea
-                value={planData.vision}
-                onChange={(e) => handleInputChange('vision', e.target.value)}
-                placeholder="What future impact do you envision? How will the world be different?"
-                rows={3}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
+  const updateResponse = (questionIndex: number, value: string) => {
+    setSections(prev => prev.map(section => 
+      section.id === currentSection 
+        ? {
+            ...section,
+            responses: section.responses.map((response, index) => 
+              index === questionIndex ? value : response
+            ),
+            completed: section.responses.every((r, i) => 
+              i === questionIndex ? value.trim() !== '' : r.trim() !== ''
+            )
+          }
+        : section
+    ));
+  };
 
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                color: '#2C3E50',
-                fontWeight: '600',
-                marginBottom: '8px'
-              }}>
-                Core Values
-              </label>
-              <textarea
-                value={planData.values}
-                onChange={(e) => handleInputChange('values', e.target.value)}
-                placeholder="What biblical values guide your business decisions?"
-                rows={3}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-          </div>
-        )
-
-      case 'Faith-Driven':
-        return (
-          <div>
-            <h2 style={{ color: '#2C3E50', fontSize: '24px', marginBottom: '16px' }}>
-              👑 Faith-Driven Impact Plan
-            </h2>
-            <p style={{ color: '#666', marginBottom: '24px' }}>
-              How will your business advance God's Faith-Driven and make disciples?
-            </p>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                color: '#2C3E50',
-                fontWeight: '600',
-                marginBottom: '8px'
-              }}>
-                Discipleship Strategy
-              </label>
-              <textarea
-                value={planData.faithDriven}
-                onChange={(e) => handleInputChange('faithDriven', e.target.value)}
-                placeholder="How will you use your business to make disciples? What opportunities for spiritual conversations and mentoring will you create?"
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            <div style={{
-              backgroundColor: '#f0f9ff',
-              padding: '20px',
-              borderRadius: '8px',
-              border: '1px solid #4ECDC4'
-            }}>
-              <h3 style={{ color: '#2C3E50', marginBottom: '12px' }}>
-                🌟 Faith-Driven Business Opportunities
-              </h3>
-              <ul style={{ color: '#666', paddingLeft: '20px', margin: 0 }}>
-                <li>Mentor young entrepreneurs in biblical business</li>
-                <li>Partner with churches for financial literacy training</li>
-                <li>Create jobs for people needing second chances</li>
-                <li>Donate percentage of profits to Faith-Driven causes</li>
-                <li>Host business networking events with spiritual focus</li>
-                <li>Integrate prayer and biblical wisdom into operations</li>
-              </ul>
-            </div>
-          </div>
-        )
-
-      default:
-        return (
-          <div style={{
-            textAlign: 'center',
-            padding: '40px'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
-            <h3 style={{ color: '#2C3E50', marginBottom: '8px' }}>
-              Section Coming Soon
-            </h3>
-            <p style={{ color: '#666' }}>
-              This section is under development. Check back soon!
-            </p>
-          </div>
-        )
-    }
-  }
+  const exportBusinessPlan = () => {
+    const exportData = {
+      generatedAt: new Date().toISOString(),
+      completedSections: completedSections,
+      totalSections: sections.length,
+      sections: sections
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'IBAM-Business-Plan.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f8f9fa',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Header */}
-      <header style={{
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e9ecef',
-        padding: '16px 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <Link href="/dashboard" style={{
-              color: '#4ECDC4',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              ← Back to Dashboard
-            </Link>
-            <div style={{
-              height: '24px',
-              width: '1px',
-              backgroundColor: '#e9ecef'
-            }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <IBAMLogo size="small" />
-              <h1 style={{
-                color: '#2C3E50',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                margin: 0
-              }}>
-                IBAM Business Planner
-              </h1>
+    <div className="min-h-screen" style={{backgroundColor: '#f8fafc'}}>
+      {/* IBAM Header */}
+      <div style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <img 
+                src="/images/branding/ibam-logo-copy.jpg" 
+                alt="IBAM Logo"
+                className="h-10 w-auto"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/branding/mini-logo.png";
+                }}
+              />
+              <div>
+                <div className="text-white/90 text-sm md:text-base mb-1">
+                  Business Planning Tool
+                </div>
+                <h1 className="text-white text-xl md:text-3xl font-bold mb-2">
+                  Your Faith-Driven Business Plan
+                </h1>
+                <div className="flex flex-wrap gap-4 text-sm md:text-base text-white/90">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#10b981'}}></span>
+                    {progressPercentage}% complete
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-3 h-3 rounded-full ${
+                      saveStatus === 'saved' ? 'bg-green-400' :
+                      saveStatus === 'saving' ? 'bg-yellow-400' : 'bg-red-400'
+                    }`}></span>
+                    <span className="hidden sm:inline">
+                      {saveStatus === 'saved' ? 'All changes saved' :
+                       saveStatus === 'saving' ? 'Saving...' : 'Save error'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-all"
+              >
+                🏠 <span className="hidden sm:inline">Dashboard</span>
+              </button>
+              
+              <button 
+                onClick={exportBusinessPlan}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm md:text-base font-medium text-white transition-all"
+              >
+                📥 Export Plan
+              </button>
             </div>
           </div>
           
-          <button
-            style={{
-              backgroundColor: '#4ECDC4',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
-          >
-            💾 Save Plan
-          </button>
-        </div>
-      </header>
-
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '24px',
-        display: 'grid',
-        gridTemplateColumns: '300px 1fr',
-        gap: '24px'
-      }}>
-        {/* Sidebar Navigation */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          height: 'fit-content',
-          position: 'sticky',
-          top: '100px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
-          <h3 style={{
-            color: '#2C3E50',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            marginBottom: '16px'
-          }}>
-            📋 Plan Sections
-          </h3>
-          
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
+          {/* Progress Bar */}
+          <div className="mt-6 bg-white/20 rounded-full h-3">
+            <div 
+              className="h-3 rounded-full transition-all duration-500"
               style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                border: 'none',
-                backgroundColor: activeSection === section.id ? '#4ECDC4' : 'transparent',
-                color: activeSection === section.id ? 'white' : '#2C3E50',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginBottom: '8px',
-                textAlign: 'left'
+                width: `${progressPercentage}%`,
+                background: 'linear-gradient(90deg, #4ECDC4 0%, #10b981 100%)'
               }}
-            >
-              <span>{section.icon}</span>
-              <span>{section.title}</span>
-            </button>
-          ))}
-
-          <div style={{
-            marginTop: '24px',
-            padding: '16px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px'
-          }}>
-            <h4 style={{
-              color: '#2C3E50',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              marginBottom: '8px'
-            }}>
-              📈 Progress
-            </h4>
-            <div style={{
-              backgroundColor: '#e9ecef',
-              borderRadius: '4px',
-              height: '8px',
-              marginBottom: '8px'
-            }}>
-              <div style={{
-                backgroundColor: '#4ECDC4',
-                height: '100%',
-                borderRadius: '4px',
-                width: '25%'
-              }} />
-            </div>
-            <p style={{
-              fontSize: '12px',
-              color: '#666',
-              margin: 0
-            }}>
-              2 of 8 sections completed
-            </p>
+            ></div>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '32px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          minHeight: '600px'
-        }}>
-          {renderSection()}
         </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{
-        backgroundColor: '#2C3E50',
-        color: 'white',
-        padding: '40px 24px',
-        marginTop: '48px'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          textAlign: 'center'
-        }}>
-          <div style={{ marginBottom: '12px' }}>
-            <IBAMLogo size="large" style={{ filter: 'brightness(0) invert(1)' }} />
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
+        
+        {/* Introduction */}
+        <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-2xl border-2 border-[#4ECDC4]/20 p-6 md:p-8 mb-8">
+          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-4 flex items-center gap-3">
+            <span className="text-4xl md:text-5xl">💼</span>
+            Build Your Faith-Driven Business Plan
+          </h2>
+          <div className="bg-white rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
+            <p className="text-gray-700 text-lg md:text-xl leading-relaxed mb-4">
+              Create a comprehensive business plan that integrates biblical principles with sound business practices. 
+              Your responses from the learning sessions are automatically included here.
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">📋</div>
+              <div>
+                <div className="font-semibold text-[#2C3E50]">Progress: {completedSections} of {sections.length} sections</div>
+                <div className="text-gray-600">Complete all sections for a comprehensive plan</div>
+              </div>
+            </div>
           </div>
-          <h3 style={{
-            margin: '0 0 8px 0',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}>
-            IBAM Learning Platform
-          </h3>
-          <p style={{
-            margin: '0 0 16px 0',
-            opacity: 0.8
-          }}>
-            Designed to Thrive - Empowering Faith-Driven Entrepreneurs
-          </p>
-          <p style={{
-            margin: 0,
-            fontSize: '14px',
-            opacity: 0.6
-          }}>
-            © 2025 IBAM. Building businesses that honor God and serve others.
-          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Section Navigation */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 sticky top-4">
+              <h3 className="font-bold text-[#2C3E50] text-lg mb-6">Plan Sections</h3>
+              
+              <div className="space-y-3">
+                {sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => setCurrentSection(section.id)}
+                    className={`w-full text-left p-4 rounded-xl transition-all ${
+                      currentSection === section.id
+                        ? 'bg-[#4ECDC4]/10 border-2 border-[#4ECDC4]'
+                        : 'hover:bg-gray-50 border-2 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-2xl">{section.icon}</span>
+                      <span className="font-semibold text-[#2C3E50]">{section.title}</span>
+                      {section.completed && (
+                        <span className="text-[#10b981] text-xl">✓</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600">{section.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Current Section Content */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8">
+              
+              {/* Section Header */}
+              <div className="mb-8">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-5xl md:text-6xl">{currentSectionData.icon}</span>
+                  <div>
+                    <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl">
+                      {currentSectionData.title}
+                    </h2>
+                    <p className="text-gray-600 text-lg">{currentSectionData.description}</p>
+                  </div>
+                </div>
+                
+                {currentSectionData.completed && (
+                  <div className="bg-[#10b981]/10 border border-[#10b981]/20 rounded-xl p-4 mb-6">
+                    <div className="flex items-center gap-2 text-[#10b981] font-semibold">
+                      <span className="text-xl">✓</span>
+                      Section Complete
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Questions */}
+              <div className="space-y-8">
+                {currentSectionData.questions.map((question, index) => (
+                  <div key={index}>
+                    <label className="block font-bold text-[#2C3E50] text-lg md:text-xl mb-4">
+                      {index + 1}. {question}
+                    </label>
+                    <textarea
+                      value={currentSectionData.responses[index]}
+                      onChange={(e) => updateResponse(index, e.target.value)}
+                      className="w-full h-32 md:h-40 p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4ECDC4] focus:border-transparent text-lg"
+                      placeholder="Provide a detailed response that will become part of your business plan..."
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Section Navigation */}
+              <div className="flex justify-between mt-12 pt-8 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    const currentIndex = sections.findIndex(s => s.id === currentSection);
+                    if (currentIndex > 0) {
+                      setCurrentSection(sections[currentIndex - 1].id);
+                    }
+                  }}
+                  disabled={sections.findIndex(s => s.id === currentSection) === 0}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-lg text-gray-600 hover:text-[#4ECDC4] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous Section
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const currentIndex = sections.findIndex(s => s.id === currentSection);
+                    if (currentIndex < sections.length - 1) {
+                      setCurrentSection(sections[currentIndex + 1].id);
+                    }
+                  }}
+                  disabled={sections.findIndex(s => s.id === currentSection) === sections.length - 1}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-lg text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}
+                >
+                  Next Section →
+                </button>
+              </div>
+            </div>
+
+            {/* Plan Summary */}
+            {completedSections === sections.length && (
+              <div className="mt-8 bg-[#10b981] text-white rounded-2xl p-6 md:p-8 text-center">
+                <div className="text-5xl md:text-6xl mb-4">🏆</div>
+                <h3 className="text-xl md:text-2xl font-bold mb-2">Business Plan Complete!</h3>
+                <p className="text-lg md:text-xl opacity-90 mb-6">
+                  Congratulations! You've completed your Faith-Driven business plan.
+                </p>
+                <button 
+                  onClick={exportBusinessPlan}
+                  className="bg-white text-[#10b981] px-8 py-3 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all"
+                >
+                  📄 Download Your Plan
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* IBAM Footer */}
+      <footer style={{background: '#2C3E50'}} className="text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="flex justify-center items-center gap-3 mb-4">
+              <img 
+                src="/images/branding/mini-logo.png" 
+                alt="IBAM Mini Logo"
+                className="h-8 w-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span className="text-xl md:text-2xl font-bold">International Business as Mission</span>
+            </div>
+            <p className="text-gray-400 text-lg md:text-xl">
+              © 2025 IBAM International Business as Mission. Equipping entrepreneurs to transform communities through faith-driven business.
+            </p>
+            <p style={{color: '#4ECDC4'}} className="text-base md:text-lg mt-2 font-semibold">
+              DESIGNED TO THRIVE
+            </p>
+          </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

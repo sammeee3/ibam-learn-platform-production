@@ -13,8 +13,8 @@ export default function TrainersPage() {
     {
       name: "Jeff", 
       experience: "30+ years",
-      background: "Process Management & Business Development",
-      impact: "Coached hundreds of entrepreneurs to profitability",
+      background: "Business & Missionary Work in Closed Countries",
+      impact: "Extensive experience in multiple developing nations traditionally closed to the Gospel",
       photoPlaceholder: "J"
     },
     {
@@ -63,10 +63,10 @@ export default function TrainersPage() {
         {/* Header Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-800 mb-6">
-            Meet Your IBAM Trainers
+            Meet Your IBAM Training Team
           </h1>
           <p className="text-xl text-gray-700 max-w-4xl mx-auto mb-8">
-            Six seasoned business leaders with a combined 180+ years of proven experience 
+            Six seasoned business leaders and curriculum contributors with a combined 180+ years of proven experience 
             in Faith Driven entrepreneurship, cross-cultural ministry, and marketplace discipleship.
           </p>
           
@@ -91,33 +91,34 @@ export default function TrainersPage() {
 
         {/* Collective Story */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-16">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Our Story</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Our Collaborative Story</h2>
           <div className="prose max-w-none text-gray-700 leading-relaxed">
             <p className="text-lg mb-6">
-              Every trainer behind this curriculum has walked the challenging path of building 
-              businesses while living out their faith. We've experienced the late nights, the 
-              financial pressures, the difficult decisions, and the joy of seeing God work through 
-              marketplace ministry.
+              Every member of our training team has walked the challenging path of building 
+              businesses while living out their faith in diverse and often difficult contexts. 
+              Together, we've experienced the late nights, the financial pressures, the difficult 
+              decisions, and the joy of seeing God work through marketplace ministry across continents.
             </p>
             
             <p className="mb-6">
-              Our diverse backgrounds span entrepreneurship, process management, retail, consultancy, 
-              and various other industries. What unites us is not just our business experience, but 
-              our shared commitment to raising families while building enterprises that honor God 
-              and advance His mission through unreached and developing communities.
+              Our collective backgrounds span entrepreneurship, process management, retail, consultancy, 
+              missionary work in closed countries, and various other industries. What unites us is not 
+              just our business experience, but our shared commitment to raising families while building 
+              enterprises that honor God and advance His mission through unreached and developing communities.
             </p>
             
             <p className="mb-6">
-              This curriculum was born from real-world experience—businesses launched, some failed, 
-              many succeeded and became profitable engines for local church impact, family provision, 
-              and gospel advancement. Every principle taught here has been tested in the crucible 
-              of actual marketplace challenges.
+              This curriculum represents our combined wisdom and experience—born from real-world 
+              application across multiple nations and cultures. Every principle taught here has been 
+              collaboratively developed, tested, and refined through our collective decades of actual 
+              marketplace challenges in both developed and developing nations, including countries 
+              traditionally closed to the Gospel.
             </p>
             
             <p className="font-semibold text-blue-600">
-              We are 100% committed to seeing this transformational training reach as many men and 
-              women worldwide as possible. Because we know what God can do through Faith Driven 
-              entrepreneurs who are designed to thrive.
+              As a unified team, we are 100% committed to seeing this transformational training reach 
+              as many men and women worldwide as possible. Because together, we know what God can do 
+              through Faith Driven entrepreneurs who are designed to thrive.
             </p>
           </div>
         </div>
@@ -125,7 +126,7 @@ export default function TrainersPage() {
         {/* Individual Trainers */}
         <div className="mb-16">
           <h2 className="text-3xl font-semibold text-gray-800 text-center mb-12">
-            Your Training Team
+            Your Curriculum Development Team
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -155,7 +156,7 @@ export default function TrainersPage() {
                   </div>
                   
                   <div>
-                    <h4 className="font-medium text-gray-800 mb-1">Impact:</h4>
+                    <h4 className="font-medium text-gray-800 mb-1">Contribution:</h4>
                     <p className="text-gray-600 text-sm">{trainer.impact}</p>
                   </div>
                 </div>
@@ -164,22 +165,23 @@ export default function TrainersPage() {
           </div>
         </div>
 
-        {/* Commitment Statement */}
+        {/* Team Commitment Statement */}
         <div className="bg-gradient-to-r from-blue-50 to-gray-50 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Our Commitment to You
+            Our Team Commitment to You
           </h2>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto mb-6">
             Every lesson, every principle, and every tool in this curriculum comes from our 
-            collective decades of real-world business experience and cross-cultural ministry. 
-            We're not teaching theory—we're sharing what actually works.
+            collaborative team's decades of real-world business experience and cross-cultural ministry. 
+            We're not teaching theory—we're sharing what has been collectively tested and proven to work 
+            across diverse cultures and challenging environments.
           </p>
           
           <div className="grid md:grid-cols-2 gap-6 mt-8">
             <div className="bg-white rounded-lg p-6">
-              <h3 className="font-semibold text-gray-800 mb-3">🏢 Business Proven</h3>
+              <h3 className="font-semibold text-gray-800 mb-3">🏢 Collectively Proven</h3>
               <p className="text-gray-600 text-sm">
-                Every principle has been tested in actual businesses across multiple industries and nations.
+                Every principle has been developed and tested by our team across multiple industries and nations.
               </p>
             </div>
             
@@ -191,9 +193,9 @@ export default function TrainersPage() {
             </div>
             
             <div className="bg-white rounded-lg p-6">
-              <h3 className="font-semibold text-gray-800 mb-3">🌍 Globally Tested</h3>
+              <h3 className="font-semibold text-gray-800 mb-3">🌍 Cross-Culturally Tested</h3>
               <p className="text-gray-600 text-sm">
-                Principles that work across cultures, from developed cities to unreached villages.
+                Principles that work across cultures, from developed cities to closed countries and unreached villages.
               </p>
             </div>
             
