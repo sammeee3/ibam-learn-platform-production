@@ -11,12 +11,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const [supabase, setSupabase] = useState<any>(null)
   useEffect(() => {
     setMounted(true)
     // Initialize Supabase client after mount
     if (typeof window !== 'undefined') {
-      const client = supabase
+      // Using imported supabase client directly
       setSupabase(client)
     }
   }, [])
@@ -24,7 +23,6 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     console.log("=== LOGIN HANDLER FIRED ===", { email, password: "hidden" });
     e.preventDefault()
-    if (!supabase) return
 
     setLoading(true)
     setError('')
