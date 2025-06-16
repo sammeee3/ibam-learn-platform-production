@@ -16,7 +16,6 @@ export default function LoginPage() {
     // Initialize Supabase client after mount
     if (typeof window !== 'undefined') {
       // Using imported supabase client directly
-      setSupabase(client)
     }
   }, [])
 
