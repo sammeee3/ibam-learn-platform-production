@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const [supabase, setSupabase] = useState<any>(null)
-
+  console.log("=== SUPABASE CLIENT STATE ===", { hasClient: !!supabase });
   useEffect(() => {
     setMounted(true)
     // Initialize Supabase client after mount

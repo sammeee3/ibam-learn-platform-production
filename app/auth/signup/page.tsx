@@ -13,7 +13,7 @@ export default function SignupPage() {
   const [message, setMessage] = useState('')
   const router = useRouter()
   const [supabase, setSupabase] = useState<any>(null)
-
+  console.log("=== SUPABASE CLIENT STATE ===", { hasClient: !!supabase });
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
