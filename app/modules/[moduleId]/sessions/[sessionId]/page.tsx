@@ -727,7 +727,7 @@ export default function SessionPage() {
                   (Big or small - they all matter!)
                 </p>
                 <textarea
-                  value={userProgress?.winsReflection || ""}
+                  value={(userProgress as any)?.winsReflection || ""}
                   onChange={(e) => updateProgress({winsReflection: e.target.value} as any)}
                   className="w-full h-32 md:h-40 p-4 border-2 border-[#10b981]/20 rounded-xl focus:ring-2 focus:ring-[#10b981] text-lg"
                   placeholder="Celebrate your progress... new customers, breakthrough insights, answered prayers, overcoming fears, positive feedback, etc."
