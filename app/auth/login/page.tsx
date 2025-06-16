@@ -23,7 +23,7 @@ export default function LoginPage() {
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    console.log("=== LOGIN HANDLER FIRED ===", { email, password: "hidden" });    e.preventDefault()
     if (!supabase) return
 
     setLoading(true)
