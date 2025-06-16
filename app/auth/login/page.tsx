@@ -1,8 +1,6 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
@@ -19,6 +17,31 @@ export default function LoginPage() {
     setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
   }
 
+  // Check if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (session) {
+          addLog('✅ Found existing session, redirecting to dashboard')
+          router.push('/dashboard')
+        } else {
+          addLog('ℹ️ No existing session found')
+        }
+      } catch (err) {
+        addLog(`❌ Session check failed: ${err}`)
+      }
+    }
+    
+    checkSession()
+  }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -26,116 +49,115 @@ export default function LoginPage() {
     setDebugLogs([])
 
     try {
-      addLog('=== ENHANCED LOGIN DEBUG START ===')
+      addLog('=== SAFE SUPABASE LOGIN START ===')
       addLog(`Attempting login with email: ${email}`)
 
-      // STEP 1: Test direct Supabase auth first
-      addLog('STEP 1: Testing direct Supabase authentication...')
+      // Test environment variables first
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      addLog(`Environment check - URL: ${supabaseUrl ? '✅ Found' : '❌ Missing'}`)
+      addLog(`Environment check - Key: ${supabaseKey ? '✅ Found' : '❌ Missing'}`)
 
-      const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithPassword({
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Missing Supabase environment variables')
+      }
+
+      // Create Supabase client
+      const supabase = createClient(supabaseUrl, supabaseKey)
+      addLog('✅ Supabase client created successfully')
+
+      // Test database connection first
+      addLog('Testing database connection...')
+      const { data: testData, error: testError } = await supabase
+        .from('profiles')
+        .select('count')
+        .limit(1)
+      
+      if (testError) {
+        addLog(`❌ Database connection failed: ${testError.message}`)
+        setError(`Database connection failed: ${testError.message}`)
+        setLoading(false)
+        return
+      }
+      
+      addLog('✅ Database connection successful')
+
+      // Attempt login
+      addLog('Attempting Supabase authentication...')
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
       })
 
-      addLog(`Supabase direct auth result: ${JSON.stringify({
-        success: !!supabaseData.user,
-        hasUser: !!supabaseData.user,
-        userEmail: supabaseData.user?.email,
-        error: supabaseError?.message
+      addLog(`Auth attempt result: ${JSON.stringify({
+        hasUser: !!authData.user,
+        userEmail: authData.user?.email,
+        hasSession: !!authData.session,
+        errorMessage: authError?.message
       })}`)
 
-      if (supabaseError) {
-        addLog(`❌ Supabase error: ${supabaseError.message}`)
-        setError(`Supabase authentication failed: ${supabaseError.message}`)
+      if (authError) {
+        addLog(`❌ Authentication failed: ${authError.message}`)
+        setError(`Login failed: ${authError.message}`)
         setLoading(false)
         return
       }
 
-      if (!supabaseData.user) {
-        addLog('❌ No user returned from Supabase')
-        setError('No user data returned from authentication')
+      if (!authData.user) {
+        addLog('❌ No user data returned')
+        setError('Login failed: No user data returned')
         setLoading(false)
         return
       }
 
-      addLog('✅ Direct Supabase auth successful!')
+      addLog('✅ Authentication successful!')
 
-      // STEP 2: Test NextAuth integration
-      addLog('STEP 2: Testing NextAuth integration...')
-      
-      const nextAuthResult = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      addLog(`NextAuth result: ${JSON.stringify({
-        ok: nextAuthResult?.ok,
-        error: nextAuthResult?.error,
-        status: nextAuthResult?.status,
-        url: nextAuthResult?.url
-      })}`)
-
-      if (nextAuthResult?.error) {
-        addLog(`❌ NextAuth error: ${nextAuthResult.error}`)
-        setError(`Authentication failed: ${nextAuthResult.error}`)
-        setLoading(false)
-        return
+      // Store user session in localStorage (simple session management)
+      const userSession = {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          created_at: authData.user.created_at
+        },
+        session: {
+          access_token: authData.session?.access_token,
+          refresh_token: authData.session?.refresh_token,
+          expires_at: authData.session?.expires_at
+        },
+        loginTime: new Date().toISOString()
       }
 
-      if (!nextAuthResult?.ok) {
-        addLog('❌ NextAuth returned not ok')
-        setError('Authentication failed - invalid credentials')
-        setLoading(false)
-        return
-      }
+      localStorage.setItem('ibam_session', JSON.stringify(userSession))
+      addLog('✅ Session stored successfully')
 
-      addLog('✅ NextAuth authentication successful!')
+      // Get user profile from database
+      addLog('Fetching user profile...')
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single()
 
-      // STEP 3: Verify session creation
-      addLog('STEP 3: Verifying session creation...')
-      
-      const session = await getSession()
-      addLog(`Session check: ${JSON.stringify({
-        hasSession: !!session,
-        userEmail: session?.user?.email,
-        userId: session?.user?.id,
-        memberType: session?.user?.memberType
-      })}`)
-
-      if (!session) {
-        addLog('❌ No session created after successful auth')
-        setError('Session creation failed')
-        setLoading(false)
-        return
-      }
-
-      addLog('✅ Session created successfully!')
-
-      // STEP 4: Force redirect to dashboard
-      addLog('STEP 4: Redirecting to dashboard...')
-      
-      // Try multiple redirect methods
-      try {
-        router.push('/dashboard')
-        addLog('Router.push attempted')
+      if (profile) {
+        addLog(`✅ Profile found: ${JSON.stringify({
+          email: profile.email,
+          memberType: profile.member_type_key,
+          fullName: profile.full_name
+        })}`)
         
-        // Backup redirect method
-        setTimeout(() => {
-          window.location.href = '/dashboard'
-          addLog('Window.location.href backup executed')
-        }, 1000)
-        
-      } catch (redirectError) {
-        addLog(`❌ Redirect error: ${redirectError}`)
-        // Force redirect as last resort
-        window.location.replace('/dashboard')
+        // Store profile data
+        localStorage.setItem('ibam_profile', JSON.stringify(profile))
+      } else {
+        addLog(`⚠️ No profile found, error: ${profileError?.message}`)
       }
+
+      addLog('🚀 Redirecting to dashboard...')
+      
+      // Force redirect to dashboard
+      setTimeout(() => {
+        window.location.href = '/dashboard'
+      }, 500)
 
     } catch (error: any) {
       addLog(`❌ Unexpected error: ${error.message}`)
@@ -146,19 +168,21 @@ export default function LoginPage() {
     }
   }
 
-  // Test Supabase connection on component load
+  // Test connection on load
   useEffect(() => {
     const testConnection = async () => {
       try {
+        addLog('🔧 Testing initial connection...')
+        
         const supabase = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         )
         
         const { data, error } = await supabase.from('profiles').select('count').limit(1)
-        addLog(`Connection test: ${error ? `❌ ${error.message}` : '✅ Connected'}`)
+        addLog(`Initial connection test: ${error ? `❌ ${error.message}` : '✅ Connected successfully'}`)
       } catch (err) {
-        addLog(`Connection test failed: ${err}`)
+        addLog(`Initial connection failed: ${err}`)
       }
     }
     testConnection()
@@ -171,7 +195,18 @@ export default function LoginPage() {
           
           {/* Login Form */}
           <div>
-            <h1 className="text-2xl font-bold text-center mb-6">Sign in to IBAM</h1>
+            <div className="text-center mb-6">
+              <img 
+                src="/images/branding/ibam-logo-copy.jpg" 
+                alt="IBAM Logo"
+                className="h-16 w-auto mx-auto mb-4"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/branding/mini-logo.png";
+                }}
+              />
+              <h1 className="text-2xl font-bold text-gray-900">Sign in to IBAM</h1>
+              <p className="text-sm text-gray-600">Faith-Driven Business Learning Platform</p>
+            </div>
             
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -211,27 +246,38 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 rounded-lg font-semibold text-lg text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? 'Signing in...' : 'Sign in to Dashboard'}
               </button>
             </form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center">
               <a href="/auth/signup" className="text-blue-600 hover:text-blue-700">
                 Don't have an account? Sign up
               </a>
             </div>
 
+            {/* Environment Status */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium mb-2">🔧 System Status:</h3>
+              <div className="text-xs space-y-1">
+                <p>Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Connected' : '❌ Missing'}</p>
+                <p>Supabase Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Found' : '❌ Missing'}</p>
+                <p>Environment: {process.env.NODE_ENV || 'unknown'}</p>
+              </div>
+            </div>
+
             {/* Quick Test User Button */}
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Quick Test (if you created test@ibam.org):</p>
+            <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+              <p className="text-sm text-yellow-800 mb-2">🧪 Quick Test (if you created test user):</p>
               <button
                 onClick={() => {
                   setEmail('test@ibam.org')
                   setPassword('password123')
                 }}
-                className="text-xs bg-gray-200 px-3 py-1 rounded"
+                className="text-xs bg-yellow-200 px-3 py-1 rounded hover:bg-yellow-300"
               >
                 Fill Test Credentials
               </button>
@@ -240,10 +286,10 @@ export default function LoginPage() {
 
           {/* Debug Panel */}
           <div>
-            <h2 className="text-lg font-semibold mb-4">Debug Logs</h2>
+            <h2 className="text-lg font-semibold mb-4">🔍 Debug Logs</h2>
             <div className="bg-gray-900 text-green-400 p-4 rounded-lg h-96 overflow-y-auto text-xs font-mono">
               {debugLogs.length === 0 ? (
-                <div className="text-gray-500">Debug logs will appear here...</div>
+                <div className="text-gray-500">Debug logs will appear here when you try to log in...</div>
               ) : (
                 debugLogs.map((log, index) => (
                   <div key={index} className="mb-1">
@@ -256,7 +302,7 @@ export default function LoginPage() {
             <div className="mt-4 space-y-2">
               <button
                 onClick={() => setDebugLogs([])}
-                className="w-full text-sm bg-gray-200 py-1 px-3 rounded"
+                className="w-full text-sm bg-gray-200 py-1 px-3 rounded hover:bg-gray-300"
               >
                 Clear Logs
               </button>
@@ -267,7 +313,7 @@ export default function LoginPage() {
                   navigator.clipboard.writeText(logs)
                   alert('Debug logs copied to clipboard!')
                 }}
-                className="w-full text-sm bg-blue-200 py-1 px-3 rounded"
+                className="w-full text-sm bg-blue-200 py-1 px-3 rounded hover:bg-blue-300"
               >
                 Copy Logs
               </button>
