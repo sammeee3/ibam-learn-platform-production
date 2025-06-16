@@ -12,19 +12,16 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const router = useRouter()
-  const [supabase, setSupabase] = useState<any>(null)
   console.log("=== SUPABASE CLIENT STATE ===", { hasClient: !!supabase });
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
-      const client = supabase
-      setSupabase(client)
+      // Using imported supabase client directly
     }
   }, [])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!supabase) return
 
     setLoading(true)
     setError('')
