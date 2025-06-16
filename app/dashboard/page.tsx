@@ -1,106 +1,482 @@
-'use client'
+'use client';
 
-import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function DashboardPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [debugInfo, setDebugInfo] = useState<any>(null)
+// Add authentication interfaces
+interface UserSession {
+  user: {
+    id: string
+    email: string
+    created_at: string
+  }
+  session: {
+    access_token: string
+    refresh_token: string
+    expires_at: number
+  }
+  loginTime: string
+}
 
+interface UserProfile {
+  id: string
+  email: string
+  member_type_key?: string
+  full_name?: string
+  created_at: string
+}
+
+// Sample data - replace with your actual data
+const moduleData = [
+  {
+    id: 1,
+    title: "Foundational Principles",
+    description: "Business as God's gift",
+    sessions: 4,
+    completed: 3,
+    icon: "📖",
+    nextSessionId: 4
+  },
+  {
+    id: 2,
+    title: "Success & Failure Factors", 
+    description: "Keys to thriving",
+    sessions: 4,
+    completed: 1,
+    icon: "🎯",
+    nextSessionId: 2
+  },
+  {
+    id: 3,
+    title: "Marketing Excellence",
+    description: "Reaching your audience",
+    sessions: 5,
+    completed: 0,
+    icon: "📈",
+    nextSessionId: 1
+  },
+  {
+    id: 4,
+    title: "Financial Management",
+    description: "Stewardship & growth",
+    sessions: 4,
+    completed: 0,
+    icon: "💰",
+    nextSessionId: 1
+  },
+  {
+    id: 5,
+    title: "Business Planning",
+    description: "Your roadmap to success",
+    sessions: 3,
+    completed: 0,
+    icon: "🗺️",
+    nextSessionId: 1
+  }
+];
+
+export default function Dashboard() {
+  const router = useRouter();
+  
+  // Authentication state
+  const [userSession, setUserSession] = useState<UserSession | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  
+  // Original dashboard state
+  const [userName, setUserName] = useState("Jeff"); // Will be updated from profile
+
+  // Authentication check - SAFE, no new packages
   useEffect(() => {
-    console.log('Dashboard mounted with session:', session)
-    setDebugInfo({
-      status,
-      hasSession: !!session,
-      userEmail: session?.user?.email,
-      userId: session?.user?.id,
-      memberType: session?.user?.memberType,
-      timestamp: new Date().toISOString()
-    })
+    const checkAuth = () => {
+      try {
+        console.log('🔒 Checking authentication...')
+        
+        // Check for stored session
+        const storedSession = localStorage.getItem('ibam_session')
+        const storedProfile = localStorage.getItem('ibam_profile')
+        
+        if (!storedSession) {
+          console.log('❌ No session found, redirecting to login')
+          router.push('/auth/login')
+          return
+        }
 
-    if (status === 'loading') return
-    
-    if (!session) {
-      console.log('No session, redirecting to login')
-      router.push('/auth/login')
+        const session: UserSession = JSON.parse(storedSession)
+        const profile: UserProfile | null = storedProfile ? JSON.parse(storedProfile) : null
+        
+        // Check if session is expired
+        if (session.session.expires_at && session.session.expires_at < Date.now() / 1000) {
+          console.log('⏰ Session expired, redirecting to login')
+          localStorage.removeItem('ibam_session')
+          localStorage.removeItem('ibam_profile')
+          router.push('/auth/login')
+          return
+        }
+
+        console.log('✅ Authentication successful')
+        setUserSession(session)
+        setUserProfile(profile)
+        
+        // Update userName from profile or email
+        if (profile?.full_name) {
+          setUserName(profile.full_name)
+        } else if (session.user.email) {
+          setUserName(session.user.email.split('@')[0])
+        }
+        
+        setLoading(false)
+        
+      } catch (error) {
+        console.error('❌ Auth check failed:', error)
+        router.push('/auth/login')
+      }
     }
-  }, [session, status, router])
 
-  if (status === 'loading') {
+    checkAuth()
+  }, [router])
+
+  // Sign out function
+  const handleSignOut = () => {
+    console.log('👋 Signing out...')
+    localStorage.removeItem('ibam_session')
+    localStorage.removeItem('ibam_profile')
+    router.push('/auth/login')
+  }
+
+  // Loading screen while checking auth
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Loading session...</p>
+          <p className="text-lg text-gray-600">Loading your IBAM dashboard...</p>
         </div>
       </div>
     )
   }
 
-  if (!session) {
+  // Redirect if no session (shouldn't happen due to useEffect, but just in case)
+  if (!userSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p>No session found. Redirecting to login...</p>
+          <p>Redirecting to login...</p>
         </div>
       </div>
     )
   }
 
+  // YOUR BEAUTIFUL DASHBOARD CODE STARTS HERE - UNCHANGED!
+  const totalSessions = moduleData.reduce((sum, module) => sum + module.sessions, 0);
+  const completedSessions = moduleData.reduce((sum, module) => sum + module.completed, 0);
+  const progressPercentage = Math.round((completedSessions / totalSessions) * 100);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold text-green-600 mb-4">🎉 LOGIN SUCCESS!</h1>
-          <p className="text-lg text-gray-700 mb-6">
-            Welcome to your IBAM Dashboard, {session.user?.email}
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h3 className="font-medium text-green-900">User Email</h3>
-              <p className="text-sm text-green-700">{session.user?.email}</p>
+    <div className="min-h-screen" style={{backgroundColor: '#f8fafc'}}>
+      {/* IBAM Header - EXACT same style as your session template */}
+      <div style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              {/* IBAM Logo - Same as your template */}
+              <img 
+                src="/images/branding/ibam-logo-copy.jpg" 
+                alt="IBAM Logo"
+                className="h-10 w-auto"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/branding/mini-logo.png";
+                }}
+              />
+              <div>
+                <div className="text-white/90 text-sm md:text-base mb-1">
+                  Learning Platform
+                </div>
+                <h1 className="text-white text-xl md:text-3xl font-bold mb-2">
+                  Welcome Back, {userName}!
+                </h1>
+                <div className="flex flex-wrap gap-4 text-sm md:text-base text-white/90">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#10b981'}}></span>
+                    {progressPercentage}% complete
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-green-400"></span>
+                    <span className="hidden sm:inline">
+                      {completedSessions} of {totalSessions} sessions completed
+                    </span>
+                  </div>
+                  {/* NEW: Authentication status indicator */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-blue-400"></span>
+                    <span className="text-xs">✅ Authenticated</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-medium text-blue-900">User ID</h3>
-              <p className="text-sm text-blue-700">{session.user?.id}</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <h3 className="font-medium text-purple-900">Member Type</h3>
-              <p className="text-sm text-purple-700">{session.user?.memberType || 'trial'}</p>
-            </div>
-            <div className="p-4 bg-orange-50 rounded-lg">
-              <h3 className="font-medium text-orange-900">Session Status</h3>
-              <p className="text-sm text-orange-700">{status}</p>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h3 className="font-medium mb-2">Debug Info:</h3>
-            <pre className="text-xs text-gray-600 overflow-auto">
-              {JSON.stringify(debugInfo, null, 2)}
-            </pre>
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              onClick={() => router.push('/sessions')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-            >
-              View Sessions
-            </button>
             
-            <button
-              onClick={() => signOut()}
-              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
-            >
-              Sign Out
-            </button>
+            {/* User Profile - Same style as session template + Sign Out */}
+            <div className="flex items-center gap-4">
+              <div className="hidden md:block text-white/90 text-right">
+                <div className="font-semibold">Learning Dashboard</div>
+                <div className="text-sm">Continue your journey</div>
+                {/* NEW: Sign out button */}
+                <button 
+                  onClick={handleSignOut}
+                  className="text-xs text-white/70 hover:text-white underline mt-1"
+                >
+                  Sign Out
+                </button>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl" style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #10b981 100%)'}}>
+                {userName.charAt(0)}
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress Bar - EXACT same style as your session template */}
+          <div className="mt-6 bg-white/20 rounded-full h-3">
+            <div 
+              className="h-3 rounded-full transition-all duration-500"
+              style={{
+                width: `${progressPercentage}%`,
+                background: 'linear-gradient(90deg, #4ECDC4 0%, #10b981 100%)'
+              }}
+            ></div>
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
+        
+        {/* Welcome Section with IBAM Vision */}
+        <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-2xl border-2 border-[#4ECDC4]/20 p-6 md:p-8 mb-6 md:mb-8">
+          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-4 flex items-center gap-3">
+            <span className="text-4xl md:text-5xl">🎯</span>
+            Your Mission
+          </h2>
+          <div className="bg-white rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
+            <p className="text-[#2C3E50] font-semibold text-lg md:text-xl leading-relaxed mb-4">
+              "Our vision is to love God and serve our community through excellent, biblically-based business, intentionally multiplying disciples who make disciples in our marketplace sphere of influence, following Jesus' model and calling."
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">🚀</div>
+              <div>
+                <div className="font-semibold text-[#2C3E50]">Ready to continue?</div>
+                <div className="text-gray-600">Your next steps are waiting below.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Learning Modules - Using your exact card style */}
+        <div className="mb-8">
+          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
+            <span className="text-4xl md:text-5xl">📚</span>
+            Learning Modules
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {moduleData.map((module) => (
+              <div 
+                key={module.id}
+                className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                onClick={() => router.push(`/modules/${module.id}`)}
+              >
+                {/* Module Icon */}
+                <div className="text-5xl md:text-6xl mb-4 text-center">{module.icon}</div>
+                
+                {/* Module Info */}
+                <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
+                  {module.title}
+                </h3>
+                <p className="text-gray-600 text-lg mb-4 text-center">
+                  {module.description}
+                </p>
+                
+                {/* Progress Section */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[#2C3E50] font-semibold">{module.sessions} sessions</span>
+                    <span className="text-gray-600">
+                      {module.completed}/{module.sessions} complete
+                    </span>
+                  </div>
+                  
+                  {/* Progress Bar - Your exact style */}
+                  <div className="bg-[#e2e8f0] rounded-full h-3 mb-3">
+                    <div 
+                      className="h-3 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(module.completed / module.sessions) * 100}%`,
+                        background: 'linear-gradient(90deg, #4ECDC4 0%, #10b981 100%)'
+                      }}
+                    ></div>
+                  </div>
+                  
+                  {/* Status */}
+                  <div className="flex items-center gap-2">
+                    {module.completed > 0 ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-[#10b981]"></span>
+                        <span className="text-[#10b981] font-semibold">In Progress</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+                        <span className="text-gray-500">Not Started</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Action Button - Your exact button style */}
+                <button 
+                  className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300 hover:-translate-y-1"
+                  style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/modules/${module.id}/sessions/${module.nextSessionId}`);
+                  }}
+                >
+                  {module.completed > 0 ? 'Continue Learning' : 'Start Module'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Access Tools - Same card style as modules */}
+        <div className="mb-8">
+          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
+            <span className="text-4xl md:text-5xl">🛠️</span>
+            Quick Access Tools
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Business Planner */}
+            <div 
+              className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+              onClick={() => router.push('/business-planner')}
+            >
+              <div className="text-5xl md:text-6xl mb-4 text-center">📊</div>
+              <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
+                Business Planner
+              </h3>
+              <p className="text-gray-600 text-lg mb-6 text-center">
+                Build your God-honoring business plan step by step
+              </p>
+              <button 
+                className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300"
+                style={{background: 'linear-gradient(135deg, #f59e0b 0%, #dc2626 100%)'}}
+              >
+                Open Planner
+              </button>
+            </div>
+
+            {/* Assessment */}
+            <div 
+              className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+              onClick={() => router.push('/assessment/post')}
+            >
+              <div className="text-5xl md:text-6xl mb-4 text-center">📋</div>
+              <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
+                Assessment
+              </h3>
+              <p className="text-gray-600 text-lg mb-6 text-center">
+                Evaluate your entrepreneurial readiness and growth areas
+              </p>
+              <button 
+                className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300"
+                style={{background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'}}
+              >
+                Take Assessment
+              </button>
+            </div>
+
+            {/* Community */}
+            <div 
+              className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+              onClick={() => router.push('/community')}
+            >
+              <div className="text-5xl md:text-6xl mb-4 text-center">🤝</div>
+              <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
+                Community
+              </h3>
+              <p className="text-gray-600 text-lg mb-6 text-center">
+                Connect with fellow entrepreneurs on the same journey
+              </p>
+              <button 
+                className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300"
+                style={{background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'}}
+              >
+                Join Discussion
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Weekly Encouragement - Using your exact styling */}
+        <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8">
+          <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
+            <span className="text-4xl md:text-5xl">💝</span>
+            Weekly Encouragement
+          </h3>
+          
+          <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
+            <p className="text-[#2C3E50] font-semibold text-lg md:text-xl leading-relaxed mb-4">
+              "Therefore go and make disciples of all nations, baptizing them in the name of the Father 
+              and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you. 
+              And surely I am with you always, to the very end of the age."
+            </p>
+            <p className="text-gray-600 text-lg">
+              <strong>Matthew 28:19-20</strong> - Remember: You're not just building a business, 
+              you're building God's kingdom through your marketplace calling.
+            </p>
+          </div>
+        </div>
+
+        {/* NEW: Debug info for testing (can be removed later) */}
+        {userProfile && (
+          <details className="mt-6">
+            <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-900">
+              🔒 Authentication Details (for testing)
+            </summary>
+            <div className="mt-4 bg-gray-100 p-4 rounded-lg text-xs">
+              <p><strong>User:</strong> {userSession.user.email}</p>
+              <p><strong>Member Type:</strong> {userProfile.member_type_key || 'trial'}</p>
+              <p><strong>Login Time:</strong> {new Date(userSession.loginTime).toLocaleString()}</p>
+              <p><strong>Session Valid:</strong> ✅ Active</p>
+            </div>
+          </details>
+        )}
+      </div>
+
+      {/* IBAM Footer - EXACT same style as your session template */}
+      <footer style={{background: '#2C3E50'}} className="text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="flex justify-center items-center gap-3 mb-4">
+              <img 
+                src="/images/branding/mini-logo.png" 
+                alt="IBAM Mini Logo"
+                className="h-8 w-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span className="text-xl md:text-2xl font-bold">International Business as Mission</span>
+            </div>
+            <p className="text-gray-400 text-lg md:text-xl">
+              © 2025 IBAM International Business as Mission. Equipping entrepreneurs to transform communities through faith-driven business.
+            </p>
+            <p style={{color: '#4ECDC4'}} className="text-base md:text-lg mt-2 font-semibold">
+              DESIGNED TO THRIVE
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
-  )
+  );
 }

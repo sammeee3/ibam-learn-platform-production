@@ -35,7 +35,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "app/auth/login/page.tsx.backup2", "app/dashboard/page.tsx.backup1"  ],
+, "app/auth/login/page.tsx.backup2", "app/dashboard/page.tsx.backup"  ],
   "exclude": [
     "node_modules"
   ]
