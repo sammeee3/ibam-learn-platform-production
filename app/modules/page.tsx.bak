@@ -80,7 +80,7 @@ export default function ModuleOverview() {
   const router = useRouter();
   const moduleId = params?.moduleId as string;
   
-  const module = (moduleData as any)[moduleId] || {
+  const module = moduleData[moduleId] || {
     title: "Module Not Found",
     description: "This module is not available",
     sessions: []
