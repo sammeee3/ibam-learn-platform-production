@@ -17,10 +17,38 @@ export default function LoginPage() {
     setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
   }
 
-  // Check if already logged in
+  // Check if already logged in - MATCH the dashboard logic
   useEffect(() => {
     const checkSession = async () => {
       try {
+        addLog('🔍 Checking for existing session...')
+        
+        // First check localStorage (same as dashboard)
+        const storedSession = localStorage.getItem('ibam_session')
+        
+        if (storedSession) {
+          try {
+            const session = JSON.parse(storedSession)
+            
+            // Check if session is not expired
+            if (session.session.expires_at && session.session.expires_at > Date.now() / 1000) {
+              addLog('✅ Found valid localStorage session, redirecting to dashboard')
+              // Force redirect with window.location
+              window.location.href = '/dashboard'
+              return
+            } else {
+              addLog('⏰ localStorage session expired, clearing it')
+              localStorage.removeItem('ibam_session')
+              localStorage.removeItem('ibam_profile')
+            }
+          } catch (err) {
+            addLog('❌ Invalid localStorage session, clearing it')
+            localStorage.removeItem('ibam_session')
+            localStorage.removeItem('ibam_profile')
+          }
+        }
+        
+        // Fallback: check Supabase session
         const supabase = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -29,10 +57,10 @@ export default function LoginPage() {
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (session) {
-          addLog('✅ Found existing session, redirecting to dashboard')
-          router.push('/dashboard')
+          addLog('✅ Found Supabase session, will redirect after storing in localStorage')
+          // Don't redirect here - let them log in to properly store the session
         } else {
-          addLog('ℹ️ No existing session found')
+          addLog('ℹ️ No existing session found anywhere')
         }
       } catch (err) {
         addLog(`❌ Session check failed: ${err}`)
@@ -40,7 +68,7 @@ export default function LoginPage() {
     }
     
     checkSession()
-  }, [router])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
