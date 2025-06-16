@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-      console.log("=== AUTH RESPONSE ===", { data, error });        email,
+        email,
         password,
       })
 
