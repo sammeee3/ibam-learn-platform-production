@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only include valid Next.js 15.3.3 options
-  serverExternalPackages: ['@supabase/supabase-js']
+  // Removed serverExternalPackages to allow client-side Supabase
 }
-
 module.exports = nextConfig
