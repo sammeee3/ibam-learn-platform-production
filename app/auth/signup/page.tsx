@@ -119,4 +119,3 @@ export default function SignupPage() {
 }
 
 export const dynamic = 'force-dynamic'
-console.log("Signup attempt:", { email, password: "***" }, "Error:", error);
