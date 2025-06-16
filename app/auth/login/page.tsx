@@ -35,6 +35,7 @@ export default function LoginPage() {
         email,
         password,
       })
+      console.log("=== AUTH RESPONSE ===", { data, error });
 
       if (error) {
         setError(error.message)
