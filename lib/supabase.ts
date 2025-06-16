@@ -20,5 +20,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Key undefined:', !supabaseAnonKey);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-export default supabase
+// Debug client creation
+console.log('🔧 Creating Supabase client...');
+let supabase;
+try {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log('✅ Supabase client created:', !!supabase);
+  console.log('Client type:', typeof supabase);
+  console.log('Client methods:', Object.keys(supabase));
+} catch (error) {
+  console.error('❌ Client creation failed:', error);
+}
+
+export { supabase };
+export default supabase;
