@@ -1,0 +1,568 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Save, 
+  Download, 
+  Calculator, 
+  DollarSign, 
+  Package, 
+  Users, 
+  FileText, 
+  Heart, 
+  Target, 
+  BarChart3, 
+  PieChart, 
+  Calendar,
+  Home,
+  Loader2,
+  Plus,
+  Minus
+} from 'lucide-react';
+
+const BusinessPlannerPlatform = () => {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+  
+  const colors = {
+    primary: '#4ECDC4',
+    secondary: '#2C3E50',
+    success: '#10b981',
+    background: '#f8fafc',
+    border: '#e2e8f0',
+    text: '#2C3E50'
+  };
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
+  const [businessPlanId, setBusinessPlanId] = useState(null);
+  const [currentSection, setCurrentSection] = useState(0);
+  
+  const [formData, setFormData] = useState({
+    businessBasics: {
+      businessName: '',
+      industry: '',
+      legalStructure: '',
+      businessAddress: ''
+    },
+    financial: {
+      planningPeriod: 30,
+      startupCosts: {
+        equipment: 0,
+        inventory: 0,
+        licenses: 0,
+        marketing: 0,
+        workingCapital: 0
+      }
+    },
+    faithIntegration: {
+      kingdomPurpose: '',
+      loveGodMetrics: {
+        dailyPrayer: { target: 0, actual: 0 },
+        scriptureStudy: { target: 0, actual: 0 }
+      }
+    }
+  });
+
+  const sections = [
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      icon: <BarChart3 className="w-6 h-6" />
+    },
+    {
+      id: 'businessBasics', 
+      title: 'Business Foundation',
+      icon: <FileText className="w-6 h-6" />
+    },
+    {
+      id: 'financial',
+      title: 'Financial Planning', 
+      icon: <DollarSign className="w-6 h-6" />
+    },
+    {
+      id: 'faithIntegration',
+      title: 'Faith Integration',
+      icon: <Heart className="w-6 h-6" />
+    }
+  ];
+
+  useEffect(() => {
+    initializeUser();
+  }, []);
+
+  const initializeUser = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+      setUser(session.user);
+      await loadBusinessPlan(session.user.id);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadBusinessPlan = async (userId) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (profile) {
+        const { data: existingPlan } = await supabase
+          .from('business_plans')
+          .select('*')
+          .eq('profile_id', profile.id)
+          .single();
+
+        if (existingPlan) {
+          setBusinessPlanId(existingPlan.id);
+          if (existingPlan.business_data) {
+            setFormData(prev => ({ ...prev, ...existingPlan.business_data }));
+          }
+        } else {
+          const { data: newPlan } = await supabase
+            .from('business_plans')
+            .insert([{
+              profile_id: profile.id,
+              business_data: formData,
+              status: 'draft'
+            }])
+            .select()
+            .single();
+
+          if (newPlan) setBusinessPlanId(newPlan.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading business plan:', error);
+    }
+  };
+
+  const handleInputChange = (section, field, value, subfield = null) => {
+    setFormData(prev => {
+      const newData = { ...prev };
+      if (subfield) {
+        newData[section][field][subfield] = value;
+      } else {
+        newData[section][field] = value;
+      }
+      return newData;
+    });
+  };
+
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="p-6 rounded-lg border-l-4" style={{ backgroundColor: `${colors.primary}15`, borderColor: colors.primary }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: colors.primary }}>Business Name</p>
+              <p className="text-xl font-bold" style={{ color: colors.text }}>
+                {formData.businessBasics.businessName || 'Not Set'}
+              </p>
+            </div>
+            <FileText className="w-8 h-8" style={{ color: colors.primary }} />
+          </div>
+        </div>
+        <div className="p-6 rounded-lg border-l-4" style={{ backgroundColor: `${colors.success}15`, borderColor: colors.success }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: colors.success }}>Industry</p>
+              <p className="text-xl font-bold" style={{ color: colors.text }}>
+                {formData.businessBasics.industry || 'Not Selected'}
+              </p>
+            </div>
+            <Target className="w-8 h-8" style={{ color: colors.success }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderBusinessBasics = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
+            Business Name *
+          </label>
+          <input
+            type="text"
+            value={formData.businessBasics.businessName}
+            onChange={(e) => handleInputChange('businessBasics', 'businessName', e.target.value)}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:outline-none"
+            style={{ borderColor: colors.border }}
+            placeholder="Your Business Name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
+            Industry *
+          </label>
+          <select
+            value={formData.businessBasics.industry}
+            onChange={(e) => handleInputChange('businessBasics', 'industry', e.target.value)}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:outline-none"
+            style={{ borderColor: colors.border }}
+          >
+            <option value="">Select Industry</option>
+            <option value="restaurant">��️ Restaurant/Food Service</option>
+            <option value="retail">🏪 Retail Store</option>
+            <option value="consulting">💼 Consulting</option>
+            <option value="ecommerce">💻 E-commerce</option>
+            <option value="manufacturing">🏭 Manufacturing</option>
+            <option value="services">✂️ Personal Services</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
+            Legal Structure
+          </label>
+          <select
+            value={formData.businessBasics.legalStructure}
+            onChange={(e) => handleInputChange('businessBasics', 'legalStructure', e.target.value)}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:outline-none"
+            style={{ borderColor: colors.border }}
+          >
+            <option value="">Select Structure</option>
+            <option value="sole_proprietorship">Sole Proprietorship</option>
+            <option value="partnership">Partnership</option>
+            <option value="llc">LLC</option>
+            <option value="corporation">Corporation</option>
+            <option value="s_corp">S Corporation</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
+            Business Address
+          </label>
+          <input
+            type="text"
+            value={formData.businessBasics.businessAddress}
+            onChange={(e) => handleInputChange('businessBasics', 'businessAddress', e.target.value)}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:outline-none"
+            style={{ borderColor: colors.border }}
+            placeholder="123 Main St, City, State ZIP"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFinancial = () => (
+    <div className="space-y-6">
+      <div className="bg-white border rounded-lg p-6" style={{ borderColor: colors.border }}>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: colors.primary }}>
+          💰 Startup Costs
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
+              Equipment & Tools 🔧
+            </label>
+            <input
+              type="number"
+              value={formData.financial.startupCosts.equipment}
+              onChange={(e) => handleInputChange('financial', 'startupCosts', parseFloat(e.target.value) || 0, 'equipment')}
+              className="w-full p-2 border rounded focus:outline-none"
+              style={{ borderColor: colors.border }}
+              placeholder="$0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
+              Starting Inventory 📦
+            </label>
+            <input
+              type="number"
+              value={formData.financial.startupCosts.inventory}
+              onChange={(e) => handleInputChange('financial', 'startupCosts', parseFloat(e.target.value) || 0, 'inventory')}
+              className="w-full p-2 border rounded focus:outline-none"
+              style={{ borderColor: colors.border }}
+              placeholder="$0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
+              Licenses & Permits 📄
+            </label>
+            <input
+              type="number"
+              value={formData.financial.startupCosts.licenses}
+              onChange={(e) => handleInputChange('financial', 'startupCosts', parseFloat(e.target.value) || 0, 'licenses')}
+              className="w-full p-2 border rounded focus:outline-none"
+              style={{ borderColor: colors.border }}
+              placeholder="$0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
+              Marketing & Advertising ��
+            </label>
+            <input
+              type="number"
+              value={formData.financial.startupCosts.marketing}
+              onChange={(e) => handleInputChange('financial', 'startupCosts', parseFloat(e.target.value) || 0, 'marketing')}
+              className="w-full p-2 border rounded focus:outline-none"
+              style={{ borderColor: colors.border }}
+              placeholder="$0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
+              Working Capital 💵
+            </label>
+            <input
+              type="number"
+              value={formData.financial.startupCosts.workingCapital}
+              onChange={(e) => handleInputChange('financial', 'startupCosts', parseFloat(e.target.value) || 0, 'workingCapital')}
+              className="w-full p-2 border rounded focus:outline-none"
+              style={{ borderColor: colors.border }}
+              placeholder="$0"
+            />
+          </div>
+        </div>
+        <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: `${colors.primary}15` }}>
+          <div className="text-lg font-semibold" style={{ color: colors.primary }}>
+            Total Startup Investment: ${Object.values(formData.financial.startupCosts).reduce((sum, val) => sum + (val || 0), 0).toLocaleString()}
+          </div>
+          <p className="text-sm text-gray-600 mt-1">This is how much money you need before you can open your business.</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFaithIntegration = () => (
+    <div className="space-y-6">
+      <div className="p-6 rounded-lg border-l-4" style={{ 
+        background: `linear-gradient(135deg, ${colors.primary}15, ${colors.secondary}15)`,
+        borderColor: colors.secondary
+      }}>
+        <h3 className="text-lg font-semibold mb-3 flex items-center" style={{ color: colors.secondary }}>
+          <Heart className="w-5 h-5 mr-2" />
+          Your Faith-Driven Business Purpose
+        </h3>
+        <div className="text-sm space-y-2" style={{ color: colors.text }}>
+          <p><strong>Love God:</strong> "Love the Lord your God with all your heart, soul, mind and strength..." - Mark 12:30</p>
+          <p><strong>Love Others:</strong> "...and love your neighbor as yourself." - Mark 12:31</p>
+          <p><strong>Help Others Grow:</strong> "Go and make disciples of all nations..." - Matthew 28:19</p>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
+          Kingdom Purpose
+        </label>
+        <textarea
+          value={formData.faithIntegration.kingdomPurpose}
+          onChange={(e) => handleInputChange('faithIntegration', 'kingdomPurpose', e.target.value)}
+          className="w-full p-3 border rounded-lg focus:outline-none"
+          style={{ borderColor: colors.border }}
+          placeholder="How will your business serve God's kingdom?"
+          rows={4}
+        />
+      </div>
+
+      <div className="bg-white border rounded-lg p-6" style={{ borderColor: colors.border }}>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: colors.primary }}>💙 Growing Your Relationship with God</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded border" style={{ backgroundColor: `${colors.primary}15` }}>
+            <label className="block text-sm font-medium mb-2" style={{ color: colors.text }}>
+              Daily Prayer (minutes)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-gray-600">Goal</label>
+                <input
+                  type="number"
+                  value={formData.faithIntegration.loveGodMetrics.dailyPrayer.target}
+                  onChange={(e) => {
+                    const newData = { ...formData };
+                    newData.faithIntegration.loveGodMetrics.dailyPrayer.target = parseInt(e.target.value) || 0;
+                    setFormData(newData);
+                  }}
+                  className="w-full p-2 text-sm border rounded focus:outline-none"
+                  style={{ borderColor: colors.border }}
+                  placeholder="Goal"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Actual</label>
+                <input
+                  type="number"
+                  value={formData.faithIntegration.loveGodMetrics.dailyPrayer.actual}
+                  onChange={(e) => {
+                    const newData = { ...formData };
+                    newData.faithIntegration.loveGodMetrics.dailyPrayer.actual = parseInt(e.target.value) || 0;
+                    setFormData(newData);
+                  }}
+                  className="w-full p-2 text-sm border rounded focus:outline-none"
+                  style={{ borderColor: colors.border }}
+                  placeholder="Actual"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded border" style={{ backgroundColor: `${colors.primary}15` }}>
+            <label className="block text-sm font-medium mb-2" style={{ color: colors.text }}>
+              Scripture Study (days per week)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-gray-600">Goal</label>
+                <input
+                  type="number"
+                  value={formData.faithIntegration.loveGodMetrics.scriptureStudy.target}
+                  onChange={(e) => {
+                    const newData = { ...formData };
+                    newData.faithIntegration.loveGodMetrics.scriptureStudy.target = parseInt(e.target.value) || 0;
+                    setFormData(newData);
+                  }}
+                  className="w-full p-2 text-sm border rounded focus:outline-none"
+                  style={{ borderColor: colors.border }}
+                  placeholder="Goal"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Actual</label>
+                <input
+                  type="number"
+                  value={formData.faithIntegration.loveGodMetrics.scriptureStudy.actual}
+                  onChange={(e) => {
+                    const newData = { ...formData };
+                    newData.faithIntegration.loveGodMetrics.scriptureStudy.actual = parseInt(e.target.value) || 0;
+                    setFormData(newData);
+                  }}
+                  className="w-full p-2 text-sm border rounded focus:outline-none"
+                  style={{ borderColor: colors.border }}
+                  placeholder="Actual"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: colors.primary }} />
+          <p style={{ color: colors.text }}>Loading your business planner...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentSectionData = sections[currentSection];
+
+  const renderCurrentSection = () => {
+    switch (currentSectionData.id) {
+      case 'dashboard': return renderDashboard();
+      case 'businessBasics': return renderBusinessBasics();
+      case 'financial': return renderFinancial();
+      case 'faithIntegration': return renderFaithIntegration();
+      default: return <div>Section coming soon...</div>;
+    }
+  };
+
+  return (
+    <div className="min-h-screen p-4" style={{ backgroundColor: colors.background }}>
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold" style={{ color: colors.text }}>
+                IBAM Business Planner
+              </h1>
+              <p className="text-gray-600">Faith-driven business planning designed to thrive</p>
+            </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+            >
+              <Home className="w-4 h-4" />
+              <span>Dashboard</span>
+            </button>
+          </div>
+
+          <div className="flex space-x-2 overflow-x-auto pb-2">
+            {sections.map((section, index) => (
+              <button
+                key={section.id}
+                onClick={() => setCurrentSection(index)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
+                  currentSection === index ? 'text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                style={currentSection === index ? { backgroundColor: colors.primary } : {}}
+              >
+                {section.icon}
+                <span className="font-medium">{section.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            {currentSectionData.icon}
+            <h2 className="text-2xl font-bold" style={{ color: colors.text }}>
+              {currentSectionData.title}
+            </h2>
+          </div>
+
+          {renderCurrentSection()}
+
+          <div className="flex justify-between items-center mt-8 pt-6" style={{ borderTop: `1px solid ${colors.border}` }}>
+            <button
+              onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
+              disabled={currentSection === 0}
+              className="flex items-center space-x-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>Previous</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
+              disabled={currentSection === sections.length - 1}
+              className="flex items-center space-x-2 px-6 py-3 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <span>Next</span>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl shadow-lg p-6 mt-6 text-white text-center"
+             style={{ background: `linear-gradient(135deg, ${colors.secondary}, ${colors.primary})` }}>
+          <p className="text-lg font-medium italic">
+            "Commit to the LORD whatever you do, and he will establish your plans."
+          </p>
+          <p className="text-sm mt-2 opacity-90">- Proverbs 16:3</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BusinessPlannerPlatform;
