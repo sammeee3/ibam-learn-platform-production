@@ -1,4 +1,3 @@
-cat > ./app/auth/login/page.tsx << 'EOF'
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -186,7 +185,7 @@ export default function LoginPage() {
       }
     }
     testConnection()
-  }, []) // FIXED: Empty dependency array prevents infinite loop
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -315,4 +314,3 @@ export default function LoginPage() {
     </div>
   )
 }
-EOF
