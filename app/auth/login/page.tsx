@@ -1,8 +1,15 @@
+cat > ./app/auth/login/page.tsx << 'EOF'
 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+
+// Create Supabase client OUTSIDE component to prevent multiple instances
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,30 +24,31 @@ export default function LoginPage() {
     setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
   }
 
-  // Check if already logged in
+  // Check if already logged in - FIXED: runs only once, no loop
   useEffect(() => {
+    let mounted = true
+
     const checkSession = async () => {
       try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        
         const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (!mounted) return
         
         if (session) {
           addLog('✅ Found existing session, redirecting to dashboard')
-          router.push('/dashboard')
+          window.location.href = '/dashboard'
         } else {
           addLog('ℹ️ No existing session found')
         }
       } catch (err) {
-        addLog(`❌ Session check failed: ${err}`)
+        if (mounted) addLog(`❌ Session check failed: ${err}`)
       }
     }
     
     checkSession()
-  }, [router])
+    
+    return () => { mounted = false }
+  }, []) // FIXED: Empty dependency array prevents infinite loop
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,9 +71,7 @@ export default function LoginPage() {
         throw new Error('Missing Supabase environment variables')
       }
 
-      // Create Supabase client
-      const supabase = createClient(supabaseUrl, supabaseKey)
-      addLog('✅ Supabase client created successfully')
+      addLog('✅ Supabase client ready (reusing existing)')
 
       // Test database connection first
       addLog('Testing database connection...')
@@ -168,17 +174,11 @@ export default function LoginPage() {
     }
   }
 
-  // Test connection on load
+  // Test connection on load - FIXED: runs only once, no loop
   useEffect(() => {
     const testConnection = async () => {
       try {
         addLog('🔧 Testing initial connection...')
-        
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        
         const { data, error } = await supabase.from('profiles').select('count').limit(1)
         addLog(`Initial connection test: ${error ? `❌ ${error.message}` : '✅ Connected successfully'}`)
       } catch (err) {
@@ -186,7 +186,7 @@ export default function LoginPage() {
       }
     }
     testConnection()
-  }, [])
+  }, []) // FIXED: Empty dependency array prevents infinite loop
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -197,7 +197,7 @@ export default function LoginPage() {
           <div>
             <h1 className="text-2xl font-bold text-center mb-6">Sign in to IBAM</h1>
             <p className="text-sm text-gray-600 text-center mb-4">
-              Safe Supabase-Only Login (No new packages)
+              Safe Supabase-Only Login (Loop Fixed!)
             </p>
             
             {error && (
@@ -265,7 +265,7 @@ export default function LoginPage() {
               <p className="text-sm text-yellow-800 mb-2">Quick Test:</p>
               <button
                 onClick={() => {
-                  setEmail('test@ibam.org')
+                  setEmail('test1@test.com')
                   setPassword('password123')
                 }}
                 className="text-xs bg-yellow-200 px-3 py-1 rounded hover:bg-yellow-300"
@@ -315,3 +315,4 @@ export default function LoginPage() {
     </div>
   )
 }
+EOF
