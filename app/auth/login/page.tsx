@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [debugLogs, setDebugLogs] = useState<string[]>([])
-  const [sessionChecked, setSessionChecked] = useState(false)
   const router = useRouter()
 
   const addLog = (message: string) => {
@@ -25,56 +23,8 @@ export default function LoginPage() {
     setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
   }
 
-  // Check if already logged in - ONLY ONCE
-  useEffect(() => {
-    if (sessionChecked) return // Prevent multiple runs
-
-    const checkSession = async () => {
-      try {
-        addLog('🔧 Checking for existing session...')
-        
-        // First check localStorage
-        const localSession = localStorage.getItem('ibam_session')
-        if (!localSession) {
-          addLog('ℹ️ No local session found')
-          setSessionChecked(true)
-          return
-        }
-
-        // Check Supabase session
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          addLog(`❌ Session check error: ${error.message}`)
-          localStorage.removeItem('ibam_session')
-          localStorage.removeItem('ibam_profile')
-          setSessionChecked(true)
-          return
-        }
-
-        if (session && session.user) {
-          addLog('✅ Valid session found, redirecting to dashboard')
-          // Use a slight delay to ensure logs are visible
-          setTimeout(() => {
-            window.location.href = '/dashboard'
-          }, 1000)
-        } else {
-          addLog('ℹ️ No valid session found, please log in')
-          localStorage.removeItem('ibam_session')
-          localStorage.removeItem('ibam_profile')
-        }
-        
-        setSessionChecked(true)
-      } catch (err) {
-        addLog(`❌ Session check failed: ${err}`)
-        localStorage.removeItem('ibam_session')
-        localStorage.removeItem('ibam_profile')
-        setSessionChecked(true)
-      }
-    }
-    
-    checkSession()
-  }, [sessionChecked])
+  // DISABLED automatic session check to prevent infinite loop
+  // useEffect removed - no more automatic redirects!
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,6 +34,11 @@ export default function LoginPage() {
     try {
       addLog('=== LOGIN ATTEMPT START ===')
       addLog(`Attempting login with: ${email}`)
+
+      // Clear any existing sessions first
+      localStorage.removeItem('ibam_session')
+      localStorage.removeItem('ibam_profile')
+      addLog('🧹 Cleared existing sessions')
 
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -106,7 +61,7 @@ export default function LoginPage() {
 
       addLog('✅ Authentication successful!')
 
-      // Store session
+      // Store NEW session
       const userSession = {
         user: {
           id: authData.user.id,
@@ -122,12 +77,12 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('ibam_session', JSON.stringify(userSession))
-      addLog('✅ Session stored, redirecting...')
+      addLog('✅ NEW session stored successfully')
       
-      // Redirect to dashboard
-      setTimeout(() => {
-        window.location.href = '/dashboard'
-      }, 500)
+      addLog('🚀 Manual redirect to dashboard...')
+      
+      // Manual redirect with fresh session
+      window.location.href = '/dashboard'
 
     } catch (error: any) {
       addLog(`❌ Unexpected error: ${error.message}`)
@@ -136,6 +91,20 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
+  // Test connection on page load - NO SESSION CHECK
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        addLog('🔧 Testing database connection...')
+        const { data, error } = await supabase.from('profiles').select('count').limit(1)
+        addLog(`Database test: ${error ? `❌ ${error.message}` : '✅ Connected successfully'}`)
+      } catch (err) {
+        addLog(`Database connection failed: ${err}`)
+      }
+    }
+    testConnection()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -146,7 +115,7 @@ export default function LoginPage() {
           <div>
             <h1 className="text-2xl font-bold text-center mb-6">Sign in to IBAM</h1>
             <p className="text-sm text-gray-600 text-center mb-4">
-              Safe Supabase-Only Login (Fixed Infinite Loop!)
+              No Auto-Redirect (Manual Login Only)
             </p>
             
             {error && (
@@ -193,12 +162,6 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-4 text-center">
-              <a href="/auth/signup" className="text-blue-600 hover:text-blue-700">
-                Don't have an account? Sign up
-              </a>
-            </div>
-
             {/* Quick Test */}
             <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-800 mb-2">Quick Test:</p>
@@ -213,19 +176,20 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Clear Session Button */}
+            {/* Emergency Reset */}
             <div className="mt-4 p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-red-800 mb-2">Having issues?</p>
+              <p className="text-sm text-red-800 mb-2">Emergency Reset:</p>
               <button
                 onClick={() => {
                   localStorage.clear()
+                  sessionStorage.clear()
                   setDebugLogs([])
-                  addLog('🧹 Cleared all sessions and cache')
-                  setTimeout(() => location.reload(), 500)
+                  addLog('🚨 EMERGENCY RESET - All data cleared')
+                  setTimeout(() => location.reload(), 1000)
                 }}
                 className="text-xs bg-red-200 px-3 py-1 rounded hover:bg-red-300"
               >
-                Clear Session & Reload
+                CLEAR ALL & RELOAD
               </button>
             </div>
           </div>
