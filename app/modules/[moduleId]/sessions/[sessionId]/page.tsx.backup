@@ -100,8 +100,8 @@ const sessionData: Record<string, Record<string, any>> = {
 
 export default function SessionPage() {
   const params = useParams();
-  const moduleId = params?.moduleId as string;
-  const sessionId = params?.sessionId as string;
+  const moduleId = params.moduleId as string;
+  const sessionId = params.sessionId as string;
   
   // Get session data or fallback
   const session = sessionData[moduleId]?.[sessionId] || {
