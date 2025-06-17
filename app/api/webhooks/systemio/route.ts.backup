@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`🎯 Processing ${eventType} for ${contact?.email}`)
     
-    let courseAssignment: any = null
+    let courseAssignment = null
     
     // Handle tag added events
     if (eventType === 'CONTACT_TAG_ADDED' && tag?.name) {
