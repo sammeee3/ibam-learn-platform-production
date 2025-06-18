@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -27,8 +26,8 @@ export default function SessionPage() {
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
   
-  const moduleId = params.moduleId as string;
-  const sessionId = params.sessionId as string;
+  const moduleId = params?.moduleId as string || '';
+  const sessionId = params?.sessionId as string || '';
 
   useEffect(() => {
     if (sessionId) {
