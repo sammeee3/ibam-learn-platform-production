@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 interface SessionData {
@@ -11,33 +11,52 @@ interface SessionData {
   session_number: number;
   estimated_time?: string;
   transformation_promise?: string;
-  scripture?: {
-    reference?: string;
-    text?: string;
-  };
+  scripture?: any;
   hook?: string;
   video_url?: string;
-  content?: {
-    text?: string;
-  };
+  content?: any;
   fast_track_summary?: string;
-  mobile_transformation?: {
-    powerInsight?: string;
-    identityShift?: string;
-  };
+  mobile_transformation?: any;
   reflection?: string;
-  becoming_gods_entrepreneur?: {
-    content?: string;
-    questions?: string[];
-  };
+  becoming_gods_entrepreneur?: any;
   case_study?: string;
   faq_questions?: string[];
   business_plan_questions?: string[];
   extra_materials?: string;
-  engagement_mechanics?: {
-    challenge?: string;
-    community?: string;
-  };
+  engagement_mechanics?: any;
+}
+
+interface UserProgress {
+  lookBackComplete: boolean;
+  lookUpComplete: boolean;
+  lookForwardComplete: boolean;
+  completionPercentage: number;
+  
+  // Look Back Data
+  lookBackPrayer: string;
+  previousActionReview: string;
+  winsAndChallenges: string;
+  visionReflection: string;
+  
+  // Look Up Data  
+  lookUpPrayer: string;
+  writtenMaterialRead: boolean;
+  videoWatched: boolean;
+  knowledgeCheckAnswer: number | null;
+  personalReflection: string;
+  faqReviewed: boolean;
+  
+  // Look Forward Data
+  lookForwardPrayer: string;
+  keyTruthReflection: string;
+  actionStatement1: string;
+  actionStatement2: string;
+  actionStatement3: string;
+  businessPlanAnswer1: string;
+  businessPlanAnswer2: string;
+  businessPlanAnswer3: string;
+  accountabilityPartner: string;
+  communityCommitment: string;
 }
 
 export default function SessionPage() {
@@ -49,7 +68,33 @@ export default function SessionPage() {
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'content' | 'reflection' | 'action'>('content');
+  const [currentSection, setCurrentSection] = useState<'lookback' | 'lookup' | 'lookforward'>('lookback');
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    lookBackComplete: false,
+    lookUpComplete: false,
+    lookForwardComplete: false,
+    completionPercentage: 0,
+    lookBackPrayer: '',
+    previousActionReview: '',
+    winsAndChallenges: '',
+    visionReflection: '',
+    lookUpPrayer: '',
+    writtenMaterialRead: false,
+    videoWatched: false,
+    knowledgeCheckAnswer: null,
+    personalReflection: '',
+    faqReviewed: false,
+    lookForwardPrayer: '',
+    keyTruthReflection: '',
+    actionStatement1: '',
+    actionStatement2: '',
+    actionStatement3: '',
+    businessPlanAnswer1: '',
+    businessPlanAnswer2: '',
+    businessPlanAnswer3: '',
+    accountabilityPartner: '',
+    communityCommitment: ''
+  });
 
   // Fetch session data
   useEffect(() => {
@@ -58,21 +103,20 @@ export default function SessionPage() {
       
       try {
         setLoading(true);
-        setError(null);
-        
         const response = await fetch(`/api/sessions/${sessionId}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: Failed to load session`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch session: ${response.status}`);
         
         const data = await response.json();
-        console.log('✅ Session loaded:', data);
         setSession(data);
         
+        // Load saved progress
+        const savedProgress = localStorage.getItem(`session-progress-${sessionId}`);
+        if (savedProgress) {
+          setUserProgress(JSON.parse(savedProgress));
+        }
+        
       } catch (err: any) {
-        console.error('❌ Session load error:', err);
-        setError(err.message || 'Failed to load session');
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -81,100 +125,81 @@ export default function SessionPage() {
     fetchSession();
   }, [sessionId]);
 
-  // Safe data getters with fallbacks
+  // Auto-save progress
+  useEffect(() => {
+    localStorage.setItem(`session-progress-${sessionId}`, JSON.stringify(userProgress));
+    
+    // Calculate completion
+    const lookBackDone = !!(userProgress.lookBackPrayer && userProgress.visionReflection);
+    const lookUpDone = !!(userProgress.personalReflection && userProgress.writtenMaterialRead);
+    const lookForwardDone = !!(userProgress.actionStatement1 && userProgress.businessPlanAnswer1);
+    
+    const newProgress = {
+      ...userProgress,
+      lookBackComplete: lookBackDone,
+      lookUpComplete: lookUpDone,
+      lookForwardComplete: lookForwardDone,
+      completionPercentage: Math.round(((Number(lookBackDone) + Number(lookUpDone) + Number(lookForwardDone)) / 3) * 100)
+    };
+    
+    if (JSON.stringify(newProgress) !== JSON.stringify(userProgress)) {
+      setUserProgress(newProgress);
+    }
+  }, [userProgress, sessionId]);
+
+  const updateProgress = (updates: Partial<UserProgress>) => {
+    setUserProgress(prev => ({ ...prev, ...updates }));
+  };
+
+  const canAccessSection = (section: 'lookback' | 'lookup' | 'lookforward') => {
+    if (section === 'lookback') return true;
+    if (section === 'lookup') return userProgress.lookBackComplete;
+    if (section === 'lookforward') return userProgress.lookBackComplete && userProgress.lookUpComplete;
+    return false;
+  };
+
   const getScripture = () => {
     try {
-      if (typeof session?.scripture === 'string') {
-        return JSON.parse(session.scripture);
-      }
+      if (typeof session?.scripture === 'string') return JSON.parse(session.scripture);
       return session?.scripture || {};
-    } catch {
-      return {};
-    }
+    } catch { return {}; }
   };
 
   const getMobileTransformation = () => {
     try {
-      if (typeof session?.mobile_transformation === 'string') {
-        return JSON.parse(session.mobile_transformation);
-      }
+      if (typeof session?.mobile_transformation === 'string') return JSON.parse(session.mobile_transformation);
       return session?.mobile_transformation || {};
-    } catch {
-      return {};
-    }
+    } catch { return {}; }
   };
 
-  const getBecomingGodsEntrepreneur = () => {
+  const getEngagement = () => {
     try {
-      if (typeof session?.becoming_gods_entrepreneur === 'string') {
-        return JSON.parse(session.becoming_gods_entrepreneur);
-      }
-      return session?.becoming_gods_entrepreneur || {};
-    } catch {
-      return {};
-    }
-  };
-
-  const getEngagementMechanics = () => {
-    try {
-      if (typeof session?.engagement_mechanics === 'string') {
-        return JSON.parse(session.engagement_mechanics);
-      }
+      if (typeof session?.engagement_mechanics === 'string') return JSON.parse(session.engagement_mechanics);
       return session?.engagement_mechanics || {};
-    } catch {
-      return {};
-    }
+    } catch { return {}; }
   };
 
-  const getContent = () => {
-    try {
-      if (typeof session?.content === 'string') {
-        return JSON.parse(session.content);
-      }
-      return session?.content || {};
-    } catch {
-      return {};
-    }
-  };
-
-  // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading Session {sessionId}</h2>
-          <p className="text-gray-600">Fetching your learning content...</p>
+          <h2 className="text-2xl font-bold text-gray-800">Loading Session {sessionId}...</h2>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-800 mb-4">Session Load Error</h2>
-          <div className="bg-red-100 border border-red-300 rounded-lg p-4 mb-6">
-            <p className="text-red-700 font-medium">Error Details:</p>
-            <p className="text-red-600 text-sm mt-1">{error}</p>
-          </div>
-          <div className="space-y-3">
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-            >
-              🔄 Try Again
-            </button>
-            <button 
-              onClick={() => router.push('/modules')}
-              className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
-            >
-              ← Back to Modules
-            </button>
-          </div>
+          <h2 className="text-2xl font-bold text-red-800 mb-4">Error Loading Session</h2>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="bg-red-600 text-white px-6 py-3 rounded-lg">
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -182,335 +207,484 @@ export default function SessionPage() {
 
   const scripture = getScripture();
   const mobileTransform = getMobileTransformation();
-  const entrepreneur = getBecomingGodsEntrepreneur();
-  const engagement = getEngagementMechanics();
-  const content = getContent();
+  const engagement = getEngagement();
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-teal-500 via-teal-600 to-blue-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
-                <button 
-                  onClick={() => router.push('/dashboard')}
-                  className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2"
-                >
-                  🏠 Dashboard
-                </button>
-                <button 
-                  onClick={() => router.push('/modules')}
-                  className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2"
-                >
-                  📚 All Modules
-                </button>
-              </div>
-              
-              <div className="mb-2">
-                <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
-                  Module {moduleId} • Session {session?.session_number || sessionId}
-                </span>
-              </div>
-              
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 leading-tight">
-                {session?.title || 'Session Title'}
-              </h1>
-              
-              {session?.subtitle && (
-                <p className="text-teal-100 text-lg sm:text-xl mb-4 max-w-3xl">
-                  {session.subtitle}
-                </p>
-              )}
-              
-              {session?.estimated_time && (
-                <div className="flex items-center gap-2 text-teal-100">
-                  <span>⏱️</span>
-                  <span>Estimated time: {session.estimated_time}</span>
-                </div>
-              )}
+      <div className="bg-gradient-to-r from-teal-500 to-blue-600 text-white">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex gap-3">
+              <button onClick={() => router.push('/dashboard')} className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                🏠 Dashboard
+              </button>
+              <button onClick={() => router.push('/modules')} className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                📚 Modules
+              </button>
             </div>
-            
-            <div className="mt-6 lg:mt-0 lg:ml-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                <div className="text-2xl font-bold mb-1">Session {session?.session_number || sessionId}</div>
-                <div className="text-teal-100 text-sm">of Module {moduleId}</div>
-              </div>
+            <div className="text-right">
+              <div className="text-sm opacity-80">Module {moduleId} • Session {sessionId}</div>
+              <div className="font-semibold">{userProgress.completionPercentage}% Complete</div>
             </div>
+          </div>
+          
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">{session?.title}</h1>
+          {session?.subtitle && <p className="text-teal-100 text-lg">{session.subtitle}</p>}
+          
+          {/* Progress Bar */}
+          <div className="mt-6 bg-white/20 rounded-full h-3">
+            <div 
+              className="h-3 rounded-full bg-gradient-to-r from-green-400 to-blue-400 transition-all duration-500"
+              style={{ width: `${userProgress.completionPercentage}%` }}
+            ></div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Tab Navigation */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 lg:hidden">
-        <div className="flex">
-          {[
-            { key: 'content', label: 'Content', icon: '📖' },
-            { key: 'reflection', label: 'Reflect', icon: '💭' },
-            { key: 'action', label: 'Action', icon: '🎯' }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
-              className={`flex-1 py-4 px-2 text-center font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="text-lg mb-1">{tab.icon}</div>
-              <div className="text-sm">{tab.label}</div>
-            </button>
-          ))}
+      {/* 3/3 Method Navigation */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex">
+            {[
+              { key: 'lookback', label: 'Look Back', icon: '👁️', subtitle: 'Reflect & Pray', complete: userProgress.lookBackComplete },
+              { key: 'lookup', label: 'Look Up', icon: '📖', subtitle: 'Learn & Grow', complete: userProgress.lookUpComplete },
+              { key: 'lookforward', label: 'Look Forward', icon: '🎯', subtitle: 'Apply & Plan', complete: userProgress.lookForwardComplete }
+            ].map((section) => {
+              const isAccessible = canAccessSection(section.key as any);
+              const isActive = currentSection === section.key;
+              
+              return (
+                <button
+                  key={section.key}
+                  onClick={() => isAccessible && setCurrentSection(section.key as any)}
+                  disabled={!isAccessible}
+                  className={`flex-1 py-6 px-4 text-center transition-all ${
+                    isActive ? 'bg-teal-50 border-b-4 border-teal-500' : 
+                    isAccessible ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{!isAccessible ? '🔒' : section.icon}</div>
+                  <div className={`font-semibold text-lg ${isActive ? 'text-teal-600' : 'text-gray-700'}`}>
+                    {section.label}
+                  </div>
+                  <div className="text-sm text-gray-500">{section.subtitle}</div>
+                  {section.complete && <div className="text-2xl mt-1">✅</div>}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-          
-          {/* Main Content - Desktop Always Visible, Mobile Conditional */}
-          <div className={`lg:col-span-8 space-y-8 ${activeTab === 'content' ? 'block' : 'hidden'} lg:block`}>
-            
-            {/* Transformation Promise */}
-            {session?.transformation_promise && (
-              <section className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-amber-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">🎯</span>
-                  Transformation Promise
-                </h2>
-                <p className="text-amber-800 text-lg leading-relaxed font-medium">
-                  {session.transformation_promise}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* LOOK BACK SECTION */}
+        {currentSection === 'lookback' && (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">👁️ Look Back</h2>
+              <p className="text-gray-600 text-lg">Reflect on your journey and pray for wisdom</p>
+            </div>
+
+            {/* Opening Prayer */}
+            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                🙏 Opening Prayer
+              </h3>
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <p className="text-blue-700 italic">
+                  "Lord, as I look back on my recent journey, help me see Your hand at work. 
+                  Give me wisdom to learn from my experiences and courage to grow in faithfulness."
                 </p>
-              </section>
+              </div>
+              <textarea
+                value={userProgress.lookBackPrayer}
+                onChange={(e) => updateProgress({ lookBackPrayer: e.target.value })}
+                placeholder="Add your personal prayer or reflection..."
+                className="w-full h-24 p-4 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Previous Actions Review */}
+            <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
+              <h3 className="text-xl font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                📋 Previous Action Review
+              </h3>
+              <p className="text-yellow-700 mb-4">
+                What action steps did you commit to in your last session? How did they go?
+              </p>
+              <textarea
+                value={userProgress.previousActionReview}
+                onChange={(e) => updateProgress({ previousActionReview: e.target.value })}
+                placeholder="Reflect on your previous commitments and what you learned..."
+                className="w-full h-32 p-4 border border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500"
+              />
+            </div>
+
+            {/* Wins and Challenges */}
+            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+              <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                🏆 Wins and Challenges
+              </h3>
+              <p className="text-green-700 mb-4">
+                What victories (big or small) have you experienced? What challenges are you facing?
+              </p>
+              <textarea
+                value={userProgress.winsAndChallenges}
+                onChange={(e) => updateProgress({ winsAndChallenges: e.target.value })}
+                placeholder="Celebrate your wins and honestly assess your challenges..."
+                className="w-full h-32 p-4 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            {/* Vision Reiteration */}
+            <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+              <h3 className="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                🎯 Our Vision
+              </h3>
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <p className="text-purple-700 font-medium">
+                  "To love God and serve our community through excellent, biblically-based business, 
+                  intentionally multiplying disciples who make disciples in our marketplace sphere of influence."
+                </p>
+              </div>
+              <p className="text-purple-700 mb-4">
+                How does this vision connect with your current business situation and recent experiences?
+              </p>
+              <textarea
+                value={userProgress.visionReflection}
+                onChange={(e) => updateProgress({ visionReflection: e.target.value })}
+                placeholder="Connect the IBAM vision with your personal journey..."
+                className="w-full h-32 p-4 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            {userProgress.lookBackComplete && (
+              <div className="bg-green-500 text-white rounded-xl p-6 text-center">
+                <div className="text-4xl mb-2">✅</div>
+                <h3 className="text-xl font-bold">Look Back Complete!</h3>
+                <p>You can now access the Look Up section.</p>
+              </div>
             )}
+          </div>
+        )}
+
+        {/* LOOK UP SECTION */}
+        {currentSection === 'lookup' && (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">📖 Look Up</h2>
+              <p className="text-gray-600 text-lg">Learn from God's Word and grow in wisdom</p>
+            </div>
+
+            {/* Learning Prayer */}
+            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                🙏 Learning Prayer
+              </h3>
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <p className="text-blue-700 italic">
+                  "Father, open my heart and mind to Your truth. Help me not just gain knowledge, 
+                  but be transformed by what I learn today."
+                </p>
+              </div>
+              <textarea
+                value={userProgress.lookUpPrayer}
+                onChange={(e) => updateProgress({ lookUpPrayer: e.target.value })}
+                placeholder="Add your personal prayer for learning..."
+                className="w-full h-24 p-4 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
             {/* Scripture Foundation */}
             {(scripture.reference || scripture.text) && (
-              <section className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-blue-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">📖</span>
-                  Biblical Foundation
-                </h2>
-                <div className="bg-white rounded-xl p-6 border border-blue-100">
+              <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
+                <h3 className="text-xl font-bold text-amber-800 mb-4 flex items-center gap-2">
+                  📖 Scripture Foundation
+                </h3>
+                <div className="bg-white rounded-lg p-4">
                   {scripture.reference && (
-                    <div className="font-bold text-blue-600 text-lg mb-3">
-                      {scripture.reference} (ESV)
-                    </div>
+                    <div className="font-bold text-amber-600 mb-2">{scripture.reference} (ESV)</div>
                   )}
                   {scripture.text && (
-                    <blockquote className="text-gray-700 text-lg leading-relaxed italic">
-                      "{scripture.text}"
-                    </blockquote>
+                    <blockquote className="text-amber-800 italic">"{scripture.text}"</blockquote>
                   )}
                 </div>
-              </section>
+              </div>
+            )}
+
+            {/* Transformation Promise */}
+            {session?.transformation_promise && (
+              <div className="bg-teal-50 rounded-xl p-6 border border-teal-200">
+                <h3 className="text-xl font-bold text-teal-800 mb-4 flex items-center gap-2">
+                  🎯 What You'll Gain
+                </h3>
+                <p className="text-teal-700 text-lg">{session.transformation_promise}</p>
+              </div>
             )}
 
             {/* Hook Story */}
             {session?.hook && (
-              <section className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">⚡</span>
-                  Opening Story
-                </h2>
-                <div className="prose prose-lg max-w-none">
-                  <p className="text-gray-700 leading-relaxed">{session.hook}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Fast Track Summary */}
-            {session?.fast_track_summary && (
-              <section className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-green-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">⚡</span>
-                  Quick Summary
-                </h2>
-                <div className="bg-white rounded-xl p-6 border border-green-100">
-                  <p className="text-green-800 text-lg leading-relaxed font-medium">
-                    {session.fast_track_summary}
-                  </p>
-                </div>
-              </section>
-            )}
-
-            {/* Main Content Text */}
-            {content.text && (
-              <section className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">📝</span>
-                  Main Content
-                </h2>
-                <div className="prose prose-lg max-w-none">
-                  <p className="text-gray-700 leading-relaxed">{content.text}</p>
-                </div>
-              </section>
-            )}
-
-            {/* Mobile Transformation Insights */}
-            {(mobileTransform.powerInsight || mobileTransform.identityShift) && (
-              <section className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-purple-900 mb-6 flex items-center gap-3">
-                  <span className="text-3xl">💡</span>
-                  Key Insights
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-6">
-                  {mobileTransform.powerInsight && (
-                    <div className="bg-white rounded-xl p-6 border border-purple-100">
-                      <h3 className="font-bold text-purple-700 mb-3 flex items-center gap-2">
-                        <span className="text-xl">⚡</span>
-                        Power Insight
-                      </h3>
-                      <p className="text-purple-800 font-medium">{mobileTransform.powerInsight}</p>
-                    </div>
-                  )}
-                  {mobileTransform.identityShift && (
-                    <div className="bg-white rounded-xl p-6 border border-purple-100">
-                      <h3 className="font-bold text-purple-700 mb-3 flex items-center gap-2">
-                        <span className="text-xl">🔄</span>
-                        Identity Shift
-                      </h3>
-                      <p className="text-purple-800 font-medium">{mobileTransform.identityShift}</p>
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {/* Case Study */}
-            {session?.case_study && (
-              <section className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl border border-teal-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-teal-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">📊</span>
-                  Real-World Case Study
-                </h2>
-                <div className="bg-white rounded-xl p-6 border border-teal-100">
-                  <div className="prose prose-lg max-w-none">
-                    <p className="text-teal-800 leading-relaxed">{session.case_study}</p>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* Becoming God's Entrepreneur */}
-            {entrepreneur.content && (
-              <section className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl border border-orange-200 p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-orange-900 mb-4 flex items-center gap-3">
-                  <span className="text-3xl">👑</span>
-                  Becoming God's Entrepreneur
-                </h2>
-                <div className="bg-white rounded-xl p-6 border border-orange-100">
-                  <p className="text-orange-800 text-lg leading-relaxed mb-6">{entrepreneur.content}</p>
-                  
-                  {entrepreneur.questions && entrepreneur.questions.length > 0 && (
-                    <div>
-                      <h3 className="font-bold text-orange-700 mb-4 flex items-center gap-2">
-                        <span className="text-xl">💭</span>
-                        Reflection Questions
-                      </h3>
-                      <div className="space-y-3">
-                        {entrepreneur.questions.map((question: string, index: number) => (
-                          <div key={index} className="flex items-start gap-3 p-4 bg-orange-50 rounded-lg">
-                            <span className="font-bold text-orange-600 text-lg mt-1">{index + 1}.</span>
-                            <p className="text-orange-800 leading-relaxed">{question}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-          </div>
-
-          {/* Sidebar - Desktop Always Visible, Mobile Conditional */}
-          <div className={`lg:col-span-4 space-y-6 ${activeTab === 'reflection' ? 'block' : 'hidden'} lg:block`}>
-            
-            {/* Reflection */}
-            {session?.reflection && (
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="text-2xl">🤔</span>
-                  Personal Reflection
+              <div className="bg-white rounded-xl p-6 border shadow-sm">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  ⚡ Opening Story
                 </h3>
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                  <p className="text-blue-800 font-medium leading-relaxed">{session.reflection}</p>
-                </div>
-                <textarea
-                  className="w-full mt-4 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows={4}
-                  placeholder="Write your personal reflection here..."
-                />
+                <p className="text-gray-700 leading-relaxed">{session.hook}</p>
               </div>
             )}
 
-            {/* Engagement Challenge */}
-            {(engagement.challenge || engagement.community) && (
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="text-2xl">🚀</span>
-                  Action Steps
+            {/* Main Content */}
+            <div className="bg-white rounded-xl p-6 border shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  📝 Main Teaching
                 </h3>
-                {engagement.challenge && (
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-red-700 mb-2 flex items-center gap-1">
-                      <span>🎯</span>
-                      This Week's Challenge
-                    </h4>
-                    <div className="bg-red-50 rounded-lg p-4 border border-red-100">
-                      <p className="text-red-800 text-sm leading-relaxed">{engagement.challenge}</p>
-                    </div>
+                <button
+                  onClick={() => updateProgress({ writtenMaterialRead: true })}
+                  className={`px-4 py-2 rounded-lg font-semibold ${
+                    userProgress.writtenMaterialRead 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-teal-500 text-white hover:bg-teal-600'
+                  }`}
+                >
+                  {userProgress.writtenMaterialRead ? '✓ Read' : 'Mark as Read'}
+                </button>
+              </div>
+              <div className="prose max-w-none">
+                <p className="text-gray-700 leading-relaxed">
+                  {session?.fast_track_summary || 'Main teaching content will be displayed here.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Video Content */}
+            {session?.video_url && !session.video_url.includes('PLACEHOLDER') && (
+              <div className="bg-gray-900 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    📺 Training Video
+                  </h3>
+                  <button
+                    onClick={() => updateProgress({ videoWatched: true })}
+                    className={`px-4 py-2 rounded-lg font-semibold ${
+                      userProgress.videoWatched 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-red-500 text-white hover:bg-red-600'
+                    }`}
+                  >
+                    {userProgress.videoWatched ? '✓ Watched' : 'Mark as Watched'}
+                  </button>
+                </div>
+                <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="text-6xl mb-4">▶️</div>
+                    <p>Video player would be embedded here</p>
                   </div>
-                )}
-                {engagement.community && (
-                  <div>
-                    <h4 className="font-semibold text-blue-700 mb-2 flex items-center gap-1">
-                      <span>👥</span>
-                      Community Discussion
-                    </h4>
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                      <p className="text-blue-800 text-sm leading-relaxed">{engagement.community}</p>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             )}
 
-            {/* FAQ */}
+            {/* Knowledge Check */}
+            <div className="bg-indigo-50 rounded-xl p-6 border border-indigo-200">
+              <h3 className="text-xl font-bold text-indigo-800 mb-4 flex items-center gap-2">
+                🧠 Knowledge Check
+              </h3>
+              <p className="text-indigo-700 mb-4">
+                What is the main biblical principle taught in this session?
+              </p>
+              <div className="space-y-3">
+                {[
+                  "God wants us to be successful in business at any cost",
+                  "Business and faith should be kept completely separate",
+                  "Biblical principles enhance business effectiveness and sustainability",
+                  "Only explicitly Christian businesses can honor God"
+                ].map((option, index) => (
+                  <label key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg cursor-pointer hover:bg-indigo-50">
+                    <input
+                      type="radio"
+                      name="knowledge-check"
+                      value={index}
+                      checked={userProgress.knowledgeCheckAnswer === index}
+                      onChange={() => updateProgress({ knowledgeCheckAnswer: index })}
+                      className="w-4 h-4 text-indigo-600"
+                    />
+                    <span className="text-gray-700">{option}</span>
+                  </label>
+                ))}
+              </div>
+              {userProgress.knowledgeCheckAnswer !== null && (
+                <div className={`mt-4 p-4 rounded-lg ${
+                  userProgress.knowledgeCheckAnswer === 2 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {userProgress.knowledgeCheckAnswer === 2 
+                    ? "✓ Correct! Biblical principles do enhance business effectiveness."
+                    : "Consider reviewing the main teaching. Biblical principles are designed to help, not hinder business success."
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* Personal Reflection */}
+            <div className="bg-pink-50 rounded-xl p-6 border border-pink-200">
+              <h3 className="text-xl font-bold text-pink-800 mb-4 flex items-center gap-2">
+                💭 Personal Reflection
+              </h3>
+              <p className="text-pink-700 mb-4">
+                {session?.reflection || 'How will you apply what you learned in this session?'}
+              </p>
+              <textarea
+                value={userProgress.personalReflection}
+                onChange={(e) => updateProgress({ personalReflection: e.target.value })}
+                placeholder="Write your personal reflection and insights..."
+                className="w-full h-32 p-4 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500"
+              />
+            </div>
+
+            {/* FAQ Review */}
             {session?.faq_questions && session.faq_questions.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="text-2xl">❓</span>
-                  FAQ
-                </h3>
-                <div className="space-y-4">
-                  {session.faq_questions.map((faq: string, index: number) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                      <p className="text-gray-700 text-sm leading-relaxed">{faq}</p>
+              <div className="bg-gray-50 rounded-xl p-6 border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    ❓ Frequently Asked Questions
+                  </h3>
+                  <button
+                    onClick={() => updateProgress({ faqReviewed: true })}
+                    className={`px-4 py-2 rounded-lg font-semibold ${
+                      userProgress.faqReviewed 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-500 text-white hover:bg-gray-600'
+                    }`}
+                  >
+                    {userProgress.faqReviewed ? '✓ Reviewed' : 'Mark as Reviewed'}
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {session.faq_questions.map((faq, index) => (
+                    <div key={index} className="bg-white p-4 rounded-lg">
+                      <p className="text-gray-700">{faq}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Business Plan Questions */}
+            {userProgress.lookUpComplete && (
+              <div className="bg-green-500 text-white rounded-xl p-6 text-center">
+                <div className="text-4xl mb-2">✅</div>
+                <h3 className="text-xl font-bold">Look Up Complete!</h3>
+                <p>You can now access the Look Forward section.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* LOOK FORWARD SECTION */}
+        {currentSection === 'lookforward' && (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">🎯 Look Forward</h2>
+              <p className="text-gray-600 text-lg">Apply what you've learned and plan your next steps</p>
+            </div>
+
+            {/* Application Prayer */}
+            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                🙏 Application Prayer
+              </h3>
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <p className="text-blue-700 italic">
+                  "Lord, give me courage to apply what I've learned. Help me take specific steps 
+                  that honor You and advance Your kingdom through my business."
+                </p>
+              </div>
+              <textarea
+                value={userProgress.lookForwardPrayer}
+                onChange={(e) => updateProgress({ lookForwardPrayer: e.target.value })}
+                placeholder="Add your prayer for wisdom in application..."
+                className="w-full h-24 p-4 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Key Truth Reflection */}
+            <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
+              <h3 className="text-xl font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                💡 Key Truth Integration
+              </h3>
+              <p className="text-yellow-700 mb-4">
+                What is the most important truth you learned today? How will it change your approach to business?
+              </p>
+              <textarea
+                value={userProgress.keyTruthReflection}
+                onChange={(e) => updateProgress({ keyTruthReflection: e.target.value })}
+                placeholder="Identify the key truth and how it will transform your business approach..."
+                className="w-full h-32 p-4 border border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500"
+              />
+            </div>
+
+            {/* Specific Action Statements */}
+            <div className="bg-red-50 rounded-xl p-6 border border-red-200">
+              <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2">
+                🎯 Specific Action Commitments
+              </h3>
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <p className="text-red-700 font-semibold">⚠️ Remember: You'll be asked about these at the start of your next session!</p>
+                <p className="text-red-600 text-sm mt-2">Make them specific, measurable, and time-bound.</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-red-700 font-medium mb-2">Action Statement #1 (Required)</label>
+                  <textarea
+                    value={userProgress.actionStatement1}
+                    onChange={(e) => updateProgress({ actionStatement1: e.target.value })}
+                    placeholder="I will [specific action] by [when] because [why]..."
+                    className="w-full h-24 p-4 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-red-700 font-medium mb-2">Action Statement #2 (Optional)</label>
+                  <textarea
+                    value={userProgress.actionStatement2}
+                    onChange={(e) => updateProgress({ actionStatement2: e.target.value })}
+                    placeholder="I will [specific action] by [when] because [why]..."
+                    className="w-full h-24 p-4 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-red-700 font-medium mb-2">Action Statement #3 (Optional)</label>
+                  <textarea
+                    value={userProgress.actionStatement3}
+                    onChange={(e) => updateProgress({ actionStatement3: e.target.value })}
+                    placeholder="I will [specific action] by [when] because [why]..."
+                    className="w-full h-24 p-4 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Business Plan Integration */}
             {session?.business_plan_questions && session.business_plan_questions.length > 0 && (
-              <div className={`bg-white rounded-xl shadow-lg border border-gray-200 p-6 ${activeTab === 'action' ? 'block' : 'hidden'} lg:block`}>
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="text-2xl">📋</span>
-                  Business Plan Integration
+              <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
+                <h3 className="text-xl font-bold text-orange-800 mb-4 flex items-center gap-2">
+                  📋 Business Plan Builder
                 </h3>
+                <p className="text-orange-700 mb-4">
+                  Your responses will be saved to your business plan automatically.
+                </p>
+                
                 <div className="space-y-4">
-                  {session.business_plan_questions.map((question: string, index: number) => (
+                  {session.business_plan_questions.slice(0, 3).map((question, index) => (
                     <div key={index}>
-                      <label className="block text-gray-700 font-medium mb-2">
+                      <label className="block text-orange-700 font-medium mb-2">
                         {index + 1}. {question}
                       </label>
                       <textarea
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        rows={3}
+                        value={userProgress[`businessPlanAnswer${index + 1}` as keyof UserProgress] as string}
+                        onChange={(e) => updateProgress({ [`businessPlanAnswer${index + 1}`]: e.target.value })}
                         placeholder="Your response will be integrated into your business plan..."
+                        className="w-full h-24 p-4 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
                   ))}
@@ -518,82 +692,79 @@ export default function SessionPage() {
               </div>
             )}
 
-            {/* Extra Materials */}
-            {session?.extra_materials && (
-              <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="text-2xl">📎</span>
-                  Extra Materials
-                </h3>
-                <div className="bg-white rounded-lg p-4 border border-gray-100">
-                  <p className="text-gray-700 text-sm leading-relaxed">{session.extra_materials}</p>
+            {/* Accountability & Community */}
+            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+              <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                👥 Accountability & Community
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-green-700 font-medium mb-2">
+                    Who will you share your action commitments with for accountability?
+                  </label>
+                  <input
+                    type="text"
+                    value={userProgress.accountabilityPartner}
+                    onChange={(e) => updateProgress({ accountabilityPartner: e.target.value })}
+                    placeholder="Name of accountability partner, spouse, mentor, etc."
+                    className="w-full p-4 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500"
+                  />
                 </div>
+                
+                <div>
+                  <label className="block text-green-700 font-medium mb-2">
+                    How will you engage with the IBAM community this week?
+                  </label>
+                  <textarea
+                    value={userProgress.communityCommitment}
+                    onChange={(e) => updateProgress({ communityCommitment: e.target.value })}
+                    placeholder="Will you share insights, ask questions, encourage others, etc.?"
+                    className="w-full h-24 p-4 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Transformation Display */}
+            {(mobileTransform.powerInsight || mobileTransform.identityShift) && (
+              <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+                <h3 className="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                  📱 Key Transformations
+                </h3>
+                
+                {mobileTransform.powerInsight && (
+                  <div className="bg-white rounded-lg p-4 mb-4">
+                    <h4 className="font-semibold text-purple-700 mb-2">💡 Power Insight</h4>
+                    <p className="text-purple-800">{mobileTransform.powerInsight}</p>
+                  </div>
+                )}
+                
+                {mobileTransform.identityShift && (
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-semibold text-purple-700 mb-2">🔄 Identity Shift</h4>
+                    <p className="text-purple-800">{mobileTransform.identityShift}</p>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Navigation */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Navigation</h3>
-              <div className="space-y-3">
+            {userProgress.lookForwardComplete && (
+              <div className="bg-green-500 text-white rounded-xl p-6 text-center">
+                <div className="text-4xl mb-2">🎉</div>
+                <h3 className="text-xl font-bold">Session Complete!</h3>
+                <p className="mb-4">Excellent work! You've completed this session.</p>
                 <button 
                   onClick={() => router.push('/dashboard')}
-                  className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+                  className="bg-white text-green-500 px-6 py-3 rounded-lg font-bold hover:bg-gray-100"
                 >
-                  🏠 Dashboard
-                </button>
-                <button 
-                  onClick={() => router.push('/modules')}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  📚 All Modules
-                </button>
-                <button 
-                  onClick={() => router.push(`/modules/${moduleId}`)}
-                  className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  📖 Module {moduleId}
+                  Return to Dashboard
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
-
-      {/* Video Player Section (if video exists) */}
-      {session?.video_url && !session.video_url.includes('PLACEHOLDER') && (
-        <div className="bg-gray-900 py-12">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">
-              📺 Training Video
-            </h2>
-            <div className="bg-black rounded-xl overflow-hidden shadow-2xl">
-              <div className="aspect-video">
-                <iframe
-                  src={session.video_url}
-                  className="w-full h-full"
-                  allowFullScreen
-                  title={`${session.title} - Training Video`}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">IBAM - International Business as Mission</h3>
-            <p className="text-gray-300 text-lg mb-4">
-              Equipping entrepreneurs to transform communities through faith-driven business
-            </p>
-            <p className="text-teal-400 font-semibold text-lg">
-              DESIGNED TO THRIVE
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
