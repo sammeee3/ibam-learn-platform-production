@@ -7,105 +7,10 @@ import { useParams, useRouter } from 'next/navigation';
 const sessionData: Record<string, Record<string, any>> = {
   "1": {
     "1": {
-      title: "Business is a Good Gift from God",
-      module: "Foundational Principles",
-      scripture: {
-        reference: "Genesis 1:26",
-        text: "Then God said, 'Let us make mankind in our image, in our likeness, so that they may rule over the fish in the sea and the birds in the sky, over the livestock and all the wild animals, and over all the creatures that move along the ground.'"
-      },
-      videoUrl: "https://vimeo.com/your-video-id",
-      writtenMaterial: "God designed humans to be creative, productive, and to exercise dominion over creation. Business is not a necessary evil or distraction from spiritual matters - it's a reflection of God's image in us. When we create value, serve others, and steward resources well, we mirror our Creator's character.",
-      reflection: "How does viewing business as a reflection of God's image change your perspective on your work?",
-      becomingGodsEntrepreneur: {
-        content: "As God's entrepreneur, you're called to blend excellence with integrity, profit with purpose, and success with service.",
-        questions: [
-          "What would change in your business if you truly believed it was a gift from God?",
-          "How can your business reflect God's creativity and generosity?"
-        ]
-      },
-      caseStudy: "Sarah owns a local bakery. She started viewing her business as ministry when she realized that providing excellent bread and pastries was serving her community. She began praying over her work, treating employees as family, and donating day-old goods to the homeless shelter.",
-      faqQuestions: [
-        "Q: Can I really make money and still honor God? A: Yes! God desires us to prosper while maintaining integrity.",
-        "Q: What if my business isn't explicitly Christian? A: Your character and excellence can reflect Christ in any business.",
-        "Q: How do I balance profit and generosity? A: Sustainable generosity requires profitable operations."
-      ],
-      businessPlanQuestions: [
-        "How will your business reflect God's character and values?",
-        "What impact do you want your business to have on your community?",
-        "How can your business serve as a platform for spiritual conversations?"
-      ]
-    },
-    "2": {
-      title: "Business Leaders Work Together with Church/Spiritual Leaders",
-      module: "Foundational Principles",
-      scripture: {
-        reference: "1 Corinthians 12:12-14",
-        text: "Just as a body, though one, has many parts, but all its many parts form one body, so it is with Christ. For we were all baptized by one Spirit so as to form one body—whether Jews or Gentiles, slave or free—and we were all given the one Spirit to drink. Even so the body is not made up of one part but of many."
-      },
-      videoUrl: "https://vimeo.com/your-video-id-2",
-      writtenMaterial: "The church and marketplace are not separate kingdoms but different parts of God's single kingdom. Business leaders bring resources, organizational skills, and community connections. Church leaders bring spiritual wisdom, pastoral care, and theological grounding. Together, they can accomplish kingdom work neither could achieve alone.",
-      reflection: "What unique strengths do you bring as a business leader that could benefit your local church or community ministry?",
-      becomingGodsEntrepreneur: {
-        content: "God's entrepreneurs understand they're part of a larger body, working in harmony with spiritual leaders to advance God's kingdom.",
-        questions: [
-          "How can you partner with church leaders without compromising your business integrity?",
-          "What kingdom projects could benefit from your business skills and resources?"
-        ]
-      },
-      caseStudy: "Mark, a construction company owner, partnered with his pastor to build homes for single mothers. The church provided spiritual care and community support while Mark's business provided construction expertise and materials at cost.",
-      faqQuestions: [
-        "Q: What if my pastor doesn't understand business? A: Start small, build trust, and educate gently.",
-        "Q: How do I avoid being seen as just a source of money? A: Offer your skills and expertise, not just finances.",
-        "Q: What if business and church priorities conflict? A: Seek wisdom through prayer and trusted advisors."
-      ],
-      businessPlanQuestions: [
-        "What partnerships could you develop between your business and local church/ministry leaders?",
-        "How can your business skills serve kingdom purposes beyond just financial giving?",
-        "What community needs could be addressed through business-ministry collaboration?"
-      ]
-    }
-  },
-  "2": {
-    "1": {
-      title: "Reasons for Failure",
-      module: "Success and Failure Factors",
-      scripture: {
-        reference: "Proverbs 19:21",
-        text: "Many are the plans in a person's heart, but it is the Lord's purpose that prevails."
-      },
-      videoUrl: "https://vimeo.com/your-video-id-3",
-      writtenMaterial: "Most business failures stem from preventable causes: inadequate planning, poor cash flow management, misunderstanding the market, or lack of differentiation. However, even with perfect planning, we must hold our plans loosely and trust God's sovereignty.",
-      reflection: "Looking at your current business situation, which failure factors pose the greatest risk, and how can you address them?",
-      becomingGodsEntrepreneur: {
-        content: "God's entrepreneurs plan diligently while holding outcomes loosely, trusting that God's purposes will prevail.",
-        questions: [
-          "How do you balance careful planning with trusting God's sovereignty?",
-          "What would it look like to 'fail successfully' in a way that honors God?"
-        ]
-      },
-      caseStudy: "David's restaurant failed after 18 months due to poor location analysis and cash flow problems. Instead of becoming bitter, he used the experience to mentor other entrepreneurs, helping them avoid similar pitfalls while trusting God's plan for his life.",
-      faqQuestions: [
-        "Q: Is business failure a sign God doesn't want me in business? A: Not necessarily - failure can be education or redirection.",
-        "Q: How do I recover from a major business failure? A: Learn, heal, rebuild slowly, and trust God's timing.",
-        "Q: What if I'm afraid of failing? A: Perfect planning reduces risk, but faith conquers fear."
-      ],
-      businessPlanQuestions: [
-        "What are the top 3 risks that could cause your business to fail, and how will you mitigate them?",
-        "How will you monitor key performance indicators to detect problems early?",
-        "What contingency plans do you need for various failure scenarios?"
-      ]
-    }
-  }
-};
+'use client';
 
-// Module configuration for navigation
-const moduleConfig = {
-  "1": { name: "Foundational Principles", totalSessions: 4 },
-  "2": { name: "Success and Failure Factors", totalSessions: 4 },
-  "3": { name: "Marketing", totalSessions: 5 },
-  "4": { name: "Finance", totalSessions: 4 },
-  "5": { name: "Business Planning", totalSessions: 3 }
-};
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
 export default function SessionPage() {
   const params = useParams();
@@ -113,24 +18,123 @@ export default function SessionPage() {
   const moduleId = params?.moduleId as string;
   const sessionId = params?.sessionId as string;
   
+  // Session state - fetch from API instead of hardcoded data
+  const [session, setSession] = useState<any>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  
   // User profile state
   const [userProfile, setUserProfile] = useState<any>(null);
   const [lastActivity, setLastActivity] = useState<any>(null);
-  
-  // Get session data or fallback
-  const session = sessionData[moduleId]?.[sessionId] || {
-    title: "Session Content Loading...",
-    module: "Module Loading...",
-    scripture: { reference: "Loading...", text: "Content being prepared..." },
-    videoUrl: "",
-    writtenMaterial: "Content loading...",
-    reflection: "Content loading...",
-    becomingGodsEntrepreneur: { content: "Loading...", questions: ["Loading..."] },
-    caseStudy: "Loading...",
-    faqQuestions: ["Loading..."],
-    businessPlanQuestions: ["Loading..."]
+
+  // Fetch session data from API
+  useEffect(() => {
+    const fetchSessionData = async () => {
+      if (!sessionId) return;
+      
+      try {
+        setSessionLoading(true);
+        setSessionError(null);
+        
+        const response = await fetch(`/api/sessions/${sessionId}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch session: ${response.status}`);
+        }
+        
+        const apiData = await response.json();
+        console.log('Session API data:', apiData);
+        
+        // Transform API data to match template format
+        const transformedSession = {
+          title: apiData.title || "Session Content Loading...",
+          module: apiData.module || "Module Loading...", 
+          scripture: {
+            reference: apiData.scripture?.reference || "Loading...",
+            text: apiData.scripture?.text || "Content being prepared..."
+          },
+          videoUrl: apiData.video_url || "",
+          writtenMaterial: apiData.fast_track_summary || apiData.hook || "Content loading...",
+          reflection: apiData.reflection || "Content loading...",
+          becomingGodsEntrepreneur: {
+            content: apiData.becoming_gods_entrepreneur?.content || "Loading...",
+            questions: apiData.becoming_gods_entrepreneur?.questions || ["Loading..."]
+          },
+          caseStudy: apiData.case_study || "Loading...",
+          faqQuestions: apiData.faq_questions || ["Loading..."],
+          businessPlanQuestions: apiData.business_plan_questions || ["Loading..."]
+        };
+        
+        setSession(transformedSession);
+        setSessionLoading(false);
+        
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        setSessionError(error instanceof Error ? error.message : 'Failed to load session');
+        setSessionLoading(false);
+        
+        // Fallback to loading state
+        setSession({
+          title: "Session Content Loading...",
+          module: "Module Loading...",
+          scripture: { reference: "Loading...", text: "Content being prepared..." },
+          videoUrl: "",
+          writtenMaterial: "Content loading...",
+          reflection: "Content loading...",
+          becomingGodsEntrepreneur: { content: "Loading...", questions: ["Loading..."] },
+          caseStudy: "Loading...",
+          faqQuestions: ["Loading..."],
+          businessPlanQuestions: ["Loading..."]
+        });
+      }
+    };
+
+    fetchSessionData();
+  }, [sessionId]);
+
+  // Show loading state
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading Session...</h2>
+          <p className="text-gray-600">Fetching session {sessionId} content</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (sessionError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">❌</div>
+          <h2 className="text-2xl font-bold text-red-800 mb-2">Session Load Error</h2>
+          <p className="text-red-600 mb-4">{sessionError}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Module configuration for navigation  
+  const moduleConfig = {
+    "1": { name: "Foundational Principles", totalSessions: 4 },
+    "2": { name: "Success and Failure Factors", totalSessions: 4 },
+    "3": { name: "Marketing", totalSessions: 5 },
+    "4": { name: "Finance", totalSessions: 4 },
+    "5": { name: "Business Planning", totalSessions: 3 }
   };
 
+  // Get module configuration
+  const currentModule = moduleConfig[moduleId as keyof typeof moduleConfig];
+  const totalSessions = currentModule?.totalSessions || 4;
   // Get module configuration
   const currentModule = moduleConfig[moduleId as keyof typeof moduleConfig];
   const totalSessions = currentModule?.totalSessions || 4;
