@@ -3,149 +3,177 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Sample assessment questions
+// IDENTICAL questions to pre-assessment - for accurate comparison
 const assessmentQuestions = [
   {
     id: 1,
-    category: 'Vision & Purpose',
-    question: 'How clearly can you articulate your business vision in terms of kingdom impact?',
-    options: [
-      'I have no clear vision for kingdom impact',
-      'I have some ideas but they\'re not well defined',
-      'I have a fairly clear vision with some details',
-      'I have a very clear and detailed kingdom vision',
-      'I can articulate a compelling vision that inspires others'
-    ]
+    category: 'Business Confidence',
+    question: 'How confident are you in your ability to start and run a successful faith-driven business?',
+    subtitle: 'Rate your overall confidence level in entrepreneurship'
   },
   {
     id: 2,
-    category: 'Market Understanding',
-    question: 'How well do you understand your target customers and their needs?',
-    options: [
-      'I have little to no understanding of my target market',
-      'I have basic assumptions but limited research',
-      'I have some research and customer feedback',
-      'I have solid market research and regular customer interaction',
-      'I have deep market insights and strong customer relationships'
-    ]
+    category: 'Financial Management',
+    question: 'How comfortable are you with managing business finances, cash flow, and budgeting?',
+    subtitle: 'Include bookkeeping, financial planning, and money management'
   },
   {
     id: 3,
-    category: 'Financial Management',
-    question: 'How confident are you in managing business finances and cash flow?',
-    options: [
-      'I have no experience with business finances',
-      'I understand basics but feel overwhelmed',
-      'I can handle basic financial tasks with some help',
-      'I\'m confident in most financial management areas',
-      'I excel at financial planning and analysis'
-    ]
+    category: 'Marketing Skills',
+    question: 'How effective are you at marketing your business and attracting customers?',
+    subtitle: 'Include social media, networking, and customer acquisition'
   },
   {
     id: 4,
-    category: 'Leadership & Team',
-    question: 'How prepared are you to lead and develop a team with kingdom values?',
-    options: [
-      'I have no leadership experience',
-      'I have limited leadership experience',
-      'I have some leadership skills but need development',
-      'I\'m a capable leader with room for growth',
-      'I\'m an experienced leader who develops others'
-    ]
+    category: 'Leadership Ability',
+    question: 'How prepared are you to lead a team and build organizational culture?',
+    subtitle: 'Include hiring, training, and developing others'
   },
   {
     id: 5,
-    category: 'Ministry Integration',
-    question: 'How prepared are you to integrate faith and business effectively?',
-    options: [
-      'I\'m unsure how to connect faith and business',
-      'I have some ideas but lack practical experience',
-      'I have basic understanding and some experience',
-      'I\'m confident in integrating faith and business',
-      'I can mentor others in faith-business integration'
-    ]
+    category: 'Faith Integration',
+    question: 'How well can you integrate your faith values into business practices?',
+    subtitle: 'Include biblical principles in decision-making and operations'
   },
   {
     id: 6,
-    category: 'Resilience & Perseverance',
-    question: 'How do you typically respond to business setbacks and challenges?',
-    options: [
-      'I tend to give up when faced with major obstacles',
-      'I struggle with setbacks but eventually bounce back',
-      'I handle most challenges with moderate resilience',
-      'I bounce back from setbacks relatively quickly',
-      'I view setbacks as learning opportunities and grow stronger'
-    ]
+    category: 'Goal Clarity',
+    question: 'How clear are you about your business vision, mission, and strategic goals?',
+    subtitle: 'Include both kingdom impact and business objectives'
+  },
+  {
+    id: 7,
+    category: 'Networking Skills',
+    question: 'How effectively can you build relationships and professional networks?',
+    subtitle: 'Include partnerships, mentors, and industry connections'
+  },
+  {
+    id: 8,
+    category: 'Problem Solving',
+    question: 'How confident are you in solving complex business challenges and obstacles?',
+    subtitle: 'Include crisis management and creative solutions'
+  },
+  {
+    id: 9,
+    category: 'Time Management',
+    question: 'How well do you manage your time and prioritize business activities?',
+    subtitle: 'Include productivity, delegation, and work-life balance'
+  },
+  {
+    id: 10,
+    category: 'Risk Tolerance',
+    question: 'How comfortable are you with taking calculated business risks and making tough decisions?',
+    subtitle: 'Include investment decisions and strategic pivots'
   }
 ];
 
-export default function Assessment() {
+export default function PostAssessment() {
   const router = useRouter();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>(new Array(assessmentQuestions.length).fill(-1));
   const [showResults, setShowResults] = useState(false);
+  const [preAssessmentData, setPreAssessmentData] = useState<any>(null);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
 
   const answeredQuestions = answers.filter(answer => answer !== -1).length;
   const progressPercentage = Math.round((answeredQuestions / assessmentQuestions.length) * 100);
 
-  // Auto-save
+  // Load pre-assessment data on mount
+  useEffect(() => {
+    const preData = localStorage.getItem('ibam-pre-assessment-final');
+    if (preData) {
+      setPreAssessmentData(JSON.parse(preData));
+    } else {
+      // No pre-assessment found - redirect to take it first
+      router.push('/assessment/pre');
+    }
+  }, [router]);
+
+  // Auto-save to localStorage
   useEffect(() => {
     if (answeredQuestions > 0) {
       setSaveStatus('saving');
       const saveTimer = setTimeout(() => {
-        localStorage.setItem('ibam-assessment', JSON.stringify(answers));
+        localStorage.setItem('ibam-post-assessment', JSON.stringify({
+          answers,
+          completedAt: new Date().toISOString(),
+          totalQuestions: assessmentQuestions.length
+        }));
         setSaveStatus('saved');
       }, 500);
       return () => clearTimeout(saveTimer);
     }
   }, [answers, answeredQuestions]);
 
-  const selectAnswer = (questionIndex: number, answerIndex: number) => {
+  const selectAnswer = (questionIndex: number, rating: number) => {
     const newAnswers = [...answers];
-    newAnswers[questionIndex] = answerIndex;
+    newAnswers[questionIndex] = rating;
     setAnswers(newAnswers);
+    
+    // Auto-advance after selection
+    setTimeout(() => {
+      if (questionIndex < assessmentQuestions.length - 1) {
+        setCurrentQuestion(questionIndex + 1);
+      }
+    }, 300);
   };
 
-  const calculateResults = () => {
-    const categories = {
-      'Vision & Purpose': [],
-      'Market Understanding': [],
-      'Financial Management': [],
-      'Leadership & Team': [],
-      'Ministry Integration': [],
-      'Resilience & Perseverance': []
-    };
+  const calculateComparison = () => {
+    if (!preAssessmentData) return null;
 
-    answers.forEach((answer, index) => {
-      if (answer !== -1) {
-        const category = assessmentQuestions[index].category as keyof typeof categories;
-        (categories[category] as number[]).push(answer + 1); // Convert to 1-5 scale
-      }
-    });
-
-    const categoryAverages = Object.entries(categories).map(([category, scores]) => ({
-      category,
-      average: scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0,
-      maxScore: 5
+    const preAnswers = preAssessmentData.answers;
+    const improvements = answers.map((postScore, index) => ({
+      category: assessmentQuestions[index].category,
+      preScore: preAnswers[index],
+      postScore: postScore,
+      improvement: postScore - preAnswers[index],
+      improvementPercent: ((postScore - preAnswers[index]) / preAnswers[index]) * 100
     }));
 
-    const overallAverage = categoryAverages.reduce((sum, cat) => sum + cat.average, 0) / categoryAverages.length;
+    const totalPreScore = preAnswers.reduce((sum: number, score: number) => sum + score, 0);
+    const totalPostScore = answers.reduce((sum, score) => sum + score, 0);
+    const overallImprovement = totalPostScore - totalPreScore;
+    const overallImprovementPercent = (overallImprovement / totalPreScore) * 100;
 
-    return { categoryAverages, overallAverage };
+    const biggestGains = improvements
+      .filter(item => item.improvement > 0)
+      .sort((a, b) => b.improvement - a.improvement)
+      .slice(0, 3);
+
+    return {
+      improvements,
+      totalPreScore,
+      totalPostScore,
+      overallImprovement,
+      overallImprovementPercent,
+      biggestGains,
+      averagePreScore: totalPreScore / assessmentQuestions.length,
+      averagePostScore: totalPostScore / assessmentQuestions.length
+    };
   };
 
-  const getRecommendation = (score: number) => {
-    if (score >= 4.5) return { level: 'Advanced', color: '#10b981', description: 'You demonstrate strong capabilities in this area.' };
-    if (score >= 3.5) return { level: 'Proficient', color: '#4ECDC4', description: 'You have solid skills with room for refinement.' };
-    if (score >= 2.5) return { level: 'Developing', color: '#f59e0b', description: 'You have basic understanding; focus on growth here.' };
-    if (score >= 1.5) return { level: 'Beginner', color: '#ef4444', description: 'This area needs significant development and training.' };
-    return { level: 'Foundation', color: '#6b7280', description: 'Start with foundational learning in this area.' };
+  const completeAssessment = () => {
+    // Save final assessment
+    localStorage.setItem('ibam-post-assessment-completed', 'true');
+    localStorage.setItem('ibam-post-assessment-final', JSON.stringify({
+      answers,
+      completedAt: new Date().toISOString(),
+      totalQuestions: assessmentQuestions.length
+    }));
+    
+    // Save comparison data
+    const comparison = calculateComparison();
+    if (comparison) {
+      localStorage.setItem('ibam-assessment-comparison', JSON.stringify(comparison));
+    }
+    
+    setShowResults(true);
   };
 
-  const results = calculateResults();
+  const isComplete = answers.every(answer => answer !== -1);
+  const comparison = calculateComparison();
 
-  if (showResults) {
+  if (showResults && comparison) {
     return (
       <div className="min-h-screen" style={{backgroundColor: '#f8fafc'}}>
         {/* IBAM Header */}
@@ -163,15 +191,19 @@ export default function Assessment() {
                 />
                 <div>
                   <div className="text-white/90 text-sm md:text-base mb-1">
-                    Entrepreneurial Assessment
+                    Course Value Demonstration
                   </div>
                   <h1 className="text-white text-xl md:text-3xl font-bold mb-2">
-                    Your Results
+                    Your Growth Results
                   </h1>
                   <div className="flex flex-wrap gap-4 text-sm md:text-base text-white/90">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-green-400"></span>
-                      Assessment Complete
+                      Module 1 Complete
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-blue-400"></span>
+                      {comparison.overallImprovement > 0 ? '+' : ''}{comparison.overallImprovement.toFixed(1)} points gained
                     </div>
                   </div>
                 </div>
@@ -189,142 +221,146 @@ export default function Assessment() {
 
         <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
           
-          {/* Overall Score */}
-          <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-2xl border-2 border-[#4ECDC4]/20 p-6 md:p-8 mb-8">
-            <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-4 flex items-center gap-3">
-              <span className="text-4xl md:text-5xl">🏆</span>
-              Overall Entrepreneurial Readiness
-            </h2>
-            <div className="bg-white rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
-              <div className="flex items-center gap-6 mb-4">
-                <div className="text-6xl font-bold" style={{color: getRecommendation(results.overallAverage).color}}>
-                  {results.overallAverage.toFixed(1)}
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-[#2C3E50]">
-                    {getRecommendation(results.overallAverage).level}
-                  </div>
-                  <div className="text-lg text-gray-600">
-                    {getRecommendation(results.overallAverage).description}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Overall Progress Bar */}
-              <div className="bg-gray-200 rounded-full h-4 mb-3">
-                <div 
-                  className="h-4 rounded-full transition-all duration-1000"
-                  style={{
-                    width: `${(results.overallAverage / 5) * 100}%`,
-                    backgroundColor: getRecommendation(results.overallAverage).color
-                  }}
-                ></div>
-              </div>
-              <div className="text-sm text-gray-500">
-                Score: {results.overallAverage.toFixed(1)} out of 5.0
-              </div>
-            </div>
-          </div>
-
-          {/* Category Results */}
-          <div className="mb-8">
+          {/* Overall Results */}
+          <div className="bg-gradient-to-r from-[#10b981]/10 to-[#4ECDC4]/10 rounded-2xl border-2 border-[#10b981]/20 p-6 md:p-8 mb-8">
             <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
-              <span className="text-4xl md:text-5xl">📊</span>
-              Detailed Category Results
+              <span className="text-4xl md:text-5xl">🎯</span>
+              Course Value Delivered
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {results.categoryAverages.map((category, index) => {
-                const recommendation = getRecommendation(category.average);
-                return (
-                  <div key={index} className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6">
-                    <h3 className="font-bold text-[#2C3E50] text-lg mb-4">
-                      {category.category}
-                    </h3>
-                    
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="text-3xl font-bold" style={{color: recommendation.color}}>
-                        {category.average.toFixed(1)}
-                      </div>
-                      <div>
-                        <div className="font-semibold" style={{color: recommendation.color}}>
-                          {recommendation.level}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {recommendation.description}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Category Progress Bar */}
-                    <div className="bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="h-3 rounded-full transition-all duration-1000"
-                        style={{
-                          width: `${(category.average / 5) * 100}%`,
-                          backgroundColor: recommendation.color
-                        }}
-                      ></div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Before Score */}
+              <div className="bg-white rounded-xl p-6 border border-gray-200">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">📊</div>
+                  <div className="text-gray-600 mb-2">Before Course</div>
+                  <div className="text-4xl font-bold text-[#ef4444]">
+                    {comparison.averagePreScore.toFixed(1)}
                   </div>
-                );
-              })}
+                  <div className="text-sm text-gray-500">Average Score</div>
+                </div>
+              </div>
+
+              {/* After Score */}
+              <div className="bg-white rounded-xl p-6 border border-[#10b981]/20">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🚀</div>
+                  <div className="text-gray-600 mb-2">After Course</div>
+                  <div className="text-4xl font-bold text-[#10b981]">
+                    {comparison.averagePostScore.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-gray-500">Average Score</div>
+                </div>
+              </div>
+
+              {/* Improvement */}
+              <div className="bg-white rounded-xl p-6 border border-[#4ECDC4]/20">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">📈</div>
+                  <div className="text-gray-600 mb-2">Improvement</div>
+                  <div className="text-4xl font-bold text-[#4ECDC4]">
+                    +{(comparison.averagePostScore - comparison.averagePreScore).toFixed(1)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {comparison.overallImprovementPercent > 0 ? '+' : ''}{comparison.overallImprovementPercent.toFixed(0)}% Growth
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Recommendations */}
+          {/* Biggest Gains */}
           <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 mb-8">
             <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
-              <span className="text-4xl md:text-5xl">💡</span>
-              Recommended Next Steps
+              <span className="text-4xl md:text-5xl">🏆</span>
+              Your Biggest Improvements
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {comparison.biggestGains.map((gain, index) => (
+                <div key={index} className="bg-gradient-to-r from-[#10b981]/10 to-[#4ECDC4]/10 rounded-xl p-6 border border-[#10b981]/20">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                    </div>
+                    <div className="font-semibold text-[#2C3E50] mb-2">
+                      {gain.category}
+                    </div>
+                    <div className="text-3xl font-bold text-[#10b981] mb-1">
+                      +{gain.improvement.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {gain.preScore.toFixed(1)} → {gain.postScore.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Detailed Comparison */}
+          <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 mb-8">
+            <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
+              <span className="text-4xl md:text-5xl">📊</span>
+              Complete Before vs After Comparison
             </h3>
             
             <div className="space-y-6">
-              <div className="bg-[#4ECDC4]/10 rounded-xl p-6 border border-[#4ECDC4]/20">
-                <h4 className="font-semibold text-[#2C3E50] text-lg mb-3">
-                  🎯 Focus Areas for Growth
-                </h4>
-                <ul className="space-y-2 text-gray-700">
-                  {results.categoryAverages
-                    .filter(cat => cat.average < 3.5)
-                    .slice(0, 3)
-                    .map((cat, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-[#f59e0b] mt-1">•</span>
-                        <span><strong>{cat.category}:</strong> Consider additional training and practice in this area</span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-              
-              <div className="bg-[#10b981]/10 rounded-xl p-6 border border-[#10b981]/20">
-                <h4 className="font-semibold text-[#2C3E50] text-lg mb-3">
-                  ✅ Your Strengths
-                </h4>
-                <ul className="space-y-2 text-gray-700">
-                  {results.categoryAverages
-                    .filter(cat => cat.average >= 3.5)
-                    .slice(0, 3)
-                    .map((cat, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-[#10b981] mt-1">•</span>
-                        <span><strong>{cat.category}:</strong> You demonstrate solid capabilities here</span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
+              {comparison.improvements.map((item, index) => (
+                <div key={index} className="border border-gray-200 rounded-xl p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="font-semibold text-[#2C3E50] text-lg">
+                      {item.category}
+                    </h4>
+                    <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      item.improvement > 0 ? 'bg-green-100 text-green-700' :
+                      item.improvement === 0 ? 'bg-gray-100 text-gray-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {item.improvement > 0 ? '+' : ''}{item.improvement.toFixed(1)}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">Before Course</div>
+                      <div className="text-2xl font-bold text-[#ef4444]">{item.preScore}/10</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1">After Course</div>
+                      <div className="text-2xl font-bold text-[#10b981]">{item.postScore}/10</div>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="relative">
+                    <div className="bg-gray-200 rounded-full h-4">
+                      <div 
+                        className="h-4 rounded-full bg-[#ef4444] opacity-50"
+                        style={{width: `${(item.preScore / 10) * 100}%`}}
+                      ></div>
+                    </div>
+                    <div className="bg-gray-200 rounded-full h-4 mt-2">
+                      <div 
+                        className="h-4 rounded-full bg-[#10b981]"
+                        style={{width: `${(item.postScore / 10) * 100}%`}}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Next Steps */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <button 
-              onClick={() => router.push('/modules')}
+              onClick={() => router.push('/modules/2')}
               className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 hover:shadow-xl transition-all"
             >
               <div className="text-4xl mb-3">📚</div>
-              <div className="font-bold text-[#2C3E50] mb-2">Continue Learning</div>
-              <div className="text-gray-600">Focus on modules that address your growth areas</div>
+              <div className="font-bold text-[#2C3E50] mb-2">Continue to Module 2</div>
+              <div className="text-gray-600">Build on your foundation with advanced concepts</div>
             </button>
             
             <button 
@@ -333,20 +369,16 @@ export default function Assessment() {
             >
               <div className="text-4xl mb-3">📊</div>
               <div className="font-bold text-[#2C3E50] mb-2">Business Planner</div>
-              <div className="text-gray-600">Apply your insights to your business plan</div>
+              <div className="text-gray-600">Apply your improved skills to your business plan</div>
             </button>
             
             <button 
-              onClick={() => {
-                setShowResults(false);
-                setCurrentQuestion(0);
-                setAnswers(new Array(assessmentQuestions.length).fill(-1));
-              }}
+              onClick={() => router.push('/dashboard')}
               className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 hover:shadow-xl transition-all"
             >
-              <div className="text-4xl mb-3">🔄</div>
-              <div className="font-bold text-[#2C3E50] mb-2">Retake Assessment</div>
-              <div className="text-gray-600">Re-evaluate your progress after learning</div>
+              <div className="text-4xl mb-3">🏠</div>
+              <div className="font-bold text-[#2C3E50] mb-2">Dashboard</div>
+              <div className="text-gray-600">Return to your learning dashboard</div>
             </button>
           </div>
         </div>
@@ -396,10 +428,10 @@ export default function Assessment() {
               />
               <div>
                 <div className="text-white/90 text-sm md:text-base mb-1">
-                  Entrepreneurial Readiness
+                  Measure Your Growth
                 </div>
                 <h1 className="text-white text-xl md:text-3xl font-bold mb-2">
-                  Assessment Tool
+                  Post-Course Assessment
                 </h1>
                 <div className="flex flex-wrap gap-4 text-sm md:text-base text-white/90">
                   <div className="flex items-center gap-2">
@@ -418,13 +450,6 @@ export default function Assessment() {
                 </div>
               </div>
             </div>
-            
-            <button 
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-all"
-            >
-              🏠 <span className="hidden sm:inline">Dashboard</span>
-            </button>
           </div>
           
           {/* Progress Bar */}
@@ -445,19 +470,19 @@ export default function Assessment() {
         {/* Instructions */}
         <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-2xl border-2 border-[#4ECDC4]/20 p-6 md:p-8 mb-8">
           <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-4 flex items-center gap-3">
-            <span className="text-4xl md:text-5xl">📋</span>
-            Entrepreneurial Readiness Assessment
+            <span className="text-4xl md:text-5xl">📈</span>
+            Measure Your Growth - Same Questions, New Skills
           </h2>
           <div className="bg-white rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
             <p className="text-gray-700 text-lg leading-relaxed mb-4">
-              This assessment will help you understand your current entrepreneurial readiness across key areas. 
-              Answer honestly to get the most accurate results and personalized recommendations.
+              You're retaking the exact same assessment from before the course. 
+              Rate yourself honestly based on your current abilities - we'll show you the amazing progress you've made!
             </p>
             <div className="flex items-center gap-4">
-              <div className="text-3xl">⏱️</div>
+              <div className="text-3xl">🎯</div>
               <div>
-                <div className="font-semibold text-[#2C3E50]">Estimated time: 5-10 minutes</div>
-                <div className="text-gray-600">{assessmentQuestions.length} questions • Your progress is automatically saved</div>
+                <div className="font-semibold text-[#2C3E50]">Same 1-10 scale as before</div>
+                <div className="text-gray-600">We'll calculate your improvement automatically</div>
               </div>
             </div>
           </div>
@@ -481,42 +506,71 @@ export default function Assessment() {
                 </div>
               </div>
             </div>
+            
+            {/* Show pre-score for comparison */}
+            {preAssessmentData && (
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Your previous score:</div>
+                <div className="text-2xl font-bold text-[#ef4444]">
+                  {preAssessmentData.answers[currentQuestion]}/10
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Question */}
-          <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-8 leading-relaxed">
+          <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-3 leading-relaxed">
             {assessmentQuestions[currentQuestion].question}
           </h3>
+          <p className="text-gray-600 text-lg mb-8">
+            {assessmentQuestions[currentQuestion].subtitle}
+          </p>
 
-          {/* Answer Options */}
-          <div className="space-y-4 mb-8">
-            {assessmentQuestions[currentQuestion].options.map((option, index) => (
-              <label 
-                key={index}
-                className={`flex items-start gap-4 p-4 md:p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                  answers[currentQuestion] === index
-                    ? 'border-[#4ECDC4] bg-[#4ECDC4]/10'
-                    : 'border-gray-200 hover:border-[#4ECDC4]/50 hover:bg-gray-50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${currentQuestion}`}
-                  value={index}
-                  checked={answers[currentQuestion] === index}
-                  onChange={() => selectAnswer(currentQuestion, index)}
-                  className="w-6 h-6 text-[#4ECDC4] mt-1"
-                />
-                <div>
-                  <div className="font-semibold text-[#2C3E50] mb-1">
-                    Level {index + 1}
+          {/* Rating Scale */}
+          <div className="mb-8">
+            <div className="flex justify-between text-sm text-gray-500 mb-4">
+              <span>1 - No Experience/Very Poor</span>
+              <span>5 - Average/Moderate</span>
+              <span>10 - Expert/Excellent</span>
+            </div>
+            
+            <div className="grid grid-cols-10 gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                <button
+                  key={rating}
+                  onClick={() => selectAnswer(currentQuestion, rating)}
+                  className={`h-16 rounded-xl font-bold text-lg transition-all ${
+                    answers[currentQuestion] === rating
+                      ? 'bg-[#4ECDC4] text-white shadow-lg scale-105'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {rating}
+                </button>
+              ))}
+            </div>
+            
+            {answers[currentQuestion] !== -1 && preAssessmentData && (
+              <div className="mt-4 text-center">
+                <span className="text-lg font-semibold text-[#4ECDC4]">
+                  Current: {answers[currentQuestion]}/10
+                </span>
+                <span className="mx-4 text-gray-400">vs</span>
+                <span className="text-lg font-semibold text-[#ef4444]">
+                  Before: {preAssessmentData.answers[currentQuestion]}/10
+                </span>
+                {answers[currentQuestion] !== preAssessmentData.answers[currentQuestion] && (
+                  <div className={`mt-2 font-bold ${
+                    answers[currentQuestion] > preAssessmentData.answers[currentQuestion] 
+                      ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {answers[currentQuestion] > preAssessmentData.answers[currentQuestion] ? '↗️' : '↘️'} 
+                    {answers[currentQuestion] > preAssessmentData.answers[currentQuestion] ? '+' : ''}
+                    {answers[currentQuestion] - preAssessmentData.answers[currentQuestion]} point change
                   </div>
-                  <div className="text-gray-700 text-lg leading-relaxed">
-                    {option}
-                  </div>
-                </div>
-              </label>
-            ))}
+                )}
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
@@ -531,18 +585,17 @@ export default function Assessment() {
             
             {currentQuestion === assessmentQuestions.length - 1 ? (
               <button
-                onClick={() => setShowResults(true)}
-                disabled={answers.includes(-1)}
+                onClick={completeAssessment}
+                disabled={!isComplete}
                 className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-lg text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'}}
               >
-                📊 View Results
+                📊 See Your Growth Results
               </button>
             ) : (
               <button
                 onClick={() => setCurrentQuestion(Math.min(assessmentQuestions.length - 1, currentQuestion + 1))}
-                disabled={answers[currentQuestion] === -1}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-lg text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-lg text-white transition-all"
                 style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}
               >
                 Next →
@@ -553,7 +606,7 @@ export default function Assessment() {
 
         {/* Question Navigation */}
         <div className="bg-white rounded-xl shadow-sm border border-[#e2e8f0] p-4">
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-10 gap-2">
             {assessmentQuestions.map((_, index) => (
               <button
                 key={index}

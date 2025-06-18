@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 // Session data structure - dynamic content per session
 const sessionData: Record<string, Record<string, any>> = {
@@ -63,6 +63,64 @@ const sessionData: Record<string, Record<string, any>> = {
         "How can your business skills serve kingdom purposes beyond just financial giving?",
         "What community needs could be addressed through business-ministry collaboration?"
       ]
+    },
+    "3": {
+      title: "Integrity in Business Practices",
+      module: "Foundational Principles", 
+      scripture: {
+        reference: "Proverbs 11:1",
+        text: "The Lord detests dishonest scales, but accurate weights find favor with him."
+      },
+      videoUrl: "https://vimeo.com/your-video-id-3",
+      writtenMaterial: "Integrity in business means more than just avoiding obvious fraud - it means complete honesty in all dealings, fair treatment of employees and customers, and transparency in communication. God cares about the details of how we conduct business because our character is revealed in small decisions as much as large ones.",
+      reflection: "What areas of your business practices need greater alignment with biblical integrity standards?",
+      becomingGodsEntrepreneur: {
+        content: "God's entrepreneurs build their reputation on trustworthiness, knowing that integrity is the foundation of sustainable business relationships.",
+        questions: [
+          "How can you demonstrate integrity even when it costs you short-term profit?",
+          "What systems can you put in place to ensure honest practices throughout your business?"
+        ]
+      },
+      caseStudy: "Tom's auto repair shop built a loyal customer base by providing honest estimates, explaining all work performed, and standing behind their repairs with genuine warranties. While competitors cut corners, Tom's integrity-based approach led to sustainable growth.",
+      faqQuestions: [
+        "Q: What if being completely honest hurts my competitiveness? A: Long-term trust builds stronger business than short-term deception.",
+        "Q: How detailed should I be about problems or limitations? A: Transparent communication builds credibility.",
+        "Q: What if my industry standard practices seem questionable? A: Be the example of a better way to do business."
+      ],
+      businessPlanQuestions: [
+        "What specific integrity standards will guide your business decisions?",
+        "How will you communicate your commitment to honesty with customers and employees?",
+        "What accountability measures will you implement to maintain high integrity standards?"
+      ]
+    },
+    "4": {
+      title: "Stewardship and Resource Management",
+      module: "Foundational Principles",
+      scripture: {
+        reference: "Luke 16:10",
+        text: "Whoever is faithful in very little is also faithful in much, and whoever is dishonest in very little is also dishonest in much."
+      },
+      videoUrl: "https://vimeo.com/your-video-id-4",
+      writtenMaterial: "Everything we have - money, time, talents, opportunities - ultimately belongs to God. We are stewards, not owners. This perspective changes how we make decisions about spending, investing, hiring, and growing our businesses. Good stewardship means maximizing the return on God's investment in us while serving others and advancing His kingdom.",
+      reflection: "How does viewing yourself as a steward rather than an owner change your approach to business decisions?",
+      becomingGodsEntrepreneur: {
+        content: "God's entrepreneurs recognize their role as stewards of divine resources, making decisions that honor the true Owner while serving others effectively.",
+        questions: [
+          "What would change in your financial decisions if you truly believed everything belongs to God?",
+          "How can you balance wise business growth with generous kingdom investment?"
+        ]
+      },
+      caseStudy: "Maria's consulting firm implemented a stewardship model: 10% of profits go to kingdom work, employees receive profit sharing, and business decisions prioritize long-term value creation over short-term gains. This approach attracted top talent and loyal clients.",
+      faqQuestions: [
+        "Q: Does stewardship mean I can't build wealth? A: Good stewards can build wealth responsibly while serving others.",
+        "Q: How much should I give away vs. reinvest in business? A: Seek God's guidance for your specific situation and season.",
+        "Q: What if I disagree with how others think I should use 'my' resources? A: You're accountable to God first, but wisdom seeks godly counsel."
+      ],
+      businessPlanQuestions: [
+        "How will you demonstrate faithful stewardship in your business operations?",
+        "What percentage of profits will you allocate to kingdom advancement?",
+        "How will you balance reinvestment, personal income, and generosity in your financial planning?"
+      ]
     }
   },
   "2": {
@@ -98,10 +156,24 @@ const sessionData: Record<string, Record<string, any>> = {
   }
 };
 
+// Module configuration for navigation
+const moduleConfig = {
+  "1": { name: "Foundational Principles", totalSessions: 4 },
+  "2": { name: "Success and Failure Factors", totalSessions: 4 },
+  "3": { name: "Marketing", totalSessions: 5 },
+  "4": { name: "Finance", totalSessions: 4 },
+  "5": { name: "Business Planning", totalSessions: 3 }
+};
+
 export default function SessionPage() {
   const params = useParams();
-  const moduleId = params.moduleId as string;
-  const sessionId = params.sessionId as string;
+  const router = useRouter();
+  const moduleId = params?.moduleId as string;
+  const sessionId = params?.sessionId as string;
+  
+  // User profile state
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [lastActivity, setLastActivity] = useState<any>(null);
   
   // Get session data or fallback
   const session = sessionData[moduleId]?.[sessionId] || {
@@ -116,6 +188,10 @@ export default function SessionPage() {
     faqQuestions: ["Loading..."],
     businessPlanQuestions: ["Loading..."]
   };
+
+  // Get module configuration
+  const currentModule = moduleConfig[moduleId as keyof typeof moduleConfig];
+  const totalSessions = currentModule?.totalSessions || 4;
 
   // Learning mode and current section state
   const [learningMode, setLearningMode] = useState<'quick' | 'normal'>('normal');
@@ -134,6 +210,7 @@ export default function SessionPage() {
     whoDidYouTell: '',
     whoSpecifically: '',
     visionReflection: '',
+    winsReflection: '',
     
     // Look Up progress  
     lookUpComplete: false,
@@ -167,6 +244,53 @@ export default function SessionPage() {
     lastSaveTime: Date.now(),
     completionPercentage: 0
   });
+
+  // Load user profile and last activity
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        // TODO: Replace with actual Supabase calls
+        // Mock user profile - replace with real data
+        const mockProfile = {
+          id: 'user123',
+          first_name: 'John', // This will replace email display
+          last_name: 'Smith',
+          email: 'john.smith@example.com'
+        };
+        setUserProfile(mockProfile);
+
+        // Mock last activity - replace with real data
+        const mockLastActivity = {
+          module_id: moduleId,
+          session_id: sessionId,
+          section: 'lookup',
+          timestamp: Date.now()
+        };
+        setLastActivity(mockLastActivity);
+
+        // const { data: profile } = await supabase
+        //   .from('profiles')
+        //   .select('first_name, last_name, email')
+        //   .eq('id', userId)
+        //   .single();
+        // setUserProfile(profile);
+
+        // const { data: activity } = await supabase
+        //   .from('user_progress')
+        //   .select('*')
+        //   .eq('user_id', userId)
+        //   .order('updated_at', { ascending: false })
+        //   .limit(1)
+        //   .single();
+        // setLastActivity(activity);
+
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   // Load saved progress from localStorage immediately
   useEffect(() => {
@@ -212,6 +336,71 @@ export default function SessionPage() {
 
     return () => clearTimeout(saveTimer);
   }, [userProgress, moduleId, sessionId]);
+
+  // Navigation functions
+  const navigateToModules = () => {
+    router.push('/modules');
+  };
+
+  const navigateToDashboard = () => {
+    router.push('/dashboard');
+  };
+
+  const continueLearning = () => {
+    if (lastActivity && lastActivity.section) {
+      setCurrentSection(lastActivity.section);
+    }
+  };
+
+  const navigateToSession = (targetSessionId: string) => {
+    router.push(`/modules/${moduleId}/sessions/${targetSessionId}`);
+  };
+
+  const navigateToPreviousSession = () => {
+    const prevSessionId = parseInt(sessionId) - 1;
+    if (prevSessionId >= 1) {
+      navigateToSession(prevSessionId.toString());
+    } else {
+      // Go to previous module's last session
+      const prevModuleId = parseInt(moduleId) - 1;
+      if (prevModuleId >= 1) {
+        const prevModule = moduleConfig[prevModuleId.toString() as keyof typeof moduleConfig];
+        router.push(`/modules/${prevModuleId}/sessions/${prevModule.totalSessions}`);
+      }
+    }
+  };
+
+  // 🆕 UPDATED: Navigate to next session with Module 1 completion logic
+  const navigateToNextSession = () => {
+    const nextSessionId = parseInt(sessionId) + 1;
+    
+    // Check if this is the end of Module 1 (Module 1, Session 4)
+    if (moduleId === "1" && sessionId === "4" && userProgress.lookForwardComplete) {
+      // Mark Module 1 as completed
+      localStorage.setItem('ibam-module-1-completed', 'true');
+      console.log('🎉 Module 1 completed! Redirecting to post-assessment...');
+      
+      // Redirect to post-assessment instead of next module
+      router.push('/assessment/post');
+      return;
+    }
+    
+    // Normal navigation logic for other sessions
+    if (nextSessionId <= totalSessions) {
+      navigateToSession(nextSessionId.toString());
+    } else {
+      // Go to next module's first session
+      const nextModuleId = parseInt(moduleId) + 1;
+      if (nextModuleId <= 5) { // Assuming 5 modules total
+        router.push(`/modules/${nextModuleId}/sessions/1`);
+      }
+    }
+  };
+
+  // 🆕 HELPER: Check if this is the final session of Module 1
+  const isModule1FinalSession = () => {
+    return moduleId === "1" && sessionId === "4";
+  };
 
   // Calculate completion and check section requirements
   const checkLookBackComplete = () => {
@@ -293,6 +482,7 @@ export default function SessionPage() {
   };
 
   const previousActionSteps = getPreviousActionSteps();
+  
   const exportUserData = () => {
     const exportData = {
       sessionInfo: {
@@ -316,9 +506,64 @@ export default function SessionPage() {
 
   return (
     <div className="min-h-screen" style={{backgroundColor: '#f8fafc'}}>
-      {/* IBAM Header with Real Branding */}
+      {/* ENHANCED IBAM Header with Navigation */}
       <div style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}>
         <div className="max-w-7xl mx-auto px-4 py-6">
+          {/* Navigation Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={navigateToDashboard}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2"
+              >
+                🏠 Dashboard
+              </button>
+              <button 
+                onClick={navigateToModules}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2"
+              >
+                📚 All Modules
+              </button>
+              {lastActivity && (
+                <button 
+                  onClick={continueLearning}
+                  className="bg-[#10b981] hover:bg-[#10b981]/80 px-4 py-2 rounded-lg text-white font-bold transition-all flex items-center gap-2"
+                >
+                  🎯 Continue Learning
+                </button>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={exportUserData}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2"
+              >
+                📥 Download My Work
+              </button>
+              {userProfile && (
+                <div className="text-white/90 text-right">
+                  <div className="font-semibold">Welcome back, {userProfile.first_name}!</div>
+                  <div className="text-sm opacity-75">{userProfile.email}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center gap-2 text-white/80 text-sm mb-4">
+            <button onClick={navigateToDashboard} className="hover:text-white">Dashboard</button>
+            <span>→</span>
+            <button onClick={navigateToModules} className="hover:text-white">Modules</button>
+            <span>→</span>
+            <button onClick={() => router.push(`/modules/${moduleId}`)} className="hover:text-white">
+              Module {moduleId}: {currentModule?.name}
+            </button>
+            <span>→</span>
+            <span className="text-white font-semibold">Session {sessionId}</span>
+          </div>
+
+          {/* Session Header */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               {/* IBAM Logo */}
@@ -327,7 +572,6 @@ export default function SessionPage() {
                 alt="IBAM Logo" 
                 className="h-12 md:h-16 w-auto"
                 onError={(e) => {
-                  // Fallback to mini logo if main logo fails
                   e.currentTarget.src = "/images/branding/mini-logo.png";
                 }}
               />
@@ -353,15 +597,57 @@ export default function SessionPage() {
                        saveStatus === 'saving' ? 'Saving...' : 'Save error (data safe locally)'}
                     </span>
                   </div>
+                  {/* 🆕 Module 1 Final Session Indicator */}
+                  {isModule1FinalSession() && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
+                      <span className="hidden sm:inline">📊 Post-Assessment after completion</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
+          
+          {/* Session Navigation */}
+          <div className="flex items-center justify-between mt-6">
+            <button 
+              onClick={navigateToPreviousSession}
+              disabled={moduleId === "1" && sessionId === "1"}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                moduleId === "1" && sessionId === "1" 
+                  ? 'bg-white/10 text-white/50 cursor-not-allowed' 
+                  : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
+            >
+              ← Previous Session
+            </button>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-white/80">Session {sessionId} of {totalSessions}</span>
+              <select 
+                value={sessionId}
+                onChange={(e) => navigateToSession(e.target.value)}
+                className="bg-white/20 text-white rounded-lg px-3 py-1 border border-white/30"
+              >
+                {Array.from({length: totalSessions}, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num} className="text-gray-900">
+                    Session {num}
+                  </option>
+                ))}
+              </select>
+            </div>
             
             <button 
-              onClick={exportUserData}
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm md:text-base font-medium text-white transition-all"
+              onClick={navigateToNextSession}
+              disabled={moduleId === "5" && sessionId === totalSessions.toString()}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                moduleId === "5" && sessionId === totalSessions.toString()
+                  ? 'bg-white/10 text-white/50 cursor-not-allowed' 
+                  : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
             >
-              📥 Download My Work
+              {isModule1FinalSession() ? 'Complete Module 1 →' : 'Next Session →'}
             </button>
           </div>
           
@@ -542,6 +828,23 @@ export default function SessionPage() {
         </div>
       </div>
 
+      {/* 🆕 Module 1 Final Session Alert */}
+      {isModule1FinalSession() && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-orange-200">
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <div className="bg-white rounded-xl border border-orange-200 p-4">
+              <div className="flex items-center gap-3">
+                <div className="text-4xl">🎉</div>
+                <div>
+                  <h4 className="font-bold text-orange-800 text-lg">Final Session of Module 1!</h4>
+                  <p className="text-orange-700">After completing this session, you'll take the post-assessment to measure your growth.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Progress Indicator - Shows what's needed to unlock next section */}
       <div className="bg-[#4ECDC4]/5 border-b" style={{borderColor: '#e2e8f0'}}>
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -628,7 +931,9 @@ export default function SessionPage() {
           
           {currentSection === 'lookforward' && !userProgress.lookForwardComplete && userProgress.lookUpComplete && (
             <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-              <h4 className="font-semibold text-green-800 text-lg mb-2">📋 To complete this session:</h4>
+              <h4 className="font-semibold text-green-800 text-lg mb-2">
+                📋 To complete this session{isModule1FinalSession() ? ' & unlock post-assessment' : ''}:
+              </h4>
               <div className="grid md:grid-cols-2 gap-3 text-sm">
                 <div className={`flex items-center gap-2 ${userProgress.keyTruthReflection ? 'text-green-600' : 'text-green-700'}`}>
                   {userProgress.keyTruthReflection ? '✅' : '⏳'} Write key truth reflection
@@ -727,8 +1032,8 @@ export default function SessionPage() {
                   (Big or small - they all matter!)
                 </p>
                 <textarea
-                  value={userProgress?.winsReflection || ""}
-                  onChange={(e) => updateProgress({winsReflection: e.target.value} as any)}
+                  value={userProgress.winsReflection || ""}
+                  onChange={(e) => updateProgress({winsReflection: e.target.value})}
                   className="w-full h-32 md:h-40 p-4 border-2 border-[#10b981]/20 rounded-xl focus:ring-2 focus:ring-[#10b981] text-lg"
                   placeholder="Celebrate your progress... new customers, breakthrough insights, answered prayers, overcoming fears, positive feedback, etc."
                 />
@@ -841,7 +1146,7 @@ export default function SessionPage() {
               </h3>
               <div className="bg-white rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
                 <p className="text-[#2C3E50] font-semibold text-lg md:text-xl leading-relaxed mb-6">
-                  "Our vision is to love God and serve our community through excellent, biblically-based business, intentionally multiplying disciples who make disciples in our marketplace sphere of influence, following Jesus’ model and calling.."
+                  "Our vision is to love God and serve our community through excellent, biblically-based business, intentionally multiplying disciples who make disciples in our marketplace sphere of influence, following Jesus' model and calling.."
                 </p>
                 <label className="block text-lg font-semibold text-[#2C3E50] mb-3">
                   How does this vision connect with your current business situation?
@@ -1336,14 +1641,26 @@ export default function SessionPage() {
               </div>
             </div>
 
-            {/* Session Complete Indicator */}
+            {/* 🆕 UPDATED: Session Complete Indicator with Module 1 logic */}
             {userProgress.lookForwardComplete && (
               <div className="bg-[#10b981] text-white rounded-2xl p-6 md:p-8 text-center">
-                <div className="text-5xl md:text-6xl mb-4">🏆</div>
-                <h3 className="text-xl md:text-2xl font-bold mb-2">Session Complete!</h3>
-                <p className="text-lg md:text-xl opacity-90">Excellent work! You can now move to the next session.</p>
-                <button className="mt-4 bg-white text-[#10b981] px-6 py-3 rounded-xl font-bold text-lg hover:bg-gray-100">
-                  Continue to Next Session →
+                <div className="text-5xl md:text-6xl mb-4">
+                  {isModule1FinalSession() ? '🎉' : '🏆'}
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold mb-2">
+                  {isModule1FinalSession() ? 'Module 1 Complete!' : 'Session Complete!'}
+                </h3>
+                <p className="text-lg md:text-xl opacity-90 mb-4">
+                  {isModule1FinalSession() 
+                    ? 'Congratulations! Time to measure your growth with the post-assessment.' 
+                    : 'Excellent work! You can now move to the next session.'
+                  }
+                </p>
+                <button 
+                  onClick={navigateToNextSession}
+                  className="mt-4 bg-white text-[#10b981] px-8 py-3 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all"
+                >
+                  {isModule1FinalSession() ? '📊 Take Post-Assessment →' : 'Continue to Next Session →'}
                 </button>
               </div>
             )}
@@ -1361,7 +1678,6 @@ export default function SessionPage() {
                 alt="IBAM Mini Logo" 
                 className="h-8 w-auto"
                 onError={(e) => {
-                  // Fallback to text if mini logo fails
                   e.currentTarget.style.display = 'none';
                 }}
               />
