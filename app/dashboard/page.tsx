@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Check module completion based on session progress (20 sessions total)
+  // Check module completion based on session progress
   const checkModuleCompletion = async (userId: string): Promise<number[]> => {
     try {
       const { data, error } = await supabase
@@ -140,34 +140,38 @@ const Dashboard: React.FC = () => {
         return [];
       }
 
-      // Calculate module completion based on session completion
-      // Module 1: Sessions 1-4, Module 2: Sessions 5-8, Module 3: Sessions 9-13, 
-      // Module 4: Sessions 14-17, Module 5: Sessions 18-20
       const completedSessions: number[] = data?.map(progress => progress.session_id) || [];
       const completedModules: number[] = [];
 
-      // Module session ranges
-      const moduleRanges: Array<{ module: number; start: number; end: number }> = [
-        { module: 1, start: 1, end: 4 },    // 4 sessions
-        { module: 2, start: 5, end: 8 },    // 4 sessions  
-        { module: 3, start: 9, end: 13 },   // 5 sessions
-        { module: 4, start: 14, end: 17 },  // 4 sessions
-        { module: 5, start: 18, end: 20 },  // 3 sessions
+      // Check each module based on actual session structure
+      // Session ID format: module_id * 10 + session_number
+      // Module 1: 11, 12, 13, 14 (4 sessions)
+      // Module 2: 21, 22, 23, 24 (4 sessions)  
+      // Module 3: 31, 32, 33, 34, 35 (5 sessions)
+      // Module 4: 41, 42, 43, 44 (4 sessions)
+      // Module 5: 51, 52, 53 (3 sessions)
+
+      const moduleSessionCounts = [
+        { module: 1, sessions: 4 },
+        { module: 2, sessions: 4 },
+        { module: 3, sessions: 5 },
+        { module: 4, sessions: 4 },
+        { module: 5, sessions: 3 }
       ];
 
-      for (const range of moduleRanges) {
-        const moduleSessions: number[] = [];
-        for (let session = range.start; session <= range.end; session++) {
-          moduleSessions.push(session);
+      for (const moduleInfo of moduleSessionCounts) {
+        const moduleSessionIds: number[] = [];
+        for (let session = 1; session <= moduleInfo.sessions; session++) {
+          moduleSessionIds.push(moduleInfo.module * 10 + session);
         }
 
         // Check if all sessions in this module are completed
-        const moduleComplete = moduleSessions.every((sessionId: number) => 
+        const moduleComplete = moduleSessionIds.every((sessionId: number) => 
           completedSessions.includes(sessionId)
         );
 
         if (moduleComplete) {
-          completedModules.push(range.module);
+          completedModules.push(moduleInfo.module);
         }
       }
 
