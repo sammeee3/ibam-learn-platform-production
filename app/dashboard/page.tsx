@@ -200,13 +200,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // TEMPORARY: Skip assessment checks completely for testing
   // Load user data and assessment status
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-        console.log('Loading user data...');
+        console.log('Loading user data (assessment checks disabled for testing)...');
 
         // Get current user
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -233,42 +234,18 @@ const Dashboard: React.FC = () => {
 
         console.log('User authenticated:', user.id);
 
-        // Check assessment completions and module progress with error handling
-        let preAssessmentCompleted = false;
-        let postAssessmentCompleted = false;
-        let completedModules: number[] = [];
-
-        try {
-          // Try to check assessments, but don't fail if it errors
-          [preAssessmentCompleted, postAssessmentCompleted, completedModules] = await Promise.allSettled([
-            checkPreAssessmentCompletion(user.id),
-            checkPostAssessmentCompletion(user.id),
-            checkModuleCompletion(user.id),
-          ]).then(results => [
-            results[0].status === 'fulfilled' ? results[0].value : false,
-            results[1].status === 'fulfilled' ? results[1].value : false,
-            results[2].status === 'fulfilled' ? results[2].value : [],
-          ]);
-          
-          console.log('Assessment check results:', {
-            preAssessmentCompleted,
-            postAssessmentCompleted,
-            completedModules
-          });
-          
-        } catch (assessmentError) {
-          console.error('Error checking assessments, using defaults:', assessmentError);
-          // Continue with default values - don't block the dashboard
-        }
-
+        // TEMPORARILY: Skip assessment and progress checks
+        // Set default values to test navigation
         setState({
           user,
-          hasCompletedPreAssessment: preAssessmentCompleted,
-          hasCompletedPostAssessment: postAssessmentCompleted,
-          completedModules,
+          hasCompletedPreAssessment: true, // TEMP: Always true to test navigation
+          hasCompletedPostAssessment: false,
+          completedModules: [], // TEMP: Empty to test Module 1 access
           isLoading: false,
           error: null,
         });
+
+        console.log('Dashboard loaded with test values - assessments bypassed');
 
       } catch (error) {
         console.error('Error loading user data:', error);
