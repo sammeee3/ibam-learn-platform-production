@@ -118,6 +118,11 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
   });
   const [hoveredVerse, setHoveredVerse] = useState<string | null>(null);
   const [pathwayMode, setPathwayMode] = useState<'individual' | 'small_group'>('individual');
+  const [surveyResponses, setSurveyResponses] = useState({
+    content_value: 0,
+    learning_experience: 0,
+    recommendation: 0
+  });
 
   // Load session data and user
   useEffect(() => {
@@ -201,8 +206,42 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
     }
   };
 
-  // Navigation functions
-  const navigateToSession = (direction: 'prev' | 'next') => {
+  // Handle survey submission
+  const submitSurvey = async () => {
+    if (!user || !sessionData) return;
+
+    try {
+      const surveyData = {
+        user_id: user.id,
+        session_id: sessionData.id,
+        module_id: sessionData.module_id,
+        content_value_rating: surveyResponses.content_value,
+        learning_experience_rating: surveyResponses.learning_experience,
+        recommendation_rating: surveyResponses.recommendation,
+        submitted_at: new Date().toISOString()
+      };
+
+      // This will need a session_surveys table - for now we'll store in user_progress
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          session_id: sessionData.id,
+          module_id: sessionData.module_id,
+          survey_data: surveyData,
+          updated_at: new Date().toISOString()
+        }, { 
+          onConflict: 'user_id,session_id',
+          ignoreDuplicates: false 
+        });
+
+      if (error) throw error;
+      
+      alert('Thank you for your feedback! 🙏');
+    } catch (err) {
+      console.error('Error submitting survey:', err);
+    }
+  };
     if (!sessionData) return;
     
     const targetSession = direction === 'next' 
@@ -236,6 +275,129 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
           <Play className="w-16 h-16 text-gray-500 mx-auto mb-4" />
           <p className="text-gray-600">{title}</p>
           <p className="text-sm text-gray-500 mt-2">Video URL: {url}</p>
+        </div>
+
+        {/* NEW: Comprehensive Course Help Center - Bottom Placement */}
+        <div className="bg-white rounded-lg shadow-lg mb-8 overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+            <h3 className="text-2xl font-bold mb-2 flex items-center">
+              🎓 IBAM Course Help Center
+            </h3>
+            <p className="text-indigo-100">Everything you need to succeed in your faith-driven business journey!</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+            {/* Course Navigation */}
+            <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500">
+              <h4 className="font-bold text-blue-800 mb-3 flex items-center">
+                <Users className="w-5 h-5 mr-2" />
+                🧭 Navigation
+              </h4>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-medium text-gray-800">Session Flow:</p>
+                  <p className="text-gray-600">Use Previous/Next or Module Overview to navigate</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Learning Paths:</p>
+                  <p className="text-gray-600">Switch between Individual & Small Group anytime</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Progress:</p>
+                  <p className="text-gray-600">Auto-saves as you complete sections</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Business Planner */}
+            <div className="bg-purple-50 p-5 rounded-lg border-l-4 border-purple-500">
+              <h4 className="font-bold text-purple-800 mb-3 flex items-center">
+                <Lightbulb className="w-5 h-5 mr-2" />
+                💼 Business Planner
+              </h4>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-medium text-gray-800">Access:</p>
+                  <p className="text-gray-600">Click "Business Planner" button anytime</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Integration:</p>
+                  <p className="text-gray-600">Session answers auto-populate your plan</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Editing:</p>
+                  <p className="text-gray-600">Refine responses as your vision grows</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Downloads & Saving */}
+            <div className="bg-green-50 p-5 rounded-lg border-l-4 border-green-500">
+              <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                <Download className="w-5 h-5 mr-2" />
+                💾 Your Work
+              </h4>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-medium text-gray-800">Auto-Save:</p>
+                  <p className="text-gray-600">Everything saves as you type - no stress!</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Downloads:</p>
+                  <p className="text-gray-600">Session materials & workbooks available</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Export:</p>
+                  <p className="text-gray-600">Download your business plan anytime</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Support */}
+            <div className="bg-red-50 p-5 rounded-lg border-l-4 border-red-500">
+              <h4 className="font-bold text-red-800 mb-3 flex items-center">
+                <Heart className="w-5 h-5 mr-2" />
+                🆘 Support
+              </h4>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-medium text-gray-800">General Help:</p>
+                  <p className="text-gray-600">
+                    <a href="mailto:support@ibam.org" className="text-red-600 hover:underline">support@ibam.org</a>
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Technical Issues:</p>
+                  <p className="text-gray-600">
+                    <a href="mailto:tech@ibam.org" className="text-red-600 hover:underline">tech@ibam.org</a>
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Response Time:</p>
+                  <p className="text-gray-600">Usually within 24 hours</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Resources */}
+          <div className="bg-gray-50 p-6 border-t">
+            <h4 className="font-bold text-gray-800 mb-4 text-center">🌟 Additional Resources</h4>
+            <div className="grid md:grid-cols-3 gap-4 text-center">
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <h5 className="font-semibold text-blue-800">📚 Resource Library</h5>
+                <p className="text-sm text-gray-600">Books, articles, and tools in your Dashboard</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <h5 className="font-semibold text-green-800">👥 Community Forum</h5>
+                <p className="text-sm text-gray-600">Connect with fellow entrepreneurs</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <h5 className="font-semibold text-purple-800">🙏 Prayer Support</h5>
+                <p className="text-sm text-gray-600">Local small groups in your area</p>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
@@ -431,6 +593,67 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
 
         {/* Pathway Selection */}
         <PathwayToggle />
+
+        {/* NEW: Quick Help Access Buttons */}
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-xl mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">🚀 Need Quick Help?</h3>
+              <p className="text-blue-100">Everything you need to navigate like a pro!</p>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setExpandedSection(expandedSection === 'quickhelp' ? null : 'quickhelp')}
+                className="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition-colors flex items-center"
+              >
+                🆘 Quick Help
+              </button>
+            </div>
+          </div>
+          
+          {expandedSection === 'quickhelp' && (
+            <div className="mt-6 bg-white/10 backdrop-blur rounded-lg p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="bg-white/20 p-4 rounded-lg">
+                    <h5 className="font-bold text-white mb-2">🧭 Navigation Made Easy</h5>
+                    <ul className="text-blue-100 text-sm space-y-1">
+                      <li>• Use Previous/Next buttons to flow through sessions</li>
+                      <li>• Switch between Individual & Small Group anytime</li>
+                      <li>• Your progress saves automatically - no stress!</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white/20 p-4 rounded-lg">
+                    <h5 className="font-bold text-white mb-2">💼 Business Planner Magic</h5>
+                    <ul className="text-blue-100 text-sm space-y-1">
+                      <li>• Your session answers auto-fill your business plan</li>
+                      <li>• Click "Business Planner" anytime to see progress</li>
+                      <li>• Edit and refine as your vision grows</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white/20 p-4 rounded-lg">
+                    <h5 className="font-bold text-white mb-2">💾 Your Work is Safe</h5>
+                    <ul className="text-blue-100 text-sm space-y-1">
+                      <li>• Everything saves automatically as you type</li>
+                      <li>• Download materials anytime you need them</li>
+                      <li>• Export your business plan when ready</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white/20 p-4 rounded-lg">
+                    <h5 className="font-bold text-white mb-2">🆘 Getting Stuck? We're Here!</h5>
+                    <ul className="text-blue-100 text-sm space-y-1">
+                      <li>• Email: <a href="mailto:support@ibam.org" className="underline font-semibold">support@ibam.org</a></li>
+                      <li>• Tech issues: <a href="mailto:tech@ibam.org" className="underline font-semibold">tech@ibam.org</a></li>
+                      <li>• Usually respond within 24 hours</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Hook Section */}
         {sessionData.hook && (
@@ -856,119 +1079,27 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
                   </div>
                 )}
 
-                {/* NEW: Enhanced FAQ Section */}
-                <div className="mb-8">
-                  <h4 className="font-bold text-green-800 mb-3 flex items-center">
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    ❓ Frequently Asked Questions
-                  </h4>
-                  <div className="bg-white rounded-lg border">
-                    
-                    {/* Session-Specific FAQs */}
-                    {sessionData.faq_questions && sessionData.faq_questions.length > 0 && (
-                      <div className="border-b">
-                        <div className="bg-blue-50 px-6 py-3">
-                          <h5 className="font-semibold text-blue-800">📚 About This Session</h5>
-                        </div>
-                        <div className="p-6 space-y-4">
-                          {sessionData.faq_questions.map((faq, index) => (
-                            <div key={index} className="border-l-4 border-blue-200 pl-4">
-                              <p className="text-gray-700">{faq}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Standard Course Navigation FAQs */}
-                    <div className="border-b">
-                      <div className="bg-green-50 px-6 py-3">
-                        <h5 className="font-semibold text-green-800">🧭 Course Navigation</h5>
+                {/* Session-Specific FAQ Only */}
+                {sessionData.faq_questions && sessionData.faq_questions.length > 0 && (
+                  <div className="mb-8">
+                    <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      ❓ Session Questions & Answers
+                    </h4>
+                    <div className="bg-white rounded-lg border">
+                      <div className="bg-blue-50 px-6 py-3">
+                        <h5 className="font-semibold text-blue-800">📚 About Today's Session</h5>
                       </div>
                       <div className="p-6 space-y-4">
-                        <div className="border-l-4 border-green-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I navigate between sessions?</p>
-                          <p className="text-gray-600 text-sm">Use the Previous/Next buttons at the top, or return to the Module Overview to jump to any session.</p>
-                        </div>
-                        <div className="border-l-4 border-green-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I switch between Individual and Small Group modes?</p>
-                          <p className="text-gray-600 text-sm">Use the pathway toggle buttons near the top of each session. Your choice affects the reflection questions and activities throughout.</p>
-                        </div>
-                        <div className="border-l-4 border-green-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">Is my progress automatically saved?</p>
-                          <p className="text-gray-600 text-sm">Yes! Your responses and section completions are saved automatically as you work through each session.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Business Planner FAQs */}
-                    <div className="border-b">
-                      <div className="bg-purple-50 px-6 py-3">
-                        <h5 className="font-semibold text-purple-800">💼 Business Planner</h5>
-                      </div>
-                      <div className="p-6 space-y-4">
-                        <div className="border-l-4 border-purple-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I access the Business Planner?</p>
-                          <p className="text-gray-600 text-sm">Click the "Business Planner" button in the navigation area, or use the "Save to Business Plan" buttons in the Look Forward section.</p>
-                        </div>
-                        <div className="border-l-4 border-purple-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do my session responses connect to my business plan?</p>
-                          <p className="text-gray-600 text-sm">Your responses to business plan questions in each session automatically populate relevant sections of your comprehensive business plan.</p>
-                        </div>
-                        <div className="border-l-4 border-purple-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">Can I edit my business plan responses later?</p>
-                          <p className="text-gray-600 text-sm">Yes! You can always return to the Business Planner to review and refine your responses as your business vision develops.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Downloads & Saving FAQs */}
-                    <div className="border-b">
-                      <div className="bg-orange-50 px-6 py-3">
-                        <h5 className="font-semibold text-orange-800">💾 Saving & Downloads</h5>
-                      </div>
-                      <div className="p-6 space-y-4">
-                        <div className="border-l-4 border-orange-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I download session materials?</p>
-                          <p className="text-gray-600 text-sm">Look for the "Session Downloads" section in each session, or check the downloads area in your Dashboard.</p>
-                        </div>
-                        <div className="border-l-4 border-orange-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">Can I print my responses and commitments?</p>
-                          <p className="text-gray-600 text-sm">Yes! Your completed business plan and session responses can be exported as PDF documents for printing and offline reference.</p>
-                        </div>
-                        <div className="border-l-4 border-orange-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I backup my work?</p>
-                          <p className="text-gray-600 text-sm">All your work is automatically backed up to secure cloud storage. You can also export your data anytime from your Dashboard.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Support & Contact FAQs */}
-                    <div>
-                      <div className="bg-red-50 px-6 py-3">
-                        <h5 className="font-semibold text-red-800">🆘 Support & Contact</h5>
-                      </div>
-                      <div className="p-6 space-y-4">
-                        <div className="border-l-4 border-red-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">Who do I contact when stuck or have problems?</p>
-                          <p className="text-gray-600 text-sm">Email support@ibam.org or use the "Help" button in your Dashboard. Our team typically responds within 24 hours.</p>
-                        </div>
-                        <div className="border-l-4 border-red-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I report technical issues?</p>
-                          <p className="text-gray-600 text-sm">Use the "Report Issue" button in your Dashboard, or email tech@ibam.org with details about what you were doing when the problem occurred.</p>
-                        </div>
-                        <div className="border-l-4 border-red-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">Where can I get additional biblical or business resources?</p>
-                          <p className="text-gray-600 text-sm">Check the "Resources" section in your Dashboard for recommended books, articles, and tools that complement your learning.</p>
-                        </div>
-                        <div className="border-l-4 border-red-200 pl-4">
-                          <p className="font-medium text-gray-800 mb-1">How do I connect with other faith-driven entrepreneurs?</p>
-                          <p className="text-gray-600 text-sm">Join our Community Forum (link in Dashboard) or contact us about local small group opportunities in your area.</p>
-                        </div>
+                        {sessionData.faq_questions.map((faq, index) => (
+                          <div key={index} className="border-l-4 border-blue-200 pl-4 bg-blue-50 p-3 rounded-r">
+                            <p className="text-gray-700">{faq}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
                 
                 <button 
                   onClick={() => markSectionComplete('lookup')}
@@ -1114,6 +1245,103 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
                     </div>
                   </div>
                 )}
+
+                {/* NEW: Session Feedback Survey */}
+                <div className="mb-6">
+                  <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+                    <h4 className="text-xl font-bold mb-3 flex items-center">
+                      <Star className="w-6 h-6 mr-2" />
+                      📊 Quick Session Feedback
+                    </h4>
+                    <p className="text-pink-100 mb-6">Help us make every session better! Your feedback takes 30 seconds and helps fellow entrepreneurs.</p>
+                    
+                    <div className="space-y-6">
+                      {/* Question 1: Content Value */}
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                        <h5 className="font-semibold text-white mb-3">💎 How valuable was today's content for your business journey?</h5>
+                        <div className="flex gap-3 justify-center">
+                          {[1, 2, 3, 4, 5].map((rating) => (
+                            <button
+                              key={rating}
+                              onClick={() => setSurveyResponses(prev => ({ ...prev, content_value: rating }))}
+                              className={`w-12 h-12 rounded-full text-2xl transition-all ${
+                                surveyResponses.content_value === rating
+                                  ? 'bg-yellow-400 text-gray-800 transform scale-110 shadow-lg'
+                                  : 'bg-white/20 text-white hover:bg-white/30'
+                              }`}
+                            >
+                              {rating === 1 ? '😕' : rating === 2 ? '😐' : rating === 3 ? '🙂' : rating === 4 ? '😊' : '🤩'}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex justify-between text-xs text-pink-200 mt-2">
+                          <span>Not helpful</span>
+                          <span>Life-changing!</span>
+                        </div>
+                      </div>
+
+                      {/* Question 2: Learning Experience */}
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                        <h5 className="font-semibold text-white mb-3">🎯 How effective was the learning format (videos, content, exercises)?</h5>
+                        <div className="flex gap-3 justify-center">
+                          {[1, 2, 3, 4, 5].map((rating) => (
+                            <button
+                              key={rating}
+                              onClick={() => setSurveyResponses(prev => ({ ...prev, learning_experience: rating }))}
+                              className={`w-12 h-12 rounded-full text-2xl transition-all ${
+                                surveyResponses.learning_experience === rating
+                                  ? 'bg-green-400 text-gray-800 transform scale-110 shadow-lg'
+                                  : 'bg-white/20 text-white hover:bg-white/30'
+                              }`}
+                            >
+                              {rating === 1 ? '💤' : rating === 2 ? '😴' : rating === 3 ? '👍' : rating === 4 ? '🚀' : '⚡'}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex justify-between text-xs text-pink-200 mt-2">
+                          <span>Boring</span>
+                          <span>Engaging & Clear</span>
+                        </div>
+                      </div>
+
+                      {/* Question 3: Recommendation */}
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                        <h5 className="font-semibold text-white mb-3">🤝 How likely are you to recommend this session to another entrepreneur?</h5>
+                        <div className="flex gap-3 justify-center">
+                          {[1, 2, 3, 4, 5].map((rating) => (
+                            <button
+                              key={rating}
+                              onClick={() => setSurveyResponses(prev => ({ ...prev, recommendation: rating }))}
+                              className={`w-12 h-12 rounded-full text-2xl transition-all ${
+                                surveyResponses.recommendation === rating
+                                  ? 'bg-blue-400 text-gray-800 transform scale-110 shadow-lg'
+                                  : 'bg-white/20 text-white hover:bg-white/30'
+                              }`}
+                            >
+                              {rating === 1 ? '👎' : rating === 2 ? '🤷' : rating === 3 ? '👌' : rating === 4 ? '👏' : '🙌'}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex justify-between text-xs text-pink-200 mt-2">
+                          <span>Wouldn't recommend</span>
+                          <span>Must experience!</span>
+                        </div>
+                      </div>
+
+                      {/* Submit Survey */}
+                      {Object.values(surveyResponses).every(rating => rating > 0) && (
+                        <div className="text-center">
+                          <button
+                            onClick={submitSurvey}
+                            className="bg-white text-purple-600 px-8 py-3 rounded-lg font-bold hover:bg-purple-50 transition-colors shadow-lg"
+                          >
+                            🙏 Submit Feedback
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="flex gap-4">
                   <button 
