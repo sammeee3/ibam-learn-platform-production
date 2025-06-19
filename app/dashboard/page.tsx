@@ -136,44 +136,69 @@ const Dashboard: React.FC = () => {
   };
 
   // Check module completion based on session progress
+  // Check module completion based on session progress
   const checkModuleCompletion = async (userId: string): Promise<number[]> => {
     try {
-      console.log('Checking module completion for user:', userId);
+      console.log("Checking module completion for user:", userId);
       
       const { data, error } = await supabase
-        .from('user_progress')
-        .select('session_id, completion_percentage')
-        .eq('user_id', userId)
-        .gte('completion_percentage', 100);
+        .from("user_progress")
+        .select("session_id, completion_percentage")
+        .eq("user_id", userId)
+        .gte("completion_percentage", 100);
 
       if (error) {
-        console.error('Error checking session completion:', error);
+        console.error("Error checking session completion:", error);
         return [];
       }
 
-      console.log('Completed sessions data:', data);
+      console.log("Completed sessions data:", data);
 
       const completedSessions: number[] = data?.map(progress => progress.session_id) || [];
       const completedModules: number[] = [];
 
-      // Check each module based on actual session structure
-      // Session ID format: module_id * 10 + session_number
-      // Module 1: 11, 12, 13, 14 (4 sessions)
-      // Module 2: 21, 22, 23, 24 (4 sessions)  
-      // Module 3: 31, 32, 33, 34, 35 (5 sessions)
-      // Module 4: 41, 42, 43, 44 (4 sessions)
-      // Module 5: 51, 52, 53 (3 sessions)
+      // Function to get actual session IDs from database structure
+      const getActualSessionIds = (moduleNumber: number): number[] => {
+        const sessionRanges: Record<number, number[]> = {
+          1: [1, 2, 3, 4],           // Module 1: sessions 1-4
+          2: [5, 6, 7, 8],           // Module 2: sessions 5-8
+          3: [9, 10, 11, 12, 13],    // Module 3: sessions 9-13
+          4: [14, 15, 16, 17],       // Module 4: sessions 14-17
+          5: [18, 19, 20]            // Module 5: sessions 18-20
+        };
+        return sessionRanges[moduleNumber] || [];
+      };
 
-// Function to get actual session IDs from database structure
-const getActualSessionIds = (moduleNumber) => {
-  const sessionRanges = {
-    1: [1, 2, 3, 4],           // Module 1: sessions 1-4
-    2: [5, 6, 7, 8],           // Module 2: sessions 5-8  
-    3: [9, 10, 11, 12, 13],    // Module 3: sessions 9-13
-    4: [14, 15, 16, 17],       // Module 4: sessions 14-17
-    5: [18, 19, 20]            // Module 5: sessions 18-20
-  };
-  return sessionRanges[moduleNumber] || [];
+      const moduleSessionCounts = [
+        { module: 1, sessions: 4 },
+        { module: 2, sessions: 4 },
+        { module: 3, sessions: 5 },
+        { module: 4, sessions: 4 },
+        { module: 5, sessions: 3 }
+      ];
+
+      for (const moduleInfo of moduleSessionCounts) {
+        const moduleSessionIds = getActualSessionIds(moduleInfo.module);
+        
+        // Check if all sessions in this module are completed
+        const moduleComplete = moduleSessionIds.every((sessionId: number) => 
+          completedSessions.includes(sessionId)
+        );
+
+        console.log(`Module ${moduleInfo.module}: Required sessions ${moduleSessionIds}, Completed: ${moduleComplete}`);
+
+        if (moduleComplete) {
+          completedModules.push(moduleInfo.module);
+        }
+      }
+
+      console.log("Completed modules:", completedModules);
+      return completedModules;
+    } catch (error) {
+      console.error("Error checking module completion:", error);
+      return [];
+    }
+  };  return sessionRanges[moduleNumber] || [];
 };
 
 // Replace the broken logic
