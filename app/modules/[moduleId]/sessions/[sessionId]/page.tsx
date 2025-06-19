@@ -15,12 +15,19 @@ import {
   Lightbulb, 
   Clock, 
   Users,
+  User,
   Loader2,
   AlertCircle,
-  Download
+  Download,
+  Heart,
+  Zap,
+  Star,
+  MessageCircle,
+  BookOpen,
+  Link2
 } from 'lucide-react';
 
-// Types based on your database structure
+// Enhanced Types with new content sections
 interface SessionData {
   id: number;
   module_id: number;
@@ -40,6 +47,31 @@ interface SessionData {
     look_forward?: {
       commitment_prompt: string;
       application_questions: string[];
+      multiplication_challenges?: string[];
+    };
+    written_curriculum?: {
+      main_content: string;
+      key_points: string[];
+      illustrations: string[];
+    };
+    discovery_bible_study?: {
+      verse: string;
+      questions: string[];
+    };
+    bringing_together?: {
+      integration_points: string[];
+      action_steps: string[];
+    };
+    pathways?: {
+      individual: {
+        reflection_prompts: string[];
+        personal_application: string[];
+      };
+      small_group: {
+        discussion_questions: string[];
+        group_activities: string[];
+        accountability_partnerships: string[];
+      };
     };
   };
   mobile_transformation?: {
@@ -56,6 +88,7 @@ interface SessionData {
   becoming_gods_entrepreneur?: {
     content: string;
     questions: string[];
+    video_url?: string;
   };
   extra_materials?: string;
   estimated_time?: string;
@@ -68,7 +101,7 @@ interface SessionPageProps {
   };
 }
 
-export default function SessionPage({ params }: SessionPageProps) {
+export default function EnhancedSessionPage({ params }: SessionPageProps) {
   const router = useRouter();
   const supabase = createClientComponentClient();
   
@@ -84,6 +117,7 @@ export default function SessionPage({ params }: SessionPageProps) {
     lookforward: false
   });
   const [hoveredVerse, setHoveredVerse] = useState<string | null>(null);
+  const [pathwayMode, setPathwayMode] = useState<'individual' | 'small_group'>('individual');
 
   // Load session data and user
   useEffect(() => {
@@ -182,6 +216,44 @@ export default function SessionPage({ params }: SessionPageProps) {
     router.push(path);
   };
 
+  // Vimeo Video Component
+  const VimeoVideo = ({ url, title }: { url: string; title: string }) => {
+    const getVimeoEmbedUrl = (vimeoUrl: string) => {
+      // Extract video ID and hash from Vimeo URL
+      const match = vimeoUrl.match(/vimeo\.com\/(\d+)\/([a-zA-Z0-9]+)/);
+      if (match) {
+        const [, videoId, hash] = match;
+        return `https://player.vimeo.com/video/${videoId}?h=${hash}&badge=0&autopause=0&player_id=0&app_id=58479`;
+      }
+      return null;
+    };
+
+    const embedUrl = getVimeoEmbedUrl(url);
+    
+    if (!embedUrl) {
+      return (
+        <div className="bg-gray-200 rounded-lg p-8 text-center">
+          <Play className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+          <p className="text-gray-600">{title}</p>
+          <p className="text-sm text-gray-500 mt-2">Video URL: {url}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+        <iframe
+          src={embedUrl}
+          className="absolute top-0 left-0 w-full h-full rounded-lg"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          title={title}
+        />
+      </div>
+    );
+  };
+
   // Scripture hover component
   const ScriptureReference = ({ reference }: { reference: string }) => (
     <span 
@@ -200,6 +272,37 @@ export default function SessionPage({ params }: SessionPageProps) {
         </div>
       )}
     </span>
+  );
+
+  // Pathway Toggle Component
+  const PathwayToggle = () => (
+    <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+      <h3 className="font-bold text-lg mb-3 text-gray-800">🎯 Choose Your Learning Path</h3>
+      <div className="flex gap-4">
+        <button
+          onClick={() => setPathwayMode('individual')}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+            pathwayMode === 'individual' 
+              ? 'bg-blue-600 text-white shadow-lg' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <User className="w-5 h-5 mr-2" />
+          Individual Study
+        </button>
+        <button
+          onClick={() => setPathwayMode('small_group')}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+            pathwayMode === 'small_group' 
+              ? 'bg-purple-600 text-white shadow-lg' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <Users className="w-5 h-5 mr-2" />
+          Small Group
+        </button>
+      </div>
+    </div>
   );
 
   // Loading state
@@ -266,7 +369,7 @@ export default function SessionPage({ params }: SessionPageProps) {
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center">
                 <Clock className="w-4 h-4 mr-1" />
-                <span>{sessionData.estimated_time || '~25 min'}</span>
+                <span>{sessionData.estimated_time || '~30 min'}</span>
               </div>
               <div className="flex items-center">
                 <Users className="w-4 h-4 mr-1" />
@@ -326,6 +429,9 @@ export default function SessionPage({ params }: SessionPageProps) {
           </div>
         </div>
 
+        {/* Pathway Selection */}
+        <PathwayToggle />
+
         {/* Hook Section */}
         {sessionData.hook && (
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-lg shadow-xl mb-8">
@@ -340,11 +446,17 @@ export default function SessionPage({ params }: SessionPageProps) {
             <h3 className="text-lg font-bold text-gray-800 mb-4">📱 Mobile Transformation</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded">
-                <h4 className="font-semibold text-blue-800">💡 Power Insight</h4>
+                <h4 className="font-semibold text-blue-800 flex items-center">
+                  <Zap className="w-5 h-5 mr-2" />
+                  Power Insight
+                </h4>
                 <p className="text-gray-700">{sessionData.mobile_transformation.powerInsight}</p>
               </div>
               <div className="bg-green-50 p-4 rounded">
-                <h4 className="font-semibold text-green-800">🔄 Identity Shift</h4>
+                <h4 className="font-semibold text-green-800 flex items-center">
+                  <Star className="w-5 h-5 mr-2" />
+                  Identity Shift
+                </h4>
                 <p className="text-gray-700">{sessionData.mobile_transformation.identityShift}</p>
               </div>
             </div>
@@ -410,7 +522,7 @@ export default function SessionPage({ params }: SessionPageProps) {
             )}
           </div>
 
-          {/* Look Up */}
+          {/* Look Up - ENHANCED WITH ALL NEW SECTIONS */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div 
               className="bg-green-500 hover:bg-green-600 text-white p-6 cursor-pointer transition-colors"
@@ -421,7 +533,7 @@ export default function SessionPage({ params }: SessionPageProps) {
                   <Book className="w-8 h-8 mr-3" />
                   <div>
                     <h3 className="text-2xl font-bold">📖 Look Up</h3>
-                    <p className="text-green-100">Scripture + Business Content + Videos</p>
+                    <p className="text-green-100">Scripture + Business Content + Videos + Integration</p>
                   </div>
                 </div>
                 {expandedSection === 'lookup' ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
@@ -432,28 +544,313 @@ export default function SessionPage({ params }: SessionPageProps) {
               <div className="p-6 bg-green-50">
                 {/* Scripture Section */}
                 {sessionData.scripture_reference && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-green-800 mb-3">📖 Key Scripture</h4>
+                  <div className="mb-8">
+                    <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                      <BookOpen className="w-5 h-5 mr-2" />
+                      📖 Key Scripture
+                    </h4>
                     <div className="bg-white p-4 rounded border-l-4 border-green-400">
                       <ScriptureReference reference={sessionData.scripture_reference} />
                     </div>
                   </div>
                 )}
 
-                {/* Video Section */}
+                {/* NEW: Written Curriculum Content Section */}
+                <div className="mb-8">
+                  <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                    <Book className="w-5 h-5 mr-2" />
+                    📝 Core Teaching Content (30-minute read)
+                  </h4>
+                  <div className="bg-white p-6 rounded-lg border-l-4 border-green-400">
+                    {sessionData.content?.written_curriculum?.main_content ? (
+                      <div className="prose max-w-none">
+                        <div className="text-gray-800 leading-relaxed mb-6">
+                          {sessionData.content.written_curriculum.main_content}
+                        </div>
+                        {sessionData.content.written_curriculum.key_points && (
+                          <div className="bg-green-50 p-4 rounded-lg">
+                            <h5 className="font-semibold text-green-800 mb-3">🎯 Key Points:</h5>
+                            <ul className="space-y-2">
+                              {sessionData.content.written_curriculum.key_points.map((point, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-green-600 mr-2">•</span>
+                                  <span className="text-gray-700">{point}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Book className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                        <p>Written curriculum content will be populated here.</p>
+                        <p className="text-sm mt-2">This section will contain the comprehensive 30-minute teaching content.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Enhanced Business Video Section */}
                 {sessionData.video_url && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-green-800 mb-3">🎥 Teaching Video</h4>
-                    <div className="bg-white p-4 rounded">
-                      <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded flex items-center justify-center">
-                        <Play className="w-16 h-16 text-gray-500" />
-                        <span className="ml-2 text-gray-600">Video: {sessionData.video_url}</span>
+                  <div className="mb-8">
+                    <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                      <Play className="w-5 h-5 mr-2" />
+                      🎥 Business Teaching Video
+                    </h4>
+                    <div className="bg-white p-4 rounded-lg">
+                      <VimeoVideo url={sessionData.video_url} title="Business Teaching Video" />
+                      
+                      {/* Video Discussion Questions */}
+                      <div className="mt-6">
+                        <h5 className="font-semibold text-gray-800 mb-3">
+                          {pathwayMode === 'individual' ? '🤔 Personal Reflection' : '💬 Group Discussion'}
+                        </h5>
+                        <div className="space-y-3">
+                          {pathwayMode === 'individual' ? (
+                            sessionData.content?.pathways?.individual?.reflection_prompts?.map((prompt, index) => (
+                              <div key={index} className="bg-blue-50 p-4 rounded">
+                                <p className="text-gray-700 mb-2">{prompt}</p>
+                                <textarea 
+                                  className="w-full p-2 border rounded resize-none"
+                                  rows={2}
+                                  placeholder="Your personal reflection..."
+                                />
+                              </div>
+                            )) || (
+                              <div className="bg-blue-50 p-4 rounded">
+                                <p className="text-gray-700 mb-2">What key insight from this video will change how you approach your business?</p>
+                                <textarea 
+                                  className="w-full p-2 border rounded resize-none"
+                                  rows={2}
+                                  placeholder="Your personal reflection..."
+                                />
+                              </div>
+                            )
+                          ) : (
+                            sessionData.content?.pathways?.small_group?.discussion_questions?.map((question, index) => (
+                              <div key={index} className="bg-purple-50 p-4 rounded">
+                                <p className="text-gray-700">{question}</p>
+                              </div>
+                            )) || (
+                              <>
+                                <div className="bg-purple-50 p-4 rounded">
+                                  <p className="text-gray-700">Share one key insight from the video with your group.</p>
+                                </div>
+                                <div className="bg-purple-50 p-4 rounded">
+                                  <p className="text-gray-700">How can you apply this principle in your business this week?</p>
+                                </div>
+                                <div className="bg-purple-50 p-4 rounded">
+                                  <p className="text-gray-700">What accountability do you need from the group?</p>
+                                </div>
+                              </>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Downloadable Materials */}
+                {/* NEW: Enhanced "Becoming God's Entrepreneur" Section */}
+                <div className="mb-8">
+                  <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                    <Heart className="w-5 h-5 mr-2" />
+                    👑 Becoming God's Entrepreneur
+                  </h4>
+                  <div className="bg-white p-6 rounded-lg border-l-4 border-purple-400">
+                    {/* BGE Video */}
+                    {sessionData.becoming_gods_entrepreneur?.video_url && (
+                      <div className="mb-6">
+                        <h5 className="font-semibold text-purple-800 mb-3">🎥 Identity Transformation Video</h5>
+                        <VimeoVideo 
+                          url={sessionData.becoming_gods_entrepreneur.video_url} 
+                          title="Becoming God's Entrepreneur" 
+                        />
+                      </div>
+                    )}
+                    
+                    {/* BGE Content */}
+                    {sessionData.becoming_gods_entrepreneur?.content && (
+                      <div className="mb-6">
+                        <h5 className="font-semibold text-purple-800 mb-3">💭 Identity Reflection</h5>
+                        <p className="text-gray-700 italic bg-purple-50 p-4 rounded">
+                          {sessionData.becoming_gods_entrepreneur.content}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* BGE Questions */}
+                    {sessionData.becoming_gods_entrepreneur?.questions && (
+                      <div className="mb-6">
+                        <h5 className="font-semibold text-purple-800 mb-3">
+                          {pathwayMode === 'individual' ? '🎯 Personal Identity Questions' : '👥 Group Identity Discussion'}
+                        </h5>
+                        <div className="space-y-3">
+                          {sessionData.becoming_gods_entrepreneur.questions.map((question, index) => (
+                            <div key={index} className="bg-purple-50 p-4 rounded">
+                              <p className="text-gray-700 mb-2">{question}</p>
+                              {pathwayMode === 'individual' && (
+                                <textarea 
+                                  className="w-full p-2 border rounded resize-none"
+                                  rows={2}
+                                  placeholder="Your reflection on identity..."
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* NEW: IBAM Discovery Bible Study */}
+                    <div className="mb-6">
+                      <h5 className="font-semibold text-purple-800 mb-3 flex items-center">
+                        <BookOpen className="w-5 h-5 mr-2" />
+                        📖 IBAM Discovery Bible Study
+                      </h5>
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
+                        {/* Discovery Study Questions */}
+                        <div className="space-y-4">
+                          <div className="bg-white p-4 rounded border-l-4 border-blue-400">
+                            <h6 className="font-semibold text-blue-800 mb-2">🙏 Pray</h6>
+                            <p className="text-gray-700 text-sm">Talk with God simply and briefly. Ask God to teach you this week's passage.</p>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded border-l-4 border-green-400">
+                            <h6 className="font-semibold text-green-800 mb-2">📖 Read and Discuss</h6>
+                            <p className="text-gray-700 text-sm mb-3">Read this week's passage: {sessionData.scripture_reference}</p>
+                            
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-gray-700 font-medium">What did you like about this passage?</p>
+                                {pathwayMode === 'individual' && (
+                                  <textarea 
+                                    className="w-full mt-1 p-2 text-sm border rounded resize-none"
+                                    rows={2}
+                                    placeholder="What you liked..."
+                                  />
+                                )}
+                              </div>
+                              
+                              <div>
+                                <p className="text-gray-700 font-medium">What did you find challenging about this passage?</p>
+                                {pathwayMode === 'individual' && (
+                                  <textarea 
+                                    className="w-full mt-1 p-2 text-sm border rounded resize-none"
+                                    rows={2}
+                                    placeholder="What was challenging..."
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded border-l-4 border-purple-400">
+                            <h6 className="font-semibold text-purple-800 mb-2">📖 Read Again & Reflect</h6>
+                            <p className="text-gray-700 text-sm mb-3">Read this week's passage again.</p>
+                            
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-gray-700 font-medium">What does this passage teach about God?</p>
+                                {pathwayMode === 'individual' && (
+                                  <textarea 
+                                    className="w-full mt-1 p-2 text-sm border rounded resize-none"
+                                    rows={2}
+                                    placeholder="What it teaches about God..."
+                                  />
+                                )}
+                              </div>
+                              
+                              <div>
+                                <p className="text-gray-700 font-medium">What does this passage teach about people?</p>
+                                {pathwayMode === 'individual' && (
+                                  <textarea 
+                                    className="w-full mt-1 p-2 text-sm border rounded resize-none"
+                                    rows={2}
+                                    placeholder="What it teaches about people..."
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* NEW: "Bringing it All Together" Integration Section */}
+                <div className="mb-8">
+                  <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                    <Link2 className="w-5 h-5 mr-2" />
+                    🔗 Bringing it All Together
+                  </h4>
+                  <div className="bg-white p-6 rounded-lg border-l-4 border-orange-400">
+                    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-lg">
+                      <h5 className="font-semibold text-orange-800 mb-4">
+                        🎯 {pathwayMode === 'individual' ? 'Personal Integration' : 'Group Integration'}
+                      </h5>
+                      
+                      {pathwayMode === 'individual' ? (
+                        <div className="space-y-4">
+                          <div className="bg-white p-4 rounded border-l-4 border-orange-400">
+                            <p className="text-gray-700 font-medium mb-2">How do the biblical principles connect with the business concepts you learned?</p>
+                            <textarea 
+                              className="w-full p-2 border rounded resize-none"
+                              rows={3}
+                              placeholder="Your integration insights..."
+                            />
+                          </div>
+                          <div className="bg-white p-4 rounded border-l-4 border-orange-400">
+                            <p className="text-gray-700 font-medium mb-2">What specific action will you take this week to apply both the biblical and business principles?</p>
+                            <textarea 
+                              className="w-full p-2 border rounded resize-none"
+                              rows={3}
+                              placeholder="Your specific action plan..."
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="bg-white p-4 rounded border-l-4 border-orange-400">
+                            <p className="text-gray-700 font-medium">Group Discussion: How do the biblical and business principles work together in your marketplace?</p>
+                          </div>
+                          <div className="bg-white p-4 rounded border-l-4 border-orange-400">
+                            <p className="text-gray-700 font-medium">Group Challenge: What specific actions will your group commit to this week?</p>
+                          </div>
+                          <div className="bg-white p-4 rounded border-l-4 border-orange-400">
+                            <p className="text-gray-700 font-medium">Accountability: How will you check in with each other on progress?</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Existing sections - Case Study, FAQ, Downloads */}
+                {sessionData.case_study && (
+                  <div className="mb-6">
+                    <h4 className="font-bold text-green-800 mb-3">📊 Case Study</h4>
+                    <div className="bg-white p-4 rounded border-l-4 border-green-400">
+                      <p className="text-gray-700">{sessionData.case_study}</p>
+                    </div>
+                  </div>
+                )}
+
+                {sessionData.faq_questions && sessionData.faq_questions.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="font-bold text-green-800 mb-3">❓ Frequently Asked Questions</h4>
+                    <div className="space-y-3">
+                      {sessionData.faq_questions.map((faq, index) => (
+                        <div key={index} className="bg-white p-4 rounded">
+                          <p className="text-gray-700">{faq}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {sessionData.extra_materials && (
                   <div className="mb-6">
                     <h4 className="font-bold text-green-800 mb-3">📄 Session Downloads</h4>
@@ -468,30 +865,6 @@ export default function SessionPage({ params }: SessionPageProps) {
                           Download
                         </button>
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Case Study */}
-                {sessionData.case_study && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-green-800 mb-3">📊 Case Study</h4>
-                    <div className="bg-white p-4 rounded border-l-4 border-green-400">
-                      <p className="text-gray-700">{sessionData.case_study}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* FAQ */}
-                {sessionData.faq_questions && sessionData.faq_questions.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-green-800 mb-3">❓ Frequently Asked Questions</h4>
-                    <div className="space-y-3">
-                      {sessionData.faq_questions.map((faq, index) => (
-                        <div key={index} className="bg-white p-4 rounded">
-                          <p className="text-gray-700">{faq}</p>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 )}
@@ -568,43 +941,75 @@ export default function SessionPage({ params }: SessionPageProps) {
                   </div>
                 )}
 
-                {/* Application Questions */}
-                {sessionData.content?.look_forward?.application_questions && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-orange-800 mb-3">🎯 Personal Application</h4>
-                    <div className="space-y-3">
-                      {sessionData.content.look_forward.application_questions.map((question, index) => (
+                {/* Enhanced Application Questions with Pathways */}
+                <div className="mb-6">
+                  <h4 className="font-bold text-orange-800 mb-3">
+                    🎯 {pathwayMode === 'individual' ? 'Personal Application' : 'Group Application & Accountability'}
+                  </h4>
+                  <div className="space-y-3">
+                    {pathwayMode === 'individual' ? (
+                      sessionData.content?.look_forward?.application_questions?.map((question, index) => (
                         <div key={index} className="bg-white p-4 rounded border-l-4 border-orange-400">
                           <p className="text-gray-700 mb-2">{question}</p>
                           <textarea 
                             className="w-full p-2 border rounded resize-none"
                             rows={2}
-                            placeholder="Your commitment..."
+                            placeholder="Your personal commitment..."
                           />
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* God's Entrepreneur Section */}
-                {sessionData.becoming_gods_entrepreneur && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-orange-800 mb-3">👑 Becoming God's Entrepreneur</h4>
-                    <div className="bg-white p-4 rounded border-l-4 border-orange-400">
-                      <p className="text-gray-700 mb-4">{sessionData.becoming_gods_entrepreneur.content}</p>
-                      <div className="space-y-3">
-                        {sessionData.becoming_gods_entrepreneur.questions?.map((question, index) => (
-                          <div key={index}>
-                            <p className="text-gray-700 mb-2">{question}</p>
-                            <textarea 
-                              className="w-full p-2 border rounded resize-none"
-                              rows={2}
-                              placeholder="Your reflection..."
-                            />
+                      )) || (
+                        <div className="bg-white p-4 rounded border-l-4 border-orange-400">
+                          <p className="text-gray-700 mb-2">What specific action will you take this week to apply today's learning?</p>
+                          <textarea 
+                            className="w-full p-2 border rounded resize-none"
+                            rows={2}
+                            placeholder="Your personal commitment..."
+                          />
+                        </div>
+                      )
+                    ) : (
+                      <>
+                        {sessionData.content?.pathways?.small_group?.accountability_partnerships?.map((partnership, index) => (
+                          <div key={index} className="bg-white p-4 rounded border-l-4 border-purple-400">
+                            <p className="text-gray-700">{partnership}</p>
                           </div>
-                        ))}
-                      </div>
+                        )) || (
+                          <>
+                            <div className="bg-white p-4 rounded border-l-4 border-purple-400">
+                              <p className="text-gray-700">What commitments will each person make for the week ahead?</p>
+                            </div>
+                            <div className="bg-white p-4 rounded border-l-4 border-purple-400">
+                              <p className="text-gray-700">How will you check in with each other during the week?</p>
+                            </div>
+                            <div className="bg-white p-4 rounded border-l-4 border-purple-400">
+                              <p className="text-gray-700">Who will you each share this week's learning with outside the group?</p>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Multiplication Challenges */}
+                {sessionData.content?.look_forward?.multiplication_challenges && (
+                  <div className="mb-6">
+                    <h4 className="font-bold text-orange-800 mb-3">
+                      🌱 {pathwayMode === 'individual' ? 'Personal Multiplication' : 'Group Multiplication Challenge'}
+                    </h4>
+                    <div className="space-y-3">
+                      {sessionData.content.look_forward.multiplication_challenges.map((challenge, index) => (
+                        <div key={index} className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded border-l-4 border-green-400">
+                          <p className="text-gray-700 font-medium">{challenge}</p>
+                          {pathwayMode === 'individual' && (
+                            <textarea 
+                              className="w-full mt-2 p-2 border rounded resize-none"
+                              rows={2}
+                              placeholder="Your multiplication plan..."
+                            />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
