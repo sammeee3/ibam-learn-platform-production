@@ -828,9 +828,9 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
                   </div>
                 </div>
 
-                {/* Existing sections - Case Study, FAQ, Downloads */}
+                {/* Existing sections - Case Study, Downloads */}
                 {sessionData.case_study && (
-                  <div className="mb-6">
+                  <div className="mb-8">
                     <h4 className="font-bold text-green-800 mb-3">📊 Case Study</h4>
                     <div className="bg-white p-4 rounded border-l-4 border-green-400">
                       <p className="text-gray-700">{sessionData.case_study}</p>
@@ -838,21 +838,8 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
                   </div>
                 )}
 
-                {sessionData.faq_questions && sessionData.faq_questions.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-green-800 mb-3">❓ Frequently Asked Questions</h4>
-                    <div className="space-y-3">
-                      {sessionData.faq_questions.map((faq, index) => (
-                        <div key={index} className="bg-white p-4 rounded">
-                          <p className="text-gray-700">{faq}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {sessionData.extra_materials && (
-                  <div className="mb-6">
+                  <div className="mb-8">
                     <h4 className="font-bold text-green-800 mb-3">📄 Session Downloads</h4>
                     <div className="bg-white p-4 rounded border-l-4 border-green-400">
                       <div className="flex items-center justify-between">
@@ -868,6 +855,120 @@ export default function EnhancedSessionPage({ params }: SessionPageProps) {
                     </div>
                   </div>
                 )}
+
+                {/* NEW: Enhanced FAQ Section */}
+                <div className="mb-8">
+                  <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    ❓ Frequently Asked Questions
+                  </h4>
+                  <div className="bg-white rounded-lg border">
+                    
+                    {/* Session-Specific FAQs */}
+                    {sessionData.faq_questions && sessionData.faq_questions.length > 0 && (
+                      <div className="border-b">
+                        <div className="bg-blue-50 px-6 py-3">
+                          <h5 className="font-semibold text-blue-800">📚 About This Session</h5>
+                        </div>
+                        <div className="p-6 space-y-4">
+                          {sessionData.faq_questions.map((faq, index) => (
+                            <div key={index} className="border-l-4 border-blue-200 pl-4">
+                              <p className="text-gray-700">{faq}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Standard Course Navigation FAQs */}
+                    <div className="border-b">
+                      <div className="bg-green-50 px-6 py-3">
+                        <h5 className="font-semibold text-green-800">🧭 Course Navigation</h5>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="border-l-4 border-green-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I navigate between sessions?</p>
+                          <p className="text-gray-600 text-sm">Use the Previous/Next buttons at the top, or return to the Module Overview to jump to any session.</p>
+                        </div>
+                        <div className="border-l-4 border-green-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I switch between Individual and Small Group modes?</p>
+                          <p className="text-gray-600 text-sm">Use the pathway toggle buttons near the top of each session. Your choice affects the reflection questions and activities throughout.</p>
+                        </div>
+                        <div className="border-l-4 border-green-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">Is my progress automatically saved?</p>
+                          <p className="text-gray-600 text-sm">Yes! Your responses and section completions are saved automatically as you work through each session.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Business Planner FAQs */}
+                    <div className="border-b">
+                      <div className="bg-purple-50 px-6 py-3">
+                        <h5 className="font-semibold text-purple-800">💼 Business Planner</h5>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I access the Business Planner?</p>
+                          <p className="text-gray-600 text-sm">Click the "Business Planner" button in the navigation area, or use the "Save to Business Plan" buttons in the Look Forward section.</p>
+                        </div>
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do my session responses connect to my business plan?</p>
+                          <p className="text-gray-600 text-sm">Your responses to business plan questions in each session automatically populate relevant sections of your comprehensive business plan.</p>
+                        </div>
+                        <div className="border-l-4 border-purple-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">Can I edit my business plan responses later?</p>
+                          <p className="text-gray-600 text-sm">Yes! You can always return to the Business Planner to review and refine your responses as your business vision develops.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Downloads & Saving FAQs */}
+                    <div className="border-b">
+                      <div className="bg-orange-50 px-6 py-3">
+                        <h5 className="font-semibold text-orange-800">💾 Saving & Downloads</h5>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="border-l-4 border-orange-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I download session materials?</p>
+                          <p className="text-gray-600 text-sm">Look for the "Session Downloads" section in each session, or check the downloads area in your Dashboard.</p>
+                        </div>
+                        <div className="border-l-4 border-orange-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">Can I print my responses and commitments?</p>
+                          <p className="text-gray-600 text-sm">Yes! Your completed business plan and session responses can be exported as PDF documents for printing and offline reference.</p>
+                        </div>
+                        <div className="border-l-4 border-orange-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I backup my work?</p>
+                          <p className="text-gray-600 text-sm">All your work is automatically backed up to secure cloud storage. You can also export your data anytime from your Dashboard.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Support & Contact FAQs */}
+                    <div>
+                      <div className="bg-red-50 px-6 py-3">
+                        <h5 className="font-semibold text-red-800">🆘 Support & Contact</h5>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="border-l-4 border-red-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">Who do I contact when stuck or have problems?</p>
+                          <p className="text-gray-600 text-sm">Email support@ibam.org or use the "Help" button in your Dashboard. Our team typically responds within 24 hours.</p>
+                        </div>
+                        <div className="border-l-4 border-red-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I report technical issues?</p>
+                          <p className="text-gray-600 text-sm">Use the "Report Issue" button in your Dashboard, or email tech@ibam.org with details about what you were doing when the problem occurred.</p>
+                        </div>
+                        <div className="border-l-4 border-red-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">Where can I get additional biblical or business resources?</p>
+                          <p className="text-gray-600 text-sm">Check the "Resources" section in your Dashboard for recommended books, articles, and tools that complement your learning.</p>
+                        </div>
+                        <div className="border-l-4 border-red-200 pl-4">
+                          <p className="font-medium text-gray-800 mb-1">How do I connect with other faith-driven entrepreneurs?</p>
+                          <p className="text-gray-600 text-sm">Join our Community Forum (link in Dashboard) or contact us about local small group opportunities in your area.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 <button 
                   onClick={() => markSectionComplete('lookup')}
