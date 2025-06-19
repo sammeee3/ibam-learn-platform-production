@@ -66,18 +66,6 @@ interface UserProgress {
   postAssessmentCompleted: boolean;
 }
 
-// Function to get actual session ID from database
-const getActualSessionId = (moduleId: number, sessionNumber: number): number => {
-  const sessionStarts = {
-    1: 1,   // Module 1 starts at session 1
-    2: 5,   // Module 2 starts at session 5
-    3: 9,   // Module 3 starts at session 9
-    4: 14,  // Module 4 starts at session 14
-    5: 18   // Module 5 starts at session 18
-  };
-  const startId = sessionStarts[moduleId];
-  return startId + (sessionNumber - 1);
-};
 export default function SessionPage() {
   const params = useParams();
   const router = useRouter();
@@ -257,7 +245,7 @@ export default function SessionPage() {
 
       // Create unique session identifier: module_id * 10 + session_number
       // Module 1 Session 1 = 11, Module 3 Session 2 = 32, etc.
-      const uniqueSessionId = getActualSessionId(parseInt(moduleId), parseInt(sessionId));
+      const uniqueSessionId = parseInt(moduleId) * 10 + parseInt(sessionId);
 
       // Save progress to user_progress table
       const { error } = await supabase

@@ -164,41 +164,29 @@ const Dashboard: React.FC = () => {
       // Module 4: 41, 42, 43, 44 (4 sessions)
       // Module 5: 51, 52, 53 (3 sessions)
 
-// Function to get actual session IDs from database structure
-const getActualSessionIds = (moduleNumber) => {
-  const sessionRanges = {
-    1: [1, 2, 3, 4],           // Module 1: sessions 1-4
-    2: [5, 6, 7, 8],           // Module 2: sessions 5-8  
-    3: [9, 10, 11, 12, 13],    // Module 3: sessions 9-13
-    4: [14, 15, 16, 17],       // Module 4: sessions 14-17
-    5: [18, 19, 20]            // Module 5: sessions 18-20
-  };
-  return sessionRanges[moduleNumber] || [];
-};
+      const moduleSessionCounts = [
+        { module: 1, sessions: 4 },
+        { module: 2, sessions: 4 },
+        { module: 3, sessions: 5 },
+        { module: 4, sessions: 4 },
+        { module: 5, sessions: 3 }
+      ];
 
-// Replace the broken logic
-const moduleSessionCounts = [
-  { module: 1, sessions: 4 },
-  { module: 2, sessions: 4 },
-  { module: 3, sessions: 5 },
-  { module: 4, sessions: 4 },
-  { module: 5, sessions: 3 }
-];
+      for (const moduleInfo of moduleSessionCounts) {
+        const moduleSessionIds: number[] = [];
+        for (let session = 1; session <= moduleInfo.sessions; session++) {
+          moduleSessionIds.push(moduleInfo.module * 10 + session);
+        }
 
-for (const moduleInfo of moduleSessionCounts) {
-  const moduleSessionIds = getActualSessionIds(moduleInfo.module);
-  
-  // Check if all sessions in this module are completed
-  const moduleComplete = moduleSessionIds.every((sessionId) => 
-    completedSessions.includes(sessionId)
-  );
+        // Check if all sessions in this module are completed
+        const moduleComplete = moduleSessionIds.every((sessionId: number) => 
+          completedSessions.includes(sessionId)
+        );
 
-  console.log(`Module ${moduleInfo.module}: Required sessions ${moduleSessionIds}, Completed: ${moduleComplete}`);
+        console.log(`Module ${moduleInfo.module}: Required sessions ${moduleSessionIds}, Completed: ${moduleComplete}`);
 
-  if (moduleComplete) {
-    completedModules.push(moduleInfo.module);
-  }
-}
+        if (moduleComplete) {
+          completedModules.push(moduleInfo.module);
         }
       }
 
