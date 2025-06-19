@@ -34,96 +34,8 @@ const sessionData: Record<string, Record<string, any>> = {
         "What impact do you want your business to have on your community?",
         "How can your business serve as a platform for spiritual conversations?"
       ]
-    },
-    "2": {
-      title: "Business Leaders Work Together with Church/Spiritual Leaders",
-      module: "Foundational Principles",
-      scripture: {
-        reference: "1 Corinthians 12:12-14",
-        text: "Just as a body, though one, has many parts, but all its many parts form one body, so it is with Christ. For we were all baptized by one Spirit so as to form one body—whether Jews or Gentiles, slave or free—and we were all given the one Spirit to drink. Even so the body is not made up of one part but of many."
-      },
-      videoUrl: "https://vimeo.com/your-video-id-2",
-      writtenMaterial: "The church and marketplace are not separate kingdoms but different parts of God's single kingdom. Business leaders bring resources, organizational skills, and community connections. Church leaders bring spiritual wisdom, pastoral care, and theological grounding. Together, they can accomplish kingdom work neither could achieve alone.",
-      reflection: "What unique strengths do you bring as a business leader that could benefit your local church or community ministry?",
-      becomingGodsEntrepreneur: {
-        content: "God's entrepreneurs understand they're part of a larger body, working in harmony with spiritual leaders to advance God's kingdom.",
-        questions: [
-          "How can you partner with church leaders without compromising your business integrity?",
-          "What kingdom projects could benefit from your business skills and resources?"
-        ]
-      },
-      caseStudy: "Mark, a construction company owner, partnered with his pastor to build homes for single mothers. The church provided spiritual care and community support while Mark's business provided construction expertise and materials at cost.",
-      faqQuestions: [
-        "Q: What if my pastor doesn't understand business? A: Start small, build trust, and educate gently.",
-        "Q: How do I avoid being seen as just a source of money? A: Offer your skills and expertise, not just finances.",
-        "Q: What if business and church priorities conflict? A: Seek wisdom through prayer and trusted advisors."
-      ],
-      businessPlanQuestions: [
-        "What partnerships could you develop between your business and local church/ministry leaders?",
-        "How can your business skills serve kingdom purposes beyond just financial giving?",
-        "What community needs could be addressed through business-ministry collaboration?"
-      ]
-    },
-    "3": {
-      title: "Integrity in Business Practices",
-      module: "Foundational Principles", 
-      scripture: {
-        reference: "Proverbs 11:1",
-        text: "The Lord detests dishonest scales, but accurate weights find favor with him."
-      },
-      videoUrl: "https://vimeo.com/your-video-id-3",
-      writtenMaterial: "Integrity in business means more than just avoiding obvious fraud - it means complete honesty in all dealings, fair treatment of employees and customers, and transparency in communication. God cares about the details of how we conduct business because our character is revealed in small decisions as much as large ones.",
-      reflection: "What areas of your business practices need greater alignment with biblical integrity standards?",
-      becomingGodsEntrepreneur: {
-        content: "God's entrepreneurs build their reputation on trustworthiness, knowing that integrity is the foundation of sustainable business relationships.",
-        questions: [
-          "How can you demonstrate integrity even when it costs you short-term profit?",
-          "What systems can you put in place to ensure honest practices throughout your business?"
-        ]
-      },
-      caseStudy: "Tom's auto repair shop built a loyal customer base by providing honest estimates, explaining all work performed, and standing behind their repairs with genuine warranties. While competitors cut corners, Tom's integrity-based approach led to sustainable growth.",
-      faqQuestions: [
-        "Q: What if being completely honest hurts my competitiveness? A: Long-term trust builds stronger business than short-term deception.",
-        "Q: How detailed should I be about problems or limitations? A: Transparent communication builds credibility.",
-        "Q: What if my industry standard practices seem questionable? A: Be the example of a better way to do business."
-      ],
-      businessPlanQuestions: [
-        "What specific integrity standards will guide your business decisions?",
-        "How will you communicate your commitment to honesty with customers and employees?",
-        "What accountability measures will you implement to maintain high integrity standards?"
-      ]
-    },
-    "4": {
-      title: "Stewardship and Resource Management",
-      module: "Foundational Principles",
-      scripture: {
-        reference: "Luke 16:10",
-        text: "Whoever is faithful in very little is also faithful in much, and whoever is dishonest in very little is also dishonest in much."
-      },
-      videoUrl: "https://vimeo.com/your-video-id-4",
-      writtenMaterial: "Everything we have - money, time, talents, opportunities - ultimately belongs to God. We are stewards, not owners. This perspective changes how we make decisions about spending, investing, hiring, and growing our businesses. Good stewardship means maximizing the return on God's investment in us while serving others and advancing His kingdom.",
-      reflection: "How does viewing yourself as a steward rather than an owner change your approach to business decisions?",
-      becomingGodsEntrepreneur: {
-        content: "God's entrepreneurs recognize their role as stewards of divine resources, making decisions that honor the true Owner while serving others effectively.",
-        questions: [
-          "What would change in your financial decisions if you truly believed everything belongs to God?",
-          "How can you balance wise business growth with generous kingdom investment?"
-        ]
-      },
-      caseStudy: "Maria's consulting firm implemented a stewardship model: 10% of profits go to kingdom work, employees receive profit sharing, and business decisions prioritize long-term value creation over short-term gains. This approach attracted top talent and loyal clients.",
-      faqQuestions: [
-        "Q: Does stewardship mean I can't build wealth? A: Good stewards can build wealth responsibly while serving others.",
-        "Q: How much should I give away vs. reinvest in business? A: Seek God's guidance for your specific situation and season.",
-        "Q: What if I disagree with how others think I should use 'my' resources? A: You're accountable to God first, but wisdom seeks godly counsel."
-      ],
-      businessPlanQuestions: [
-        "How will you demonstrate faithful stewardship in your business operations?",
-        "What percentage of profits will you allocate to kingdom advancement?",
-        "How will you balance reinvestment, personal income, and generosity in your financial planning?"
-      ]
     }
   },
-  // Add Module 5, Session 3 data for final session
   "5": {
     "3": {
       title: "Implementation and Launch Strategy",
@@ -166,6 +78,26 @@ const moduleConfig = {
   "5": { name: "Business Planning", totalSessions: 3 }
 };
 
+// User progress interface
+interface UserProgress {
+  lookBackComplete: boolean;
+  lookUpComplete: boolean;
+  lookForwardComplete: boolean;
+  writtenMaterialRead: boolean;
+  videoWatched: boolean;
+  quizAnswer: number | null;
+  personalReflection: string;
+  faqReviewed: boolean;
+  keyTruthReflection: string;
+  actionStatement1: string;
+  businessPlanAnswer1: string;
+  surveyRating1: number | null;
+  surveyRating2: number | null;
+  surveyRating3: number | null;
+  postAssessmentRequired: boolean;
+  postAssessmentCompleted: boolean;
+}
+
 export default function SessionPage() {
   const params = useParams();
   const router = useRouter();
@@ -189,22 +121,21 @@ export default function SessionPage() {
   const totalSessions = currentModule?.totalSessions || 4;
 
   const [currentSection, setCurrentSection] = useState<'lookback' | 'lookup' | 'lookforward'>('lookback');
-  const [userProgress, setUserProgress] = useState({
+  const [userProgress, setUserProgress] = useState<UserProgress>({
     lookBackComplete: false,
     lookUpComplete: false,
     lookForwardComplete: false,
     writtenMaterialRead: false,
     videoWatched: false,
-    quizAnswer: null as number | null,
+    quizAnswer: null,
     personalReflection: '',
     faqReviewed: false,
     keyTruthReflection: '',
     actionStatement1: '',
     businessPlanAnswer1: '',
-    surveyRating1: null as number | null,
-    surveyRating2: null as number | null,
-    surveyRating3: null as number | null,
-    // Add post-assessment tracking for final session
+    surveyRating1: null,
+    surveyRating2: null,
+    surveyRating3: null,
     postAssessmentRequired: false,
     postAssessmentCompleted: false
   });
@@ -243,7 +174,26 @@ export default function SessionPage() {
     return moduleId === "5" && sessionId === "3";
   };
 
-  const updateProgress = (updates: Partial<typeof userProgress>) => {
+  // Helper function to get survey rating
+  const getSurveyRating = (index: number): number | null => {
+    switch (index) {
+      case 0: return userProgress.surveyRating1;
+      case 1: return userProgress.surveyRating2;
+      case 2: return userProgress.surveyRating3;
+      default: return null;
+    }
+  };
+
+  // Helper function to update survey rating
+  const updateSurveyRating = (index: number, rating: number) => {
+    switch (index) {
+      case 0: updateProgress({ surveyRating1: rating }); break;
+      case 1: updateProgress({ surveyRating2: rating }); break;
+      case 2: updateProgress({ surveyRating3: rating }); break;
+    }
+  };
+
+  const updateProgress = (updates: Partial<UserProgress>) => {
     setUserProgress(prev => {
       const newProgress = {...prev, ...updates};
       
@@ -311,7 +261,7 @@ export default function SessionPage() {
             ].map((section) => (
               <button
                 key={section.key}
-                onClick={() => setCurrentSection(section.key as any)}
+                onClick={() => setCurrentSection(section.key as 'lookback' | 'lookup' | 'lookforward')}
                 className={`flex-1 py-6 text-center ${
                   currentSection === section.key ? 'border-b-4 border-blue-500 bg-blue-50' : ''
                 }`}
@@ -415,7 +365,7 @@ export default function SessionPage() {
                 }
               </p>
               <div className="space-y-2">
-                {isFinalCourseSession() ? [
+                {(isFinalCourseSession() ? [
                   "Maximum financial profit",
                   "Personal success and recognition",
                   "Multiplying disciples and advancing God's kingdom",
@@ -425,7 +375,7 @@ export default function SessionPage() {
                   "Business reflects God's image and calling",
                   "Business should be separate from faith",
                   "Business is only acceptable if explicitly Christian"
-                ]}.map((option, index) => (
+                ]).map((option: string, index: number) => (
                   <label key={index} className="flex items-center gap-2 p-3 border rounded hover:bg-gray-50">
                     <input
                       type="radio"
@@ -553,20 +503,20 @@ export default function SessionPage() {
             {/* Survey */}
             <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="text-xl font-bold mb-4">📊 Session Feedback</h3>
-              {[
+              {([
                 isFinalCourseSession() ? "How valuable was this entire course?" : "How valuable was this session?",
                 "How clear was the material?",
                 "How likely are you to apply what you learned?"
-              ].map((question, index) => (
+              ]).map((question: string, index: number) => (
                 <div key={index} className="mb-6">
                   <p className="mb-3">{question}</p>
                   <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((rating) => (
+                    {[1, 2, 3, 4, 5].map((rating: number) => (
                       <button
                         key={rating}
-                        onClick={() => updateProgress({[`surveyRating${index + 1}`]: rating})}
+                        onClick={() => updateSurveyRating(index, rating)}
                         className={`w-12 h-12 rounded-full font-bold ${
-                          userProgress[`surveyRating${index + 1}` as keyof typeof userProgress] === rating
+                          getSurveyRating(index) === rating
                             ? 'bg-blue-500 text-white' : 'bg-gray-200'
                         }`}
                       >

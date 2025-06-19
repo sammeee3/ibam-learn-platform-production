@@ -34,7 +34,7 @@ const Dashboard: React.FC = () => {
     user: null,
     hasCompletedPreAssessment: false,
     hasCompletedPostAssessment: false,
-    completedModules: [],
+    completedModules: [] as number[],
     isLoading: true,
     error: null,
   });
@@ -143,11 +143,11 @@ const Dashboard: React.FC = () => {
       // Calculate module completion based on session completion
       // Module 1: Sessions 1-4, Module 2: Sessions 5-8, Module 3: Sessions 9-13, 
       // Module 4: Sessions 14-17, Module 5: Sessions 18-20
-      const completedSessions = data?.map(progress => progress.session_id) || [];
+      const completedSessions: number[] = data?.map(progress => progress.session_id) || [];
       const completedModules: number[] = [];
 
       // Module session ranges
-      const moduleRanges = [
+      const moduleRanges: Array<{ module: number; start: number; end: number }> = [
         { module: 1, start: 1, end: 4 },    // 4 sessions
         { module: 2, start: 5, end: 8 },    // 4 sessions  
         { module: 3, start: 9, end: 13 },   // 5 sessions
@@ -156,13 +156,13 @@ const Dashboard: React.FC = () => {
       ];
 
       for (const range of moduleRanges) {
-        const moduleSessions = [];
+        const moduleSessions: number[] = [];
         for (let session = range.start; session <= range.end; session++) {
           moduleSessions.push(session);
         }
 
         // Check if all sessions in this module are completed
-        const moduleComplete = moduleSessions.every(sessionId => 
+        const moduleComplete = moduleSessions.every((sessionId: number) => 
           completedSessions.includes(sessionId)
         );
 
@@ -417,25 +417,38 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Post-Assessment & Completion Section */}
-        {allModulesCompleted && (
+        {allModulesCompleted && !state.hasCompletedPostAssessment && (
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg shadow-lg p-8 mb-8">
+            <div className="flex items-center mb-4">
+              <Award className="w-8 h-8 mr-3" />
+              <h2 className="text-2xl font-bold">Almost There!</h2>
+            </div>
+            <p className="text-yellow-100 mb-6 text-lg">
+              You've completed all modules! Take your final assessment to measure your transformation and earn your Faith-Driven Business certificate.
+            </p>
+            <button 
+              onClick={() => window.location.href = '/assessment/post'}
+              className="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-colors flex items-center"
+            >
+              <Award className="w-5 h-5 mr-2" />
+              Take Final Assessment
+            </button>
+          </div>
+        )}
+
+        {allModulesCompleted && state.hasCompletedPostAssessment && (
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-lg p-8">
             <div className="flex items-center mb-4">
               <Award className="w-8 h-8 mr-3" />
               <h2 className="text-2xl font-bold">Congratulations!</h2>
             </div>
             <p className="text-green-100 mb-6 text-lg">
-              You've completed all modules! 
-              {!state.hasCompletedPostAssessment 
-                ? " Complete your post-assessment in the final session to earn your certificate."
-                : " You've earned your Faith-Driven Business certificate!"
-              }
+              You've earned your Faith-Driven Business certificate! Your transformation journey is complete and your business is equipped for Kingdom impact.
             </p>
-            {state.hasCompletedPostAssessment && (
-              <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center">
-                <Award className="w-5 h-5 mr-2" />
-                View Certificate
-              </button>
-            )}
+            <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center">
+              <Award className="w-5 h-5 mr-2" />
+              View Certificate
+            </button>
           </div>
         )}
       </div>
