@@ -1,482 +1,449 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
+import { BookOpen, CheckCircle, Lock, Play, Award, ArrowRight } from 'lucide-react';
 
-// Add authentication interfaces
-interface UserSession {
-  user: {
-    id: string
-    email: string
-    created_at: string
-  }
-  session: {
-    access_token: string
-    refresh_token: string
-    expires_at: number
-  }
-  loginTime: string
+// Supabase client - Replace your current dashboard page.tsx with this
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+interface DashboardState {
+  user: User | null;
+  hasCompletedPreAssessment: boolean;
+  hasCompletedPostAssessment: boolean;
+  completedModules: number[];
+  isLoading: boolean;
+  error: string | null;
 }
 
-interface UserProfile {
-  id: string
-  email: string
-  member_type_key?: string
-  full_name?: string
-  created_at: string
+interface Module {
+  id: number;
+  title: string;
+  sessions: number;
+  description: string;
+  isLocked: boolean;
+  isCompleted: boolean;
 }
 
-// Sample data - replace with your actual data
-const moduleData = [
-  {
-    id: 1,
-    title: "Foundational Principles",
-    description: "Business as God's gift",
-    sessions: 4,
-    completed: 3,
-    icon: "📖",
-    nextSessionId: 4
-  },
-  {
-    id: 2,
-    title: "Success & Failure Factors", 
-    description: "Keys to thriving",
-    sessions: 4,
-    completed: 1,
-    icon: "🎯",
-    nextSessionId: 2
-  },
-  {
-    id: 3,
-    title: "Marketing Excellence",
-    description: "Reaching your audience",
-    sessions: 5,
-    completed: 0,
-    icon: "📈",
-    nextSessionId: 1
-  },
-  {
-    id: 4,
-    title: "Financial Management",
-    description: "Stewardship & growth",
-    sessions: 4,
-    completed: 0,
-    icon: "💰",
-    nextSessionId: 1
-  },
-  {
-    id: 5,
-    title: "Business Planning",
-    description: "Your roadmap to success",
-    sessions: 3,
-    completed: 0,
-    icon: "🗺️",
-    nextSessionId: 1
-  }
-];
+const Dashboard: React.FC = () => {
+  const [state, setState] = useState<DashboardState>({
+    user: null,
+    hasCompletedPreAssessment: false,
+    hasCompletedPostAssessment: false,
+    completedModules: [],
+    isLoading: true,
+    error: null,
+  });
 
-export default function Dashboard() {
-  const router = useRouter();
-  
-  // Authentication state
-  const [userSession, setUserSession] = useState<UserSession | null>(null)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  
-  // Original dashboard state
-  const [userName, setUserName] = useState("Jeff"); // Will be updated from profile
+  const modules: Module[] = [
+    {
+      id: 1,
+      title: "Foundational Principles",
+      sessions: 4,
+      description: "Business as God's gift, working with church leaders, godly guidelines",
+      isLocked: !state.hasCompletedPreAssessment,
+      isCompleted: state.completedModules.includes(1),
+    },
+    {
+      id: 2,
+      title: "Success and Failure Factors", 
+      sessions: 4,
+      description: "Understanding failure reasons, success factors, and God's will",
+      isLocked: !state.completedModules.includes(1),
+      isCompleted: state.completedModules.includes(2),
+    },
+    {
+      id: 3,
+      title: "Marketing Excellence",
+      sessions: 5,
+      description: "Marketing triangle, selling process, market research, competition",
+      isLocked: !state.completedModules.includes(2),
+      isCompleted: state.completedModules.includes(3),
+    },
+    {
+      id: 4,
+      title: "Financial Management",
+      sessions: 4,
+      description: "Funding, budgeting, investor requirements, listening to your business",
+      isLocked: !state.completedModules.includes(3),
+      isCompleted: state.completedModules.includes(4),
+    },
+    {
+      id: 5,
+      title: "Business Planning",
+      sessions: 3,
+      description: "Homework, writing your plan, implementation and launch",
+      isLocked: !state.completedModules.includes(4),
+      isCompleted: state.completedModules.includes(5),
+    },
+  ];
 
-  // Authentication check - SAFE, no new packages
-  useEffect(() => {
-    const checkAuth = () => {
-      try {
-        console.log('🔒 Checking authentication...')
-        
-        // Check for stored session
-        const storedSession = localStorage.getItem('ibam_session')
-        const storedProfile = localStorage.getItem('ibam_profile')
-        
-        if (!storedSession) {
-          console.log('❌ No session found, redirecting to login')
-          router.push('/auth/login')
-          return
-        }
+  // Check pre-assessment completion in database
+  const checkPreAssessmentCompletion = async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('assessment_responses')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7') // Pre-assessment ID
+        .single();
 
-        const session: UserSession = JSON.parse(storedSession)
-        const profile: UserProfile | null = storedProfile ? JSON.parse(storedProfile) : null
-        
-        // Check if session is expired
-        if (session.session.expires_at && session.session.expires_at < Date.now() / 1000) {
-          console.log('⏰ Session expired, redirecting to login')
-          localStorage.removeItem('ibam_session')
-          localStorage.removeItem('ibam_profile')
-          router.push('/auth/login')
-          return
-        }
-
-        console.log('✅ Authentication successful')
-        setUserSession(session)
-        setUserProfile(profile)
-        
-        // Update userName from profile or email
-        if (profile?.full_name) {
-          setUserName(profile.full_name)
-        } else if (session.user.email) {
-          setUserName(session.user.email.split('@')[0])
-        }
-        
-        setLoading(false)
-        
-      } catch (error) {
-        console.error('❌ Auth check failed:', error)
-        router.push('/auth/login')
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking pre-assessment:', error);
+        return false;
       }
+
+      return !!data;
+    } catch (error) {
+      console.error('Error checking pre-assessment:', error);
+      return false;
     }
+  };
 
-    checkAuth()
-  }, [router])
+  // Check post-assessment completion in database
+  const checkPostAssessmentCompletion = async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('assessment_responses')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853') // Post-assessment ID
+        .single();
 
-  // Sign out function
-  const handleSignOut = () => {
-    console.log('👋 Signing out...')
-    localStorage.removeItem('ibam_session')
-    localStorage.removeItem('ibam_profile')
-    router.push('/auth/login')
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking post-assessment:', error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('Error checking post-assessment:', error);
+      return false;
+    }
+  };
+
+  // Check module completion based on session progress (20 sessions total)
+  const checkModuleCompletion = async (userId: string): Promise<number[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('session_id, completion_percentage')
+        .eq('user_id', userId)
+        .gte('completion_percentage', 100);
+
+      if (error) {
+        console.error('Error checking session completion:', error);
+        return [];
+      }
+
+      // Calculate module completion based on session completion
+      // Module 1: Sessions 1-4, Module 2: Sessions 5-8, Module 3: Sessions 9-13, 
+      // Module 4: Sessions 14-17, Module 5: Sessions 18-20
+      const completedSessions = data?.map(progress => progress.session_id) || [];
+      const completedModules: number[] = [];
+
+      // Module session ranges
+      const moduleRanges = [
+        { module: 1, start: 1, end: 4 },    // 4 sessions
+        { module: 2, start: 5, end: 8 },    // 4 sessions  
+        { module: 3, start: 9, end: 13 },   // 5 sessions
+        { module: 4, start: 14, end: 17 },  // 4 sessions
+        { module: 5, start: 18, end: 20 },  // 3 sessions
+      ];
+
+      for (const range of moduleRanges) {
+        const moduleSessions = [];
+        for (let session = range.start; session <= range.end; session++) {
+          moduleSessions.push(session);
+        }
+
+        // Check if all sessions in this module are completed
+        const moduleComplete = moduleSessions.every(sessionId => 
+          completedSessions.includes(sessionId)
+        );
+
+        if (moduleComplete) {
+          completedModules.push(range.module);
+        }
+      }
+
+      return completedModules;
+    } catch (error) {
+      console.error('Error checking module completion:', error);
+      return [];
+    }
+  };
+
+  // Load user data and assessment status
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        setState(prev => ({ ...prev, isLoading: true }));
+
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          setState(prev => ({ ...prev, error: 'Authentication error', isLoading: false }));
+          return;
+        }
+
+        if (!user) {
+          setState(prev => ({ ...prev, error: 'User not found', isLoading: false }));
+          return;
+        }
+
+        // Check assessment completions and module progress
+        const [preAssessmentCompleted, postAssessmentCompleted, completedModules] = await Promise.all([
+          checkPreAssessmentCompletion(user.id),
+          checkPostAssessmentCompletion(user.id),
+          checkModuleCompletion(user.id),
+        ]);
+
+        setState({
+          user,
+          hasCompletedPreAssessment: preAssessmentCompleted,
+          hasCompletedPostAssessment: postAssessmentCompleted,
+          completedModules,
+          isLoading: false,
+          error: null,
+        });
+
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Failed to load user data', 
+          isLoading: false 
+        }));
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  // Handle pre-assessment click
+  const handlePreAssessmentClick = () => {
+    window.location.href = '/assessment';
+  };
+
+  // Handle module click
+  const handleModuleClick = (moduleId: number) => {
+    if (modules.find(m => m.id === moduleId)?.isLocked) {
+      return; // Don't navigate if locked
+    }
+    window.location.href = `/modules/${moduleId}/sessions/1`;
+  };
+
+  // Handle continue learning click
+  const handleContinueLearning = () => {
+    // Find the first incomplete module
+    const nextModule = modules.find(module => !module.isCompleted && !module.isLocked);
+    if (nextModule) {
+      window.location.href = `/modules/${nextModule.id}/sessions/1`;
+    }
+  };
+
+  // Calculate overall progress
+  const calculateProgress = () => {
+    let totalSteps = 6; // Pre-assessment + 5 modules
+    let completedSteps = 0;
+
+    if (state.hasCompletedPreAssessment) completedSteps++;
+    completedSteps += state.completedModules.length;
+
+    return Math.round((completedSteps / totalSteps) * 100);
+  };
+
+  if (state.isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  // Loading screen while checking auth
-  if (loading) {
+  if (state.error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading your IBAM dashboard...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+          <h2 className="text-red-800 font-semibold mb-2">Error</h2>
+          <p className="text-red-600">{state.error}</p>
         </div>
       </div>
-    )
+    );
   }
 
-  // Redirect if no session (shouldn't happen due to useEffect, but just in case)
-  if (!userSession) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p>Redirecting to login...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // YOUR BEAUTIFUL DASHBOARD CODE STARTS HERE - UNCHANGED!
-  const totalSessions = moduleData.reduce((sum, module) => sum + module.sessions, 0);
-  const completedSessions = moduleData.reduce((sum, module) => sum + module.completed, 0);
-  const progressPercentage = Math.round((completedSessions / totalSessions) * 100);
+  const progress = calculateProgress();
+  const allModulesCompleted = state.completedModules.length === 5;
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: '#f8fafc'}}>
-      {/* IBAM Header - EXACT same style as your session template */}
-      <div style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}>
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              {/* IBAM Logo - Same as your template */}
-              <img 
-                src="/images/branding/ibam-logo-copy.jpg" 
-                alt="IBAM Logo"
-                className="h-10 w-auto"
-                onError={(e) => {
-                  e.currentTarget.src = "/images/branding/mini-logo.png";
-                }}
-              />
-              <div>
-                <div className="text-white/90 text-sm md:text-base mb-1">
-                  Learning Platform
-                </div>
-                <h1 className="text-white text-xl md:text-3xl font-bold mb-2">
-                  Welcome Back, {userName}!
-                </h1>
-                <div className="flex flex-wrap gap-4 text-sm md:text-base text-white/90">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#10b981'}}></span>
-                    {progressPercentage}% complete
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-green-400"></span>
-                    <span className="hidden sm:inline">
-                      {completedSessions} of {totalSessions} sessions completed
-                    </span>
-                  </div>
-                  {/* NEW: Authentication status indicator */}
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-blue-400"></span>
-                    <span className="text-xs">✅ Authenticated</span>
-                  </div>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Learning Dashboard</h1>
+              <p className="text-gray-600 mt-1">Welcome back, {state.user?.email}</p>
             </div>
-            
-            {/* User Profile - Same style as session template + Sign Out */}
-            <div className="flex items-center gap-4">
-              <div className="hidden md:block text-white/90 text-right">
-                <div className="font-semibold">Learning Dashboard</div>
-                <div className="text-sm">Continue your journey</div>
-                {/* NEW: Sign out button */}
-                <button 
-                  onClick={handleSignOut}
-                  className="text-xs text-white/70 hover:text-white underline mt-1"
-                >
-                  Sign Out
-                </button>
-              </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl" style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #10b981 100%)'}}>
-                {userName.charAt(0)}
-              </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">{progress}%</div>
+              <div className="text-sm text-gray-600">Complete</div>
             </div>
           </div>
-          
-          {/* Progress Bar - EXACT same style as your session template */}
-          <div className="mt-6 bg-white/20 rounded-full h-3">
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Progress Overview */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
             <div 
-              className="h-3 rounded-full transition-all duration-500"
-              style={{
-                width: `${progressPercentage}%`,
-                background: 'linear-gradient(90deg, #4ECDC4 0%, #10b981 100%)'
-              }}
+              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
             ></div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
-        
-        {/* Welcome Section with IBAM Vision */}
-        <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-2xl border-2 border-[#4ECDC4]/20 p-6 md:p-8 mb-6 md:mb-8">
-          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-4 flex items-center gap-3">
-            <span className="text-4xl md:text-5xl">🎯</span>
-            Your Mission
-          </h2>
-          <div className="bg-white rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
-            <p className="text-[#2C3E50] font-semibold text-lg md:text-xl leading-relaxed mb-4">
-              "Our vision is to love God and serve our community through excellent, biblically-based business, intentionally multiplying disciples who make disciples in our marketplace sphere of influence, following Jesus' model and calling."
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="text-4xl">🚀</div>
-              <div>
-                <div className="font-semibold text-[#2C3E50]">Ready to continue?</div>
-                <div className="text-gray-600">Your next steps are waiting below.</div>
-              </div>
-            </div>
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>Pre-Assessment: {state.hasCompletedPreAssessment ? '✓' : '○'}</span>
+            <span>Modules: {state.completedModules.length}/5</span>
+            <span>Post-Assessment: {state.hasCompletedPostAssessment ? '✓' : '○'}</span>
           </div>
         </div>
 
-        {/* Learning Modules - Using your exact card style */}
-        <div className="mb-8">
-          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
-            <span className="text-4xl md:text-5xl">📚</span>
-            Learning Modules
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {moduleData.map((module) => (
-              <div 
-                key={module.id}
-                className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-                onClick={() => router.push(`/modules/${module.id}`)}
+        {/* Pre-Assessment Section */}
+        {!state.hasCompletedPreAssessment && (
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg p-8 mb-8">
+            <div className="flex items-center mb-4">
+              <BookOpen className="w-8 h-8 mr-3" />
+              <h2 className="text-2xl font-bold">Start Your Journey</h2>
+            </div>
+            <p className="text-blue-100 mb-6 text-lg">
+              Take the pre-assessment to unlock your Faith-Driven Business learning path and begin Module 1.
+            </p>
+            <button
+              onClick={handlePreAssessmentClick}
+              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Take Pre-Assessment
+            </button>
+          </div>
+        )}
+
+        {/* Continue Learning Button */}
+        {state.hasCompletedPreAssessment && !allModulesCompleted && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-green-800">Ready to Continue Learning?</h3>
+                <p className="text-green-600">Jump back into your Faith-Driven Business training</p>
+              </div>
+              <button
+                onClick={handleContinueLearning}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center"
               >
-                {/* Module Icon */}
-                <div className="text-5xl md:text-6xl mb-4 text-center">{module.icon}</div>
-                
-                {/* Module Info */}
-                <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
-                  {module.title}
-                </h3>
-                <p className="text-gray-600 text-lg mb-4 text-center">
-                  {module.description}
-                </p>
-                
-                {/* Progress Section */}
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[#2C3E50] font-semibold">{module.sessions} sessions</span>
-                    <span className="text-gray-600">
-                      {module.completed}/{module.sessions} complete
-                    </span>
-                  </div>
-                  
-                  {/* Progress Bar - Your exact style */}
-                  <div className="bg-[#e2e8f0] rounded-full h-3 mb-3">
-                    <div 
-                      className="h-3 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(module.completed / module.sessions) * 100}%`,
-                        background: 'linear-gradient(90deg, #4ECDC4 0%, #10b981 100%)'
-                      }}
-                    ></div>
-                  </div>
-                  
-                  {/* Status */}
-                  <div className="flex items-center gap-2">
-                    {module.completed > 0 ? (
-                      <>
-                        <span className="w-3 h-3 rounded-full bg-[#10b981]"></span>
-                        <span className="text-[#10b981] font-semibold">In Progress</span>
-                      </>
+                Continue Learning
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modules Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {modules.map((module, index) => (
+            <div
+              key={module.id}
+              className={`
+                bg-white rounded-lg shadow-md p-6 transition-all duration-200
+                ${module.isLocked 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:shadow-lg cursor-pointer hover:-translate-y-1'
+                }
+                ${module.isCompleted ? 'ring-2 ring-green-200' : ''}
+              `}
+              onClick={() => handleModuleClick(module.id)}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center mr-3
+                    ${module.isCompleted 
+                      ? 'bg-green-100 text-green-600' 
+                      : module.isLocked 
+                        ? 'bg-gray-100 text-gray-400'
+                        : 'bg-blue-100 text-blue-600'
+                    }
+                  `}>
+                    {module.isCompleted ? (
+                      <CheckCircle className="w-6 h-6" />
+                    ) : module.isLocked ? (
+                      <Lock className="w-6 h-6" />
                     ) : (
-                      <>
-                        <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                        <span className="text-gray-500">Not Started</span>
-                      </>
+                      <span className="font-bold">{module.id}</span>
                     )}
                   </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Module {module.id}</h3>
+                    <p className="text-sm text-gray-600">{module.sessions} sessions</p>
+                  </div>
                 </div>
-                
-                {/* Action Button - Your exact button style */}
-                <button 
-                  className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300 hover:-translate-y-1"
-                  style={{background: 'linear-gradient(135deg, #4ECDC4 0%, #2C3E50 100%)'}}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/modules/${module.id}/sessions/${module.nextSessionId}`);
-                  }}
-                >
-                  {module.completed > 0 ? 'Continue Learning' : 'Start Module'}
-                </button>
               </div>
-            ))}
-          </div>
+              
+              <h4 className="font-semibold text-lg mb-2">{module.title}</h4>
+              <p className="text-gray-600 text-sm mb-4">{module.description}</p>
+              
+              <div className="flex items-center justify-between">
+                <span className={`
+                  text-sm px-3 py-1 rounded-full
+                  ${module.isCompleted 
+                    ? 'bg-green-100 text-green-800' 
+                    : module.isLocked 
+                      ? 'bg-gray-100 text-gray-600'
+                      : 'bg-blue-100 text-blue-800'
+                  }
+                `}>
+                  {module.isCompleted ? 'Completed' : module.isLocked ? 'Locked' : 'Available'}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Quick Access Tools - Same card style as modules */}
-        <div className="mb-8">
-          <h2 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
-            <span className="text-4xl md:text-5xl">🛠️</span>
-            Quick Access Tools
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Business Planner */}
-            <div 
-              className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-              onClick={() => router.push('/business-planner')}
-            >
-              <div className="text-5xl md:text-6xl mb-4 text-center">📊</div>
-              <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
-                Business Planner
-              </h3>
-              <p className="text-gray-600 text-lg mb-6 text-center">
-                Build your God-honoring business plan step by step
-              </p>
-              <button 
-                className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300"
-                style={{background: 'linear-gradient(135deg, #f59e0b 0%, #dc2626 100%)'}}
-              >
-                Open Planner
-              </button>
+        {/* Post-Assessment & Completion Section */}
+        {allModulesCompleted && (
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-lg p-8">
+            <div className="flex items-center mb-4">
+              <Award className="w-8 h-8 mr-3" />
+              <h2 className="text-2xl font-bold">Congratulations!</h2>
             </div>
-
-            {/* Assessment */}
-            <div 
-              className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-              onClick={() => router.push('/assessment/post')}
-            >
-              <div className="text-5xl md:text-6xl mb-4 text-center">📋</div>
-              <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
-                Assessment
-              </h3>
-              <p className="text-gray-600 text-lg mb-6 text-center">
-                Evaluate your entrepreneurial readiness and growth areas
-              </p>
-              <button 
-                className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300"
-                style={{background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'}}
-              >
-                Take Assessment
-              </button>
-            </div>
-
-            {/* Community */}
-            <div 
-              className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-              onClick={() => router.push('/community')}
-            >
-              <div className="text-5xl md:text-6xl mb-4 text-center">🤝</div>
-              <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-2 text-center">
-                Community
-              </h3>
-              <p className="text-gray-600 text-lg mb-6 text-center">
-                Connect with fellow entrepreneurs on the same journey
-              </p>
-              <button 
-                className="w-full py-3 px-6 rounded-xl font-semibold text-lg text-white transition-all duration-300"
-                style={{background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'}}
-              >
-                Join Discussion
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Weekly Encouragement - Using your exact styling */}
-        <div className="bg-white rounded-2xl shadow-lg border border-[#e2e8f0] p-6 md:p-8">
-          <h3 className="font-bold text-[#2C3E50] text-xl md:text-2xl mb-6 flex items-center gap-3">
-            <span className="text-4xl md:text-5xl">💝</span>
-            Weekly Encouragement
-          </h3>
-          
-          <div className="bg-gradient-to-r from-[#4ECDC4]/10 to-[#10b981]/10 rounded-xl p-4 md:p-6 border border-[#4ECDC4]/20">
-            <p className="text-[#2C3E50] font-semibold text-lg md:text-xl leading-relaxed mb-4">
-              "Therefore go and make disciples of all nations, baptizing them in the name of the Father 
-              and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you. 
-              And surely I am with you always, to the very end of the age."
+            <p className="text-green-100 mb-6 text-lg">
+              You've completed all modules! 
+              {!state.hasCompletedPostAssessment 
+                ? " Complete your post-assessment in the final session to earn your certificate."
+                : " You've earned your Faith-Driven Business certificate!"
+              }
             </p>
-            <p className="text-gray-600 text-lg">
-              <strong>Matthew 28:19-20</strong> - Remember: You're not just building a business, 
-              you're building God's kingdom through your marketplace calling.
-            </p>
+            {state.hasCompletedPostAssessment && (
+              <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center">
+                <Award className="w-5 h-5 mr-2" />
+                View Certificate
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* NEW: Debug info for testing (can be removed later) */}
-        {userProfile && (
-          <details className="mt-6">
-            <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-900">
-              🔒 Authentication Details (for testing)
-            </summary>
-            <div className="mt-4 bg-gray-100 p-4 rounded-lg text-xs">
-              <p><strong>User:</strong> {userSession.user.email}</p>
-              <p><strong>Member Type:</strong> {userProfile.member_type_key || 'trial'}</p>
-              <p><strong>Login Time:</strong> {new Date(userSession.loginTime).toLocaleString()}</p>
-              <p><strong>Session Valid:</strong> ✅ Active</p>
-            </div>
-          </details>
         )}
       </div>
-
-      {/* IBAM Footer - EXACT same style as your session template */}
-      <footer style={{background: '#2C3E50'}} className="text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="flex justify-center items-center gap-3 mb-4">
-              <img 
-                src="/images/branding/mini-logo.png" 
-                alt="IBAM Mini Logo"
-                className="h-8 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <span className="text-xl md:text-2xl font-bold">International Business as Mission</span>
-            </div>
-            <p className="text-gray-400 text-lg md:text-xl">
-              © 2025 IBAM International Business as Mission. Equipping entrepreneurs to transform communities through faith-driven business.
-            </p>
-            <p style={{color: '#4ECDC4'}} className="text-base md:text-lg mt-2 font-semibold">
-              DESIGNED TO THRIVE
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
-}
+};
+
+export default Dashboard;
+
+// File: /app/dashboard/page.tsx
+// This replaces your current localStorage-based dashboard

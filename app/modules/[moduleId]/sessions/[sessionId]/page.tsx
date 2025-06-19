@@ -122,6 +122,38 @@ const sessionData: Record<string, Record<string, any>> = {
         "How will you balance reinvestment, personal income, and generosity in your financial planning?"
       ]
     }
+  },
+  // Add Module 5, Session 3 data for final session
+  "5": {
+    "3": {
+      title: "Implementation and Launch Strategy",
+      module: "Business Planning",
+      scripture: {
+        reference: "Jeremiah 29:11",
+        text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future."
+      },
+      videoUrl: "https://vimeo.com/your-video-id-final",
+      writtenMaterial: "Congratulations! You've completed an incredible journey through Faith-Driven Business principles. This final session focuses on implementing everything you've learned and launching your business with biblical foundations. Remember, this is not an ending but a beginning of your marketplace ministry.",
+      reflection: "How has your understanding of business as ministry evolved throughout this course?",
+      becomingGodsEntrepreneur: {
+        content: "As you launch your Faith-Driven business, remember that you're equipped to multiply disciples through your marketplace influence.",
+        questions: [
+          "What are your top 3 action steps for implementing these principles?",
+          "How will you measure success in both business and kingdom impact?"
+        ]
+      },
+      caseStudy: "David launched his consulting firm with clear kingdom values, prayer-based decision making, and intentional discipleship relationships with clients and employees. Within two years, he was mentoring 12 other business leaders and supporting 3 church plants.",
+      faqQuestions: [
+        "Q: How do I maintain these principles under business pressure? A: Build accountability systems and regular spiritual disciplines.",
+        "Q: What if my business faces major challenges? A: Trust God's sovereignty while taking wise action.",
+        "Q: How do I continue growing as a Faith-Driven entrepreneur? A: Stay connected to other kingdom business leaders and continue learning."
+      ],
+      businessPlanQuestions: [
+        "What specific steps will you take in the next 30 days to implement your Faith-Driven business plan?",
+        "How will you continue your growth as a kingdom entrepreneur?",
+        "What legacy do you want your business to leave for God's kingdom?"
+      ]
+    }
   }
 };
 
@@ -171,8 +203,18 @@ export default function SessionPage() {
     businessPlanAnswer1: '',
     surveyRating1: null as number | null,
     surveyRating2: null as number | null,
-    surveyRating3: null as number | null
+    surveyRating3: null as number | null,
+    // Add post-assessment tracking for final session
+    postAssessmentRequired: false,
+    postAssessmentCompleted: false
   });
+
+  // Check if this is the final session and set post-assessment requirement
+  useEffect(() => {
+    if (isFinalCourseSession()) {
+      setUserProgress(prev => ({ ...prev, postAssessmentRequired: true }));
+    }
+  }, [moduleId, sessionId]);
 
   // Navigation functions
   const navigateToNextSession = () => {
@@ -214,14 +256,28 @@ export default function SessionPage() {
         newProgress.personalReflection &&
         newProgress.faqReviewed
       );
-      newProgress.lookForwardComplete = !!(
-        newProgress.keyTruthReflection &&
-        newProgress.actionStatement1 &&
-        newProgress.businessPlanAnswer1 &&
-        newProgress.surveyRating1 !== null &&
-        newProgress.surveyRating2 !== null &&
-        newProgress.surveyRating3 !== null
-      );
+      
+      // For final session, require post-assessment acknowledgment
+      if (isFinalCourseSession()) {
+        newProgress.lookForwardComplete = !!(
+          newProgress.keyTruthReflection &&
+          newProgress.actionStatement1 &&
+          newProgress.businessPlanAnswer1 &&
+          newProgress.surveyRating1 !== null &&
+          newProgress.surveyRating2 !== null &&
+          newProgress.surveyRating3 !== null &&
+          newProgress.postAssessmentRequired
+        );
+      } else {
+        newProgress.lookForwardComplete = !!(
+          newProgress.keyTruthReflection &&
+          newProgress.actionStatement1 &&
+          newProgress.businessPlanAnswer1 &&
+          newProgress.surveyRating1 !== null &&
+          newProgress.surveyRating2 !== null &&
+          newProgress.surveyRating3 !== null
+        );
+      }
       
       return newProgress;
     });
@@ -236,7 +292,9 @@ export default function SessionPage() {
             <h1 className="text-2xl font-bold mb-2">{session.title}</h1>
             <p className="opacity-90">Module {moduleId}: {session.module}</p>
             {isFinalCourseSession() && (
-              <p className="text-yellow-300 mt-2">🎉 Final session! Post-assessment after completion</p>
+              <div className="mt-3 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3">
+                <p className="text-yellow-100 font-semibold">🎉 Final Session - Post-Assessment Required for Completion</p>
+              </div>
             )}
           </div>
         </div>
@@ -275,9 +333,28 @@ export default function SessionPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-xl font-bold mb-4">Opening Prayer</h3>
               <p className="text-gray-700 italic mb-4">
-                "Lord, as I look back on my recent journey, help me learn from my experiences and be open to Your guidance. Amen."
+                {isFinalCourseSession() 
+                  ? "Lord, as I complete this incredible journey, help me reflect on all You've taught me and prepare my heart for the transformation assessment ahead. Amen."
+                  : "Lord, as I look back on my recent journey, help me learn from my experiences and be open to Your guidance. Amen."
+                }
               </p>
             </div>
+            
+            {/* Final Session Reflection */}
+            {isFinalCourseSession() && (
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg shadow p-6">
+                <h3 className="text-xl font-bold mb-4">🌟 Course Journey Reflection</h3>
+                <p className="text-gray-700 mb-4">
+                  You've completed an amazing 20-session journey through Faith-Driven Business principles. Take a moment to reflect on:
+                </p>
+                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                  <li>How your understanding of business as ministry has evolved</li>
+                  <li>The specific biblical principles you'll implement in your business</li>
+                  <li>The relationships and partnerships you want to develop</li>
+                  <li>Your vision for kingdom impact through your marketplace influence</li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -331,14 +408,24 @@ export default function SessionPage() {
             {/* Quiz */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-xl font-bold mb-4">🧠 Knowledge Check</h3>
-              <p className="mb-4">What is the primary biblical foundation for business?</p>
+              <p className="mb-4">
+                {isFinalCourseSession() 
+                  ? "What is the ultimate goal of a Faith-Driven business?"
+                  : "What is the primary biblical foundation for business?"
+                }
+              </p>
               <div className="space-y-2">
-                {[
+                {isFinalCourseSession() ? [
+                  "Maximum financial profit",
+                  "Personal success and recognition",
+                  "Multiplying disciples and advancing God's kingdom",
+                  "Building the largest possible business"
+                ] : [
                   "Business is a necessary evil",
                   "Business reflects God's image and calling",
                   "Business should be separate from faith",
                   "Business is only acceptable if explicitly Christian"
-                ].map((option, index) => (
+                ]}.map((option, index) => (
                   <label key={index} className="flex items-center gap-2 p-3 border rounded hover:bg-gray-50">
                     <input
                       type="radio"
@@ -398,7 +485,10 @@ export default function SessionPage() {
                 value={userProgress.keyTruthReflection}
                 onChange={(e) => updateProgress({keyTruthReflection: e.target.value})}
                 className="w-full h-32 p-3 border rounded"
-                placeholder="What are the key insights from this session?"
+                placeholder={isFinalCourseSession() 
+                  ? "What are the most important insights from your entire Faith-Driven Business journey?"
+                  : "What are the key insights from this session?"
+                }
               />
             </div>
 
@@ -409,7 +499,10 @@ export default function SessionPage() {
                 value={userProgress.actionStatement1}
                 onChange={(e) => updateProgress({actionStatement1: e.target.value})}
                 className="w-full h-24 p-3 border rounded"
-                placeholder="What specific action will you take before the next session?"
+                placeholder={isFinalCourseSession() 
+                  ? "What are your top 3 implementation steps for launching your Faith-Driven business?"
+                  : "What specific action will you take before the next session?"
+                }
               />
             </div>
 
@@ -425,11 +518,43 @@ export default function SessionPage() {
               />
             </div>
 
+            {/* POST-ASSESSMENT SECTION - Only for Final Session */}
+            {isFinalCourseSession() && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4 text-orange-700">⭐ Final Assessment Required</h3>
+                <div className="bg-white rounded p-4 mb-4">
+                  <p className="text-gray-700 mb-3">
+                    <strong>Before completing this course, you must take the post-assessment to:</strong>
+                  </p>
+                  <ul className="list-disc list-inside text-gray-700 space-y-1 mb-4">
+                    <li>Measure your transformation and growth</li>
+                    <li>Compare your progress from the beginning</li>
+                    <li>Demonstrate the course's impact on your thinking</li>
+                    <li>Earn your Faith-Driven Business certificate</li>
+                  </ul>
+                  <p className="text-orange-600 font-semibold">
+                    The post-assessment will be automatically launched when you complete this session.
+                  </p>
+                </div>
+                <label className="flex items-center gap-3 p-3 bg-white rounded border">
+                  <input
+                    type="checkbox"
+                    checked={userProgress.postAssessmentRequired}
+                    onChange={(e) => updateProgress({postAssessmentRequired: e.target.checked})}
+                    className="w-5 h-5"
+                  />
+                  <span className="font-semibold">
+                    I understand that I need to complete the post-assessment to finish the course and earn my certificate.
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* Survey */}
             <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="text-xl font-bold mb-4">📊 Session Feedback</h3>
               {[
-                "How valuable was this session?",
+                isFinalCourseSession() ? "How valuable was this entire course?" : "How valuable was this session?",
                 "How clear was the material?",
                 "How likely are you to apply what you learned?"
               ].map((question, index) => (
@@ -455,21 +580,25 @@ export default function SessionPage() {
 
             {/* Complete Button */}
             {userProgress.lookForwardComplete && (
-              <div className="bg-green-500 text-white rounded-lg p-6 text-center">
+              <div className={`${
+                isFinalCourseSession() ? 'bg-gradient-to-r from-green-500 to-blue-500' : 'bg-green-500'
+              } text-white rounded-lg p-6 text-center`}>
                 <h3 className="text-xl font-bold mb-2">
-                  {isFinalCourseSession() ? '🎉 Course Complete!' : '🏆 Session Complete!'}
+                  {isFinalCourseSession() ? '🎉 Ready for Post-Assessment!' : '🏆 Session Complete!'}
                 </h3>
                 <p className="mb-4">
                   {isFinalCourseSession() 
-                    ? 'Congratulations! Time to measure your growth with the post-assessment.' 
+                    ? 'Congratulations! You\'ve completed all 20 sessions. Time to measure your transformation and earn your certificate!' 
                     : 'Great work! Ready for the next session?'
                   }
                 </p>
                 <button 
                   onClick={navigateToNextSession}
-                  className="bg-white text-green-500 px-6 py-3 rounded-lg font-bold"
+                  className={`${
+                    isFinalCourseSession() ? 'bg-white text-blue-600' : 'bg-white text-green-500'
+                  } px-6 py-3 rounded-lg font-bold text-lg`}
                 >
-                  {isFinalCourseSession() ? '📊 Take Post-Assessment' : 'Next Session →'}
+                  {isFinalCourseSession() ? '📊 Take Post-Assessment & Get Certificate' : 'Next Session →'}
                 </button>
               </div>
             )}
