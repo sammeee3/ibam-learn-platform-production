@@ -1,3 +1,4 @@
+cat > app/dashboard/page.tsx << 'EOF'
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -5,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { User } from '@supabase/supabase-js';
 import { BookOpen, CheckCircle, Lock, Play, Award, ArrowRight } from 'lucide-react';
 
+// Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -33,7 +35,7 @@ const Dashboard: React.FC = () => {
     user: null,
     hasCompletedPreAssessment: false,
     hasCompletedPostAssessment: false,
-    completedModules: [],
+    completedModules: [] as number[],
     isLoading: true,
     error: null,
   });
@@ -81,81 +83,151 @@ const Dashboard: React.FC = () => {
     },
   ];
 
+  // Check pre-assessment completion in database
   const checkPreAssessmentCompletion = async (userId: string): Promise<boolean> => {
     try {
+      console.log('Checking pre-assessment for user:', userId);
+      
       const { data, error } = await supabase
         .from('assessment_responses')
         .select('id')
         .eq('user_id', userId)
-        .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7')
-        .maybeSingle();
+        .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7') // Pre-assessment ID
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
 
       if (error) {
         console.error('Error checking pre-assessment:', error);
         return false;
       }
-      return !!data;
+
+      const hasCompleted = !!data;
+      console.log('Pre-assessment completed:', hasCompleted);
+      return hasCompleted;
     } catch (error) {
       console.error('Error checking pre-assessment:', error);
       return false;
     }
   };
 
+  // Check post-assessment completion in database
   const checkPostAssessmentCompletion = async (userId: string): Promise<boolean> => {
     try {
+      console.log('Checking post-assessment for user:', userId);
+      
       const { data, error } = await supabase
         .from('assessment_responses')
         .select('id')
         .eq('user_id', userId)
-        .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853')
-        .maybeSingle();
+        .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853') // Post-assessment ID
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
 
       if (error) {
         console.error('Error checking post-assessment:', error);
         return false;
       }
-      return !!data;
+
+      const hasCompleted = !!data;
+      console.log('Post-assessment completed:', hasCompleted);
+      return hasCompleted;
     } catch (error) {
       console.error('Error checking post-assessment:', error);
       return false;
     }
   };
 
+  // Check module completion based on session progress
+  // Check module completion based on session progress
   const checkModuleCompletion = async (userId: string): Promise<number[]> => {
     try {
+      console.log("Checking module completion for user:", userId);
+      
       const { data, error } = await supabase
-        .from('user_progress')
-        .select('session_id, completion_percentage')
-        .eq('user_id', userId)
-        .gte('completion_percentage', 100);
+        .from("user_progress")
+        .select("session_id, completion_percentage")
+        .eq("user_id", userId)
+        .gte("completion_percentage", 100);
 
       if (error) {
-        console.error('Error checking session completion:', error);
+        console.error("Error checking session completion:", error);
         return [];
       }
+
+      console.log("Completed sessions data:", data);
 
       const completedSessions: number[] = data?.map(progress => progress.session_id) || [];
       const completedModules: number[] = [];
 
-      const moduleSessionRanges = {
-        1: [1, 2, 3, 4],
-        2: [5, 6, 7, 8],  
-        3: [9, 10, 11, 12, 13],
-        4: [14, 15, 16, 17],
-        5: [18, 19, 20]
+      // Function to get actual session IDs from database structure
+      const getActualSessionIds = (moduleNumber: number): number[] => {
+        const sessionRanges: Record<number, number[]> = {
+          1: [1, 2, 3, 4],           // Module 1: sessions 1-4
+          2: [5, 6, 7, 8],           // Module 2: sessions 5-8
+          3: [9, 10, 11, 12, 13],    // Module 3: sessions 9-13
+          4: [14, 15, 16, 17],       // Module 4: sessions 14-17
+          5: [18, 19, 20]            // Module 5: sessions 18-20
+        };
+        return sessionRanges[moduleNumber] || [];
       };
 
-      for (let moduleId = 1; moduleId <= 5; moduleId++) {
-        const requiredSessions = moduleSessionRanges[moduleId as keyof typeof moduleSessionRanges];
-        const moduleComplete = requiredSessions.every(sessionId => 
+      const moduleSessionCounts = [
+        { module: 1, sessions: 4 },
+        { module: 2, sessions: 4 },
+        { module: 3, sessions: 5 },
+        { module: 4, sessions: 4 },
+        { module: 5, sessions: 3 }
+      ];
+
+      for (const moduleInfo of moduleSessionCounts) {
+        const moduleSessionIds = getActualSessionIds(moduleInfo.module);
+        
+        // Check if all sessions in this module are completed
+        const moduleComplete = moduleSessionIds.every((sessionId: number) => 
           completedSessions.includes(sessionId)
         );
 
+        console.log(`Module ${moduleInfo.module}: Required sessions ${moduleSessionIds}, Completed: ${moduleComplete}`);
+
         if (moduleComplete) {
-          completedModules.push(moduleId);
+          completedModules.push(moduleInfo.module);
         }
       }
 
+      console.log("Completed modules:", completedModules);
+      return completedModules;
+    } catch (error) {
+      console.error("Error checking module completion:", error);
+      return [];
+    }
+  };  return sessionRanges[moduleNumber] || [];
+};
+
+// Replace the broken logic
+const moduleSessionCounts = [
+  { module: 1, sessions: 4 },
+  { module: 2, sessions: 4 },
+  { module: 3, sessions: 5 },
+  { module: 4, sessions: 4 },
+  { module: 5, sessions: 3 }
+];
+
+for (const moduleInfo of moduleSessionCounts) {
+  const moduleSessionIds = getActualSessionIds(moduleInfo.module);
+  
+  // Check if all sessions in this module are completed
+  const moduleComplete = moduleSessionIds.every((sessionId) => 
+    completedSessions.includes(sessionId)
+  );
+
+  console.log(`Module ${moduleInfo.module}: Required sessions ${moduleSessionIds}, Completed: ${moduleComplete}`);
+
+  if (moduleComplete) {
+    completedModules.push(moduleInfo.module);
+  }
+}
+        }
+      }
+
+      console.log('Completed modules:', completedModules);
       return completedModules;
     } catch (error) {
       console.error('Error checking module completion:', error);
@@ -163,14 +235,19 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Load user data and assessment status
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
+        console.log('Loading user data...');
+
+        // Get current user
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (userError || !user) {
+        if (userError) {
+          console.error('User authentication error:', userError);
           setState(prev => ({ 
             ...prev, 
             error: 'Authentication error', 
@@ -179,6 +256,19 @@ const Dashboard: React.FC = () => {
           return;
         }
 
+        if (!user) {
+          console.error('No user found');
+          setState(prev => ({ 
+            ...prev, 
+            error: 'User not found', 
+            isLoading: false 
+          }));
+          return;
+        }
+
+        console.log('User authenticated:', user.id);
+
+        // Check assessments and progress
         const [hasCompletedPre, hasCompletedPost, completedModules] = await Promise.all([
           checkPreAssessmentCompletion(user.id),
           checkPostAssessmentCompletion(user.id),
@@ -194,6 +284,12 @@ const Dashboard: React.FC = () => {
           error: null,
         });
 
+        console.log('Dashboard loaded successfully:', {
+          preAssessment: hasCompletedPre,
+          postAssessment: hasCompletedPost,
+          modules: completedModules
+        });
+
       } catch (error) {
         console.error('Error loading user data:', error);
         setState(prev => ({ 
@@ -207,27 +303,32 @@ const Dashboard: React.FC = () => {
     loadUserData();
   }, []);
 
+  // Handle pre-assessment click
   const handlePreAssessmentClick = () => {
     window.location.href = '/assessment/pre';
   };
 
+  // Handle module click
   const handleModuleClick = (moduleId: number) => {
     const module = modules.find(m => m.id === moduleId);
     if (module?.isLocked) {
-      return;
+      return; // Don't navigate if locked
     }
-    window.location.href = `/modules/${moduleId}`;
+    window.location.href = `/modules/${moduleId}/sessions/1`;
   };
 
+  // Handle continue learning click
   const handleContinueLearning = () => {
+    // Find the first incomplete module
     const nextModule = modules.find(module => !module.isCompleted && !module.isLocked);
     if (nextModule) {
       window.location.href = `/modules/${nextModule.id}/sessions/1`;
     }
   };
 
+  // Calculate overall progress
   const calculateProgress = () => {
-    let totalSteps = 6;
+    let totalSteps = 6; // Pre-assessment + 5 modules
     let completedSteps = 0;
 
     if (state.hasCompletedPreAssessment) completedSteps++;
@@ -260,6 +361,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
@@ -276,6 +378,27 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Debug Information - Remove in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+            <h3 className="text-sm font-bold text-yellow-800 mb-2">Debug Information:</h3>
+            <div className="text-xs text-yellow-700 space-y-1">
+              <p>User ID: {state.user?.id}</p>
+              <p>Pre-Assessment Complete: {state.hasCompletedPreAssessment ? 'Yes' : 'No'}</p>
+              <p>Post-Assessment Complete: {state.hasCompletedPostAssessment ? 'Yes' : 'No'}</p>
+              <p>Completed Modules: [{state.completedModules.join(', ')}]</p>
+              <p>Error: {state.error || 'None'}</p>
+              <button 
+                onClick={() => console.log('Dashboard State:', state)}
+                className="bg-yellow-200 px-2 py-1 rounded text-xs mt-2"
+              >
+                Log State to Console
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Progress Overview */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
           <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
@@ -291,6 +414,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Pre-Assessment Section */}
         {!state.hasCompletedPreAssessment && (
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg p-8 mb-8">
             <div className="flex items-center mb-4">
@@ -310,6 +434,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
+        {/* Continue Learning Button */}
         {state.hasCompletedPreAssessment && !allModulesCompleted && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
             <div className="flex items-center justify-between">
@@ -328,8 +453,9 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
+        {/* Modules Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {modules.map((module) => (
+          {modules.map((module, index) => (
             <div
               key={module.id}
               className={`
@@ -388,6 +514,7 @@ const Dashboard: React.FC = () => {
           ))}
         </div>
 
+        {/* Post-Assessment & Completion Section */}
         {allModulesCompleted && !state.hasCompletedPostAssessment && (
           <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg shadow-lg p-8 mb-8">
             <div className="flex items-center mb-4">
@@ -428,3 +555,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+EOF
