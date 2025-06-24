@@ -1,0 +1,1425 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  BookOpen, 
+  CheckCircle, 
+  ChevronDown, 
+  ChevronRight,
+  MessageCircle,
+  Target,
+  Download,
+  Play,
+  Heart,
+  Users,
+  Briefcase,
+  HelpCircle
+} from 'lucide-react';
+
+// Initialize Supabase client
+const supabase = createClientComponentClient();
+
+// NOTE: Make sure you have these environment variables in your .env.local:
+// NEXT_PUBLIC_SUPABASE_URL=https://tutrnikhomrgcpkzszvq.supabase.co
+// NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+// Enhanced Bible Reference System (keeping your existing system)
+const enhancedBibleReferences: Record<string, string> = {
+  "Genesis 1:26": "Then God said, 'Let us make man in our image, after our likeness. And let them have dominion over the fish of the sea and over the birds of the heavens and over the livestock and over all the earth and over every creeping thing that creeps on the earth.'",
+  "1 Peter 3:15": "But in your hearts revere Christ as Lord. Always be prepared to give an answer to everyone who asks you to give the reason for the hope that you have. But do this with gentleness and respect.",
+  "Colossians 3:23": "Whatever you do, work heartily, as for the Lord and not for men,",
+  "1 Timothy 5:8": "But if anyone does not provide for his relatives, and especially for members of his household, he has denied the faith and is worse than an unbeliever.",
+  "Ephesians 4:28": "Let the thief no longer steal, but rather let him labor, doing honest work with his own hands, so that he may have something to share with anyone in need.",
+};
+
+// Database Types
+interface SessionData {
+  id: string;
+  module_id: number;
+  session_number: number;
+  title: string;
+  subtitle?: string;
+  content: {
+    written_curriculum?: {
+      main_content?: string;
+      quick_version?: string;
+    };
+    look_back?: {
+      vision_statement?: string;
+      reflection_questions?: string[];
+    };
+    look_forward?: {
+      commitment_prompt?: string;
+      application_questions?: string[];
+    };
+    quiz_questions?: any[];
+    faq_questions?: any[];
+    coaching_questions?: any[];
+  };
+  scripture_reference?: string;
+  video_url?: string;
+  case_study?: string;
+  business_plan_questions?: string[];
+  transformation_promise?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SessionPageProps {
+  params: {
+    moduleId: string;
+    sessionId: string;
+  };
+}
+
+// Action Commitment Interface
+interface ActionCommitment {
+  id: string;
+  type: 'business' | 'discipleship';
+  smartData: {
+    specific: string;
+    measurable?: string;
+    ministryMinded?: string;
+    achievable: string;
+    relevant?: string;
+    relational?: string;
+    timed: string;
+  };
+  generatedStatement: string;
+  completed: boolean;
+  completionNotes?: string;
+  learningReflection?: string;
+  impactAssessment?: string;
+  obstacleIdentification?: string;
+}
+
+// Section interface for proper typing
+interface LearnSection {
+  type: 'content' | 'video' | 'case_study' | 'business_questions' | 'transformation';
+  title: string;
+  icon: string;
+  content: string | string[];
+  duration: string;
+}
+
+// Enhanced Scripture Reference Component (keeping your existing one)
+const EnhancedScriptureReference: React.FC<{ reference: string; children?: React.ReactNode }> = ({ reference, children }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const elementRef = useRef<HTMLSpanElement>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    setIsHovered(true);
+    if (elementRef.current) {
+      const rect = elementRef.current.getBoundingClientRect();
+      setPopupPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10
+      });
+    }
+  };
+
+  const verseText = enhancedBibleReferences[reference];
+
+  return (
+    <>
+      <span
+        ref={elementRef}
+        className="relative inline-block cursor-pointer text-blue-600 font-semibold border-b-2 border-dotted border-blue-400 hover:text-blue-800 hover:border-blue-600 transition-all duration-200 px-1 py-0.5 rounded"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{
+          background: isHovered ? 'linear-gradient(135deg, #EBF8FF 0%, #BEE3F8 100%)' : 'transparent'
+        }}
+      >
+        {children || reference}
+      </span>
+      
+      {isHovered && verseText && (
+        <div 
+          className="fixed z-50 transform -translate-x-1/2 -translate-y-full mb-2"
+          style={{ 
+            left: popupPosition.x,
+            top: popupPosition.y,
+            maxWidth: '400px'
+          }}
+        >
+          <div className="bg-white border-2 border-blue-200 rounded-xl shadow-2xl p-6 relative">
+            <div className="flex items-center mb-3 pb-2 border-b border-blue-100">
+              <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
+              <div className="font-bold text-blue-800 text-lg">{reference}</div>
+            </div>
+            <div className="text-gray-700 leading-relaxed italic text-base">
+              "{verseText}"
+            </div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-blue-200"></div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Vision Statement Component
+const VisionStatement: React.FC = () => {
+  return (
+    <div className="relative mb-6 bg-gradient-to-r from-teal-400 to-slate-700 rounded-2xl p-6 md:p-8 text-white overflow-hidden">
+      {/* Animated background effect */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-white/10 to-transparent animate-pulse"></div>
+      </div>
+      
+      <div className="relative z-10 text-center">
+        <div className="text-3xl md:text-4xl mb-4 animate-pulse">✨</div>
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 leading-tight">
+          Multiplying Followers of Jesus while building profitable businesses
+        </h2>
+        <p className="text-teal-100 text-sm md:text-base lg:text-lg max-w-2xl mx-auto">
+          Your journey of faith-driven entrepreneurship transforms lives and communities
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Eyeball Icon Components
+const EyeballLeft: React.FC<{ size?: number }> = ({ size = 24 }) => {
+  return (
+    <div 
+      className="relative inline-block bg-slate-700 rounded-full"
+      style={{ width: size, height: size }}
+    >
+      <div 
+        className="absolute bg-white rounded-full"
+        style={{ 
+          width: size * 0.5, 
+          height: size * 0.5, 
+          top: size * 0.25, 
+          left: size * 0.17  // Looking left
+        }}
+      ></div>
+      <div 
+        className="absolute bg-teal-400 rounded-full"
+        style={{ 
+          width: size * 0.25, 
+          height: size * 0.25, 
+          top: size * 0.375, 
+          left: size * 0.21  // Pupil looking left
+        }}
+      ></div>
+    </div>
+  );
+};
+
+const EyeballRight: React.FC<{ size?: number }> = ({ size = 24 }) => {
+  return (
+    <div 
+      className="relative inline-block bg-slate-700 rounded-full"
+      style={{ width: size, height: size }}
+    >
+      <div 
+        className="absolute bg-white rounded-full"
+        style={{ 
+          width: size * 0.5, 
+          height: size * 0.5, 
+          top: size * 0.25, 
+          right: size * 0.17  // Looking right
+        }}
+      ></div>
+      <div 
+        className="absolute bg-teal-400 rounded-full"
+        style={{ 
+          width: size * 0.25, 
+          height: size * 0.25, 
+          top: size * 0.375, 
+          right: size * 0.21  // Pupil looking right
+        }}
+      ></div>
+    </div>
+  );
+};
+
+// Learn Together Content Component with Sub-Sections
+const LearnTogetherContent: React.FC<{ 
+  sessionData: SessionData; 
+  readingMode: 'quick' | 'normal' 
+}> = ({ sessionData, readingMode }) => {
+  const [activeSubSection, setActiveSubSection] = useState(0);
+
+  // Memoize content parsing to avoid re-parsing on every render
+  const sections = React.useMemo(() => {
+    const parsedSections: LearnSection[] = [];
+    
+    // Get the content based on reading mode
+    const content = readingMode === 'quick' 
+      ? sessionData.content?.written_curriculum?.quick_version 
+      : sessionData.content?.written_curriculum?.main_content;
+
+    if (content && typeof content === 'string') {
+      try {
+        // Split by the reading block markers
+        const blocks = content.split(/## 🔥 READING BLOCK - CHUNK/);
+        
+        // First block (before any reading block markers)
+        if (blocks[0]?.trim()) {
+          parsedSections.push({
+            type: 'content',
+            title: 'Foundation',
+            icon: '🏗️',
+            content: blocks[0].trim(),
+            duration: '3-5 min'
+          });
+        }
+
+        // Subsequent reading blocks
+        blocks.slice(1).forEach((block, index) => {
+          if (block?.trim()) {
+            // Extract a meaningful title from the content
+            const lines = block.trim().split('\n').filter(line => line.trim());
+            let title = `Reading Block ${index + 1}`;
+            
+            // Try to find a good title from the content
+            for (const line of lines) {
+              const cleaned = line.replace(/[#*\-•]/g, '').trim();
+              if (cleaned.length > 10 && cleaned.length < 50 && !cleaned.includes('🔥')) {
+                title = cleaned;
+                break;
+              }
+            }
+
+            parsedSections.push({
+              type: 'content',
+              title: title,
+              icon: '📖',
+              content: block.trim(),
+              duration: '4-6 min'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error parsing content:', error);
+      }
+    }
+
+    // Add other content types as separate sections
+    if (sessionData.video_url) {
+      parsedSections.push({
+        type: 'video',
+        title: 'Teaching Video',
+        icon: '🎬',
+        content: sessionData.video_url,
+        duration: '8-12 min'
+      });
+    }
+
+    if (sessionData.case_study) {
+      parsedSections.push({
+        type: 'case_study',
+        title: 'Success Story',
+        icon: '📊',
+        content: sessionData.case_study,
+        duration: '5-7 min'
+      });
+    }
+
+    if (sessionData.business_plan_questions?.length) {
+      parsedSections.push({
+        type: 'business_questions',
+        title: 'Apply to Business',
+        icon: '💼',
+        content: sessionData.business_plan_questions,
+        duration: '3-5 min'
+      });
+    }
+
+    if (sessionData.transformation_promise) {
+      parsedSections.push({
+        type: 'transformation',
+        title: 'Your Promise',
+        icon: '🌟',
+        content: sessionData.transformation_promise,
+        duration: '2-3 min'
+      });
+    }
+
+    return parsedSections;
+  }, [sessionData, readingMode]);
+
+  // Fixed content formatting function
+  const formatContent = (content: string): string => {
+    if (!content || typeof content !== 'string') return '';
+    
+    try {
+      let formatted = content
+        // Remove reading block markers
+        .replace(/## 🔥 READING BLOCK - CHUNK[^\n]*/g, '')
+        // Clean up extra whitespace
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      // Convert markdown to HTML with proper structure
+      formatted = formatted
+        // Headers
+        .replace(/### (.*?)$/gm, '<h3 class="text-xl font-bold text-gray-800 mt-6 mb-3">$1</h3>')
+        .replace(/## ((?!🔥).*?)$/gm, '<h2 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h2>')
+        // Bold text
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+        // Split into paragraphs
+        .split('\n\n')
+        .map(paragraph => {
+          const trimmed = paragraph.trim();
+          if (!trimmed) return '';
+          
+          // Handle bullet lists
+          if (trimmed.includes('\n* ') || trimmed.startsWith('* ')) {
+            const listItems = trimmed
+              .split('\n')
+              .filter(line => line.trim().startsWith('* '))
+              .map(line => `<li class="ml-4 mb-2">${line.replace(/^\* /, '').trim()}</li>`)
+              .join('');
+            return `<ul class="list-disc list-inside mb-4 space-y-2">${listItems}</ul>`;
+          }
+          
+          // Handle headers (already processed)
+          if (trimmed.startsWith('<h')) {
+            return trimmed;
+          }
+          
+          // Regular paragraphs
+          return `<p class="mb-4 leading-relaxed">${trimmed}</p>`;
+        })
+        .filter(Boolean)
+        .join('');
+
+      return formatted;
+    } catch (error) {
+      console.error('Error formatting content:', error);
+      return content; // Return original content if formatting fails
+    }
+  };
+
+  const renderSectionContent = (section: LearnSection) => {
+    switch (section.type) {
+      case 'content':
+        return (
+          <div className="prose prose-lg max-w-none">
+            <div 
+              className="text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ 
+                __html: formatContent(section.content as string) 
+              }} 
+            />
+          </div>
+        );
+
+      case 'video':
+        return (
+          <div className="bg-gray-900 rounded-xl p-8 text-white">
+            <div className="text-center">
+              <Play className="w-20 h-20 mx-auto mb-6 text-gray-400" />
+              <h4 className="text-xl font-semibold mb-4">Teaching Video</h4>
+              <p className="text-gray-300 mb-6">Expert explanation with practical examples</p>
+              <div className="bg-gray-800 rounded-lg p-4">
+                <p className="text-sm text-gray-400">Video: {section.content}</p>
+              </div>
+              <button className="mt-6 bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg transition-colors flex items-center gap-2 mx-auto">
+                <Play className="w-5 h-5" />
+                Play Video
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'case_study':
+        return (
+          <div className="bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-400 rounded-r-xl p-8">
+            <h4 className="text-xl font-bold text-orange-800 mb-4 flex items-center">
+              📊 Real-World Success Story
+            </h4>
+            <div className="prose prose-lg max-w-none">
+              <div 
+                className="text-gray-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ 
+                  __html: formatContent(section.content as string) 
+                }} 
+              />
+            </div>
+          </div>
+        );
+
+      case 'business_questions':
+        const questions = Array.isArray(section.content) ? section.content : [];
+        return (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-r-xl p-8">
+            <h4 className="text-xl font-bold text-green-800 mb-6 flex items-center">
+              💼 Apply This to Your Business
+            </h4>
+            <div className="space-y-4">
+              {questions.map((question: string, index: number) => (
+                <div key={index} className="bg-white rounded-lg p-6 border border-green-200">
+                  <div className="flex items-start gap-4">
+                    <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-gray-800 font-medium mb-3">{question}</p>
+                      <textarea 
+                        className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                        rows={3}
+                        placeholder="Your reflection..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'transformation':
+        return (
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-400 rounded-r-xl p-8 text-center">
+            <div className="text-4xl mb-4">🌟</div>
+            <h4 className="text-2xl font-bold text-purple-800 mb-4">Your Transformation Promise</h4>
+            <p className="text-lg text-gray-700 italic leading-relaxed max-w-2xl mx-auto">
+              {section.content as string}
+            </p>
+            <div className="mt-6 bg-white rounded-lg p-4 inline-block">
+              <p className="text-sm text-gray-600">
+                💪 <strong>Remember:</strong> Every small step builds toward this transformation
+              </p>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Content type not supported: {section.type}</p>
+          </div>
+        );
+    }
+  };
+
+  // Handle case where no sections are available
+  if (sections.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-500 text-4xl mb-4">⚠️</div>
+        <h4 className="text-xl font-semibold text-gray-600 mb-2">No Content Available</h4>
+        <p className="text-gray-500">Unable to load learning content from database</p>
+        <details className="mt-4 text-left bg-yellow-50 p-4 rounded-lg">
+          <summary className="cursor-pointer font-medium">Debug Info</summary>
+          <pre className="mt-2 text-xs bg-white p-2 rounded overflow-auto">
+            {JSON.stringify({
+              hasContent: !!sessionData.content,
+              hasWrittenCurriculum: !!sessionData.content?.written_curriculum,
+              readingMode,
+              contentLength: sessionData.content?.written_curriculum?.main_content?.length || 0
+            }, null, 2)}
+          </pre>
+        </details>
+      </div>
+    );
+  }
+
+  // Ensure activeSubSection is within bounds
+  const safeActiveSubSection = Math.min(activeSubSection, sections.length - 1);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+        <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
+          <BookOpen className="w-5 h-5 mr-2" />
+          Learn Together: Core Teaching Content
+        </h4>
+        <p className="text-blue-700">
+          Digestible 5-minute sections for effective learning • {sections.length} sections total
+        </p>
+      </div>
+
+      {/* Sub-Section Navigation */}
+      <div className="bg-white border rounded-xl p-4">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {sections.map((section, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveSubSection(index)}
+              className={`min-w-[120px] h-16 rounded-lg border-2 flex flex-col items-center justify-center p-2 transition-all ${
+                safeActiveSubSection === index
+                  ? 'border-teal-400 bg-teal-50 text-teal-800 scale-105'
+                  : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              <div className="text-lg mb-1">{section.icon}</div>
+              <div className="text-xs font-semibold text-center leading-tight">{section.title}</div>
+              <div className="text-xs opacity-80">{section.duration}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Active Section Content */}
+      <div className="bg-white border rounded-xl overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+              <span className="text-2xl">{sections[safeActiveSubSection].icon}</span>
+              {sections[safeActiveSubSection].title}
+            </h3>
+            <div className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full">
+              {sections[safeActiveSubSection].duration}
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6">
+          {renderSectionContent(sections[safeActiveSubSection])}
+        </div>
+      </div>
+
+      {/* Progress Indicator */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Section Progress</span>
+          <span className="text-sm text-gray-600">{safeActiveSubSection + 1} of {sections.length}</span>
+        </div>
+        <div className="bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-gradient-to-r from-teal-400 to-teal-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${((safeActiveSubSection + 1) / sections.length) * 100}%` }}
+          ></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Help Popup Component
+const HelpPopup: React.FC<{ 
+  isOpen: boolean; 
+  onClose: () => void; 
+  title: string; 
+  content: string;
+}> = ({ isOpen, onClose, title, content }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <span className="text-2xl">&times;</span>
+          </button>
+        </div>
+        <div className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: content }} />
+        <div className="mt-4 text-center">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            💡 Show Examples
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Action Builder Component
+const ActionBuilder: React.FC<{
+  onSaveAction: (action: ActionCommitment) => void;
+  savedCount: number;
+}> = ({ onSaveAction, savedCount }) => {
+  const [actionType, setActionType] = useState<'business' | 'discipleship' | ''>('');
+  const [helpPopup, setHelpPopup] = useState<{ isOpen: boolean; title: string; content: string }>({
+    isOpen: false,
+    title: '',
+    content: ''
+  });
+  
+  // Form state
+  const [businessForm, setBusinessForm] = useState({
+    specific: '',
+    measurable: '',
+    achievable: '',
+    relevant: '',
+    timed: ''
+  });
+  
+  const [discipleshipForm, setDiscipleshipForm] = useState({
+    specific: '',
+    ministryMinded: '',
+    achievable: '',
+    relational: '',
+    timed: ''
+  });
+
+  const helpContent = {
+    'business-specific': {
+      title: 'Making Actions Specific',
+      content: `
+        <p><strong>✅ Good Example:</strong> "Call 5 potential customers to discuss their biggest business challenges"</p>
+        <p><strong>❌ Poor Example:</strong> "Do some marketing"</p>
+        <p><strong>Tips:</strong></p>
+        <ul>
+          <li>Include numbers when possible (how many, how much)</li>
+          <li>Name specific people or types of people</li>
+          <li>Describe the exact action you'll take</li>
+        </ul>
+      `
+    },
+    'disciple-specific': {
+      title: 'Specific Discipleship Actions',
+      content: `
+        <p><strong>✅ Good Example:</strong> "Have coffee with Sarah from accounting and ask about her family and work stress"</p>
+        <p><strong>❌ Poor Example:</strong> "Be more spiritual at work"</p>
+        <p><strong>Tips:</strong></p>
+        <ul>
+          <li>Name the specific person you'll connect with</li>
+          <li>Plan specific conversation topics or questions</li>
+          <li>Focus on building the relationship first</li>
+        </ul>
+      `
+    }
+  };
+
+  const showHelp = (type: string) => {
+    const help = helpContent[type as keyof typeof helpContent];
+    if (help) {
+      setHelpPopup({ isOpen: true, title: help.title, content: help.content });
+    }
+  };
+
+  const handleSave = () => {
+    if (!actionType) return;
+
+    const newAction: ActionCommitment = {
+      id: `action_${Date.now()}`,
+      type: actionType,
+      smartData: actionType === 'business' ? businessForm : discipleshipForm,
+      generatedStatement: generateActionStatement(),
+      completed: false
+    };
+
+    onSaveAction(newAction);
+    
+    // Reset form
+    if (actionType === 'business') {
+      setBusinessForm({ specific: '', measurable: '', achievable: '', relevant: '', timed: '' });
+    } else {
+      setDiscipleshipForm({ specific: '', ministryMinded: '', achievable: '', relational: '', timed: '' });
+    }
+    setActionType('');
+  };
+
+  const generateActionStatement = (): string => {
+    if (actionType === 'business') {
+      return `I will ${businessForm.specific} ${businessForm.timed ? '| When: ' + businessForm.timed : ''}`;
+    } else {
+      return `I will ${discipleshipForm.specific} ${discipleshipForm.timed ? '| When: ' + discipleshipForm.timed : ''}`;
+    }
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-6">
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-2">Create Your Action Commitments</h4>
+        <p className="text-gray-600">
+          Transform today's learning into specific, achievable actions. Choose at least 1 action, up to 4 total.
+        </p>
+      </div>
+
+      {/* Action Type Selector */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <button
+          onClick={() => setActionType('business')}
+          className={`p-4 rounded-xl border-2 transition-all ${
+            actionType === 'business'
+              ? 'border-teal-400 bg-teal-50 text-teal-800'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+          }`}
+        >
+          <Briefcase className="w-8 h-8 mx-auto mb-2" />
+          <div className="font-semibold">Business Action</div>
+          <div className="text-xs">Classic SMART format</div>
+        </button>
+        
+        <button
+          onClick={() => setActionType('discipleship')}
+          className={`p-4 rounded-xl border-2 transition-all ${
+            actionType === 'discipleship'
+              ? 'border-teal-400 bg-teal-50 text-teal-800'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+          }`}
+        >
+          <Heart className="w-8 h-8 mx-auto mb-2" />
+          <div className="font-semibold">Discipleship Action</div>
+          <div className="text-xs">Faith-driven SMART format</div>
+        </button>
+      </div>
+
+      {/* Business SMART Form */}
+      {actionType === 'business' && (
+        <div className="bg-white rounded-lg p-6 border">
+          <h5 className="font-semibold text-gray-800 mb-4">Business Action Builder</h5>
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center gap-2 font-medium text-gray-700 mb-2">
+                📝 <strong>S</strong>pecific: What exactly will you do?
+                <button 
+                  onClick={() => showHelp('business-specific')}
+                  className="w-5 h-5 bg-teal-400 text-white rounded-full flex items-center justify-center text-xs hover:bg-teal-500"
+                >
+                  ?
+                </button>
+              </label>
+              <input
+                type="text"
+                value={businessForm.specific}
+                onChange={(e) => setBusinessForm(prev => ({ ...prev, specific: e.target.value }))}
+                placeholder="e.g., Call 5 potential customers to discuss their biggest business challenges"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 font-medium text-gray-700 mb-2">
+                📊 <strong>M</strong>easurable: How will you know it's done?
+              </label>
+              <input
+                type="text"
+                value={businessForm.measurable}
+                onChange={(e) => setBusinessForm(prev => ({ ...prev, measurable: e.target.value }))}
+                placeholder="e.g., Complete all 5 calls and document their responses"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 font-medium text-gray-700 mb-2">
+                ⏰ <strong>T</strong>ime-bound: When will you do this?
+              </label>
+              <input
+                type="text"
+                value={businessForm.timed}
+                onChange={(e) => setBusinessForm(prev => ({ ...prev, timed: e.target.value }))}
+                placeholder="e.g., Wednesday and Thursday between 2-4 PM from my office"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+              />
+            </div>
+
+            {/* Action Preview */}
+            {(businessForm.specific || businessForm.timed) && (
+              <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                <h6 className="font-semibold text-green-800 mb-2">📋 Your Action Preview:</h6>
+                <p className="text-green-700">
+                  💼 <strong>Business Action:</strong> {businessForm.specific} 
+                  {businessForm.timed && (
+                    <span> | <strong>When:</strong> {businessForm.timed}</span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Discipleship SMART Form */}
+      {actionType === 'discipleship' && (
+        <div className="bg-white rounded-lg p-6 border">
+          <h5 className="font-semibold text-gray-800 mb-4">Discipleship Action Builder</h5>
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center gap-2 font-medium text-gray-700 mb-2">
+                👥 <strong>S</strong>pecific: What exactly will you do, with whom?
+                <button 
+                  onClick={() => showHelp('disciple-specific')}
+                  className="w-5 h-5 bg-teal-400 text-white rounded-full flex items-center justify-center text-xs hover:bg-teal-500"
+                >
+                  ?
+                </button>
+              </label>
+              <input
+                type="text"
+                value={discipleshipForm.specific}
+                onChange={(e) => setDiscipleshipForm(prev => ({ ...prev, specific: e.target.value }))}
+                placeholder="e.g., Have coffee with Sarah from accounting and ask about her family and work stress"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 font-medium text-gray-700 mb-2">
+                💒 <strong>M</strong>inistry-minded: How might this open spiritual conversations?
+              </label>
+              <input
+                type="text"
+                value={discipleshipForm.ministryMinded}
+                onChange={(e) => setDiscipleshipForm(prev => ({ ...prev, ministryMinded: e.target.value }))}
+                placeholder="e.g., Listen for opportunities to share how prayer helps me handle work stress"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 font-medium text-gray-700 mb-2">
+                ⏰ <strong>T</strong>imed: When and where will this happen?
+              </label>
+              <input
+                type="text"
+                value={discipleshipForm.timed}
+                onChange={(e) => setDiscipleshipForm(prev => ({ ...prev, timed: e.target.value }))}
+                placeholder="e.g., Friday at 3 PM at the coffee shop near our office"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+              />
+            </div>
+
+            {/* Action Preview */}
+            {(discipleshipForm.specific || discipleshipForm.timed) && (
+              <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                <h6 className="font-semibold text-green-800 mb-2">📋 Your Action Preview:</h6>
+                <p className="text-green-700">
+                  ❤️ <strong>Discipleship Action:</strong> {discipleshipForm.specific} 
+                  {discipleshipForm.timed && (
+                    <span> | <strong>When:</strong> {discipleshipForm.timed}</span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Save Button */}
+      {actionType && (
+        <div className="flex gap-4 mt-6">
+          <button
+            onClick={handleSave}
+            disabled={!actionType || (actionType === 'business' && !businessForm.specific) || (actionType === 'discipleship' && !discipleshipForm.specific)}
+            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ✅ Save This Action
+          </button>
+          
+          {savedCount < 4 && savedCount > 0 && (
+            <button className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+              ➕ Add Another Action
+            </button>
+          )}
+        </div>
+      )}
+
+      <HelpPopup 
+        isOpen={helpPopup.isOpen}
+        onClose={() => setHelpPopup(prev => ({ ...prev, isOpen: false }))}
+        title={helpPopup.title}
+        content={helpPopup.content}
+      />
+    </div>
+  );
+};
+
+// Previous Actions Review Component
+const PreviousActionsReview: React.FC = () => {
+  const [actionStatuses, setActionStatuses] = useState<Record<string, 'done' | 'partial' | 'not-done'>>({});
+  
+  // Mock previous actions (would come from database)
+  const previousActions: ActionCommitment[] = [
+    {
+      id: '1',
+      type: 'business',
+      smartData: { specific: 'Call 5 potential customers', timed: 'Wednesday and Thursday 2-4 PM', achievable: '', relevant: '' },
+      generatedStatement: 'Call 5 potential customers between Wednesday and Thursday 2-4 PM from my office to discuss their biggest business challenges and document their responses in my CRM.',
+      completed: false
+    },
+    {
+      id: '2',
+      type: 'discipleship',
+      smartData: { specific: 'Have coffee with Sarah from accounting', timed: 'Friday at 3 PM', achievable: '', relational: '' },
+      generatedStatement: 'Have coffee with Sarah from accounting on Friday at 3 PM at the coffee shop near our office, ask about her family and work stress, and listen for opportunities to share how prayer helps me handle work stress.',
+      completed: true
+    }
+  ];
+
+  const handleStatusChange = (actionId: string, status: 'done' | 'partial' | 'not-done') => {
+    setActionStatuses(prev => ({ ...prev, [actionId]: status }));
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+        <h4 className="font-semibold text-blue-800 mb-2">Reflect on Your Previous Session Commitments</h4>
+        <p className="text-blue-700">
+          Let's celebrate your progress and learn from your experience. Remember: every outcome is a win when you learn and grow from it!
+        </p>
+      </div>
+
+      {previousActions.map((action) => (
+        <div key={action.id} className="bg-white border rounded-lg p-6">
+          <h5 className="font-semibold text-gray-800 mb-3">
+            {action.type === 'business' ? '💼 Business Action' : '❤️ Discipleship Action'}
+          </h5>
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <p className="text-gray-700">
+              <strong>Your Commitment:</strong> "{action.generatedStatement}"
+            </p>
+          </div>
+
+          {/* Status Buttons */}
+          <div className="flex gap-3 mb-4">
+            <span className="font-medium text-gray-700">Status:</span>
+            {['done', 'partial', 'not-done'].map((status) => (
+              <button
+                key={status}
+                onClick={() => handleStatusChange(action.id, status as any)}
+                className={`px-4 py-2 rounded-full border-2 transition-colors ${
+                  actionStatuses[action.id] === status
+                    ? 'bg-green-600 border-green-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
+                }`}
+              >
+                {status === 'done' ? '✅ Done' : 
+                 status === 'partial' ? '⚡ Partially' : 
+                 '💭 Not Done'}
+              </button>
+            ))}
+          </div>
+
+          {/* Celebration Message */}
+          {actionStatuses[action.id] === 'done' && (
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg mb-4">
+              🎉 Awesome! You followed through on this commitment. This is how real transformation happens - one action at a time!
+            </div>
+          )}
+
+          {/* Reflection Questions */}
+          <div className="space-y-4">
+            <div>
+              <label className="block font-medium text-gray-700 mb-2">What did you learn from this experience?</label>
+              <textarea 
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+                rows={3}
+                placeholder="Share what you discovered about yourself, your business, or your approach..."
+              />
+            </div>
+            
+            <div>
+              <label className="block font-medium text-gray-700 mb-2">How did this affect your business/relationships?</label>
+              <textarea 
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+                rows={3}
+                placeholder="Describe any positive impacts or unexpected outcomes..."
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default function SessionPage({ params }: SessionPageProps) {
+  const router = useRouter();
+  const { moduleId, sessionId } = params;
+  
+  // Enhanced state management
+  const [currentChunk, setCurrentChunk] = useState(2); // Start with chunk 2 (Read Bible)
+  const [readingMode, setReadingMode] = useState<'quick' | 'normal'>('normal');
+  const [savedActions, setSavedActions] = useState<ActionCommitment[]>([]);
+  const [chunkProgress, setChunkProgress] = useState({
+    0: true,  // LOOKING BACK completed
+    1: true,  // God's Love completed  
+    2: false, // Read Bible (current)
+    3: false, // Learn Together
+    4: false, // Practice
+    5: false  // LOOKING FORWARD
+  });
+
+  // Database state
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch session data from database
+  useEffect(() => {
+    const fetchSessionData = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching session data for:', { moduleId, sessionId });
+        
+        const { data, error } = await supabase
+          .from('sessions')
+          .select('*')
+          .eq('module_id', parseInt(moduleId))
+          .eq('session_number', parseInt(sessionId))
+          .single();
+
+        if (error) {
+          console.error('Supabase error:', error);
+          setError(`Failed to load session: ${error.message}`);
+          return;
+        }
+
+        if (!data) {
+          setError(`No session found for Module ${moduleId}, Session ${sessionId}`);
+          return;
+        }
+
+        console.log('Session data loaded:', data);
+        setSessionData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching session:', err);
+        setError('Failed to load session data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSessionData();
+  }, [moduleId, sessionId]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading session content...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !sessionData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-lg shadow-sm border max-w-md">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Session Not Found</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Looking for: Module {moduleId}, Session {sessionId}
+          </p>
+          <button 
+            onClick={() => router.push(`/modules/${moduleId}`)}
+            className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            Back to Module
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const chunks = [
+    { id: 0, title: 'LOOKING BACK', icon: <EyeballLeft size={20} />, duration: '10 min' },
+    { id: 1, title: "God's Love", icon: '❤️', duration: '5 min' },
+    { id: 2, title: 'Read Bible', icon: '📖', duration: '10 min' },
+    { id: 3, title: 'Learn Together', icon: '📚', duration: '15 min' },
+    { id: 4, title: 'Practice', icon: '🤝', duration: '15 min' },
+    { id: 5, title: 'LOOKING FORWARD', icon: <EyeballRight size={20} />, duration: '20 min' }
+  ];
+
+  const handleChunkComplete = () => {
+    setChunkProgress(prev => ({ ...prev, [currentChunk]: true }));
+    // Move to next chunk if available
+    if (currentChunk < 5) {
+      setCurrentChunk(currentChunk + 1);
+    }
+  };
+
+  const handleSaveAction = (action: ActionCommitment) => {
+    setSavedActions(prev => [...prev, action]);
+  };
+
+  const calculateProgress = () => {
+    const completedChunks = Object.values(chunkProgress).filter(Boolean).length;
+    return Math.round((completedChunks / 6) * 100);
+  };
+
+  // Get scripture reference from database or fallback
+  const scriptureReference = sessionData.scripture_reference || "Genesis 1:26";
+  const scriptureText = enhancedBibleReferences[scriptureReference] || "Scripture text loading...";
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-teal-400 to-slate-700 text-white shadow-lg sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => router.push(`/modules/${moduleId}`)}
+                className="flex items-center text-white/90 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Back to Module {moduleId}
+              </button>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold">{sessionData.title}</h1>
+                <p className="text-teal-100 text-sm">
+                  {sessionData.subtitle || `Module ${moduleId} • Session ${sessionId}`}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="bg-white/20 rounded-full px-3 py-1">
+                <span className="text-sm font-medium">{calculateProgress()}% Complete</span>
+              </div>
+              <button className="flex items-center text-white/90 hover:text-white transition-colors">
+                <Download className="w-4 h-4 mr-1" />
+                Export
+              </button>
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mt-4 bg-white/20 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${calculateProgress()}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Vision Statement */}
+        <VisionStatement />
+
+        {/* Chunk Navigation */}
+        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {chunks.map((chunk) => (
+              <button
+                key={chunk.id}
+                onClick={() => setCurrentChunk(chunk.id)}
+                className={`min-w-[100px] h-20 rounded-xl border-2 flex flex-col items-center justify-center p-3 transition-all ${
+                  currentChunk === chunk.id
+                    ? 'border-teal-400 bg-teal-50 text-teal-800 scale-105'
+                    : chunkProgress[chunk.id as keyof typeof chunkProgress]
+                    ? 'border-green-300 bg-green-50 text-green-700'
+                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-lg mb-1">{chunk.icon}</div>
+                <div className="text-xs font-semibold text-center leading-tight">{chunk.title}</div>
+                <div className="text-xs opacity-80">{chunk.duration}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="bg-white rounded-xl shadow-sm border">
+          {/* Content Header */}
+          <div className="border-b p-6">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{chunks[currentChunk].icon}</span>
+                <h2 className="text-2xl font-bold text-gray-800">{chunks[currentChunk].title}</h2>
+              </div>
+              
+              {/* Reading Mode Toggle */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setReadingMode('quick')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    readingMode === 'quick'
+                      ? 'bg-orange-500 text-white'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  ⚡ Quick
+                </button>
+                <button
+                  onClick={() => setReadingMode('normal')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    readingMode === 'normal'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  📚 Deep Dive
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Content */}
+          <div className="p-6">
+            {/* Debug Panel - Remove this in production */}
+            <details className="mb-6 bg-gray-100 p-4 rounded-lg">
+              <summary className="cursor-pointer font-medium text-gray-700">
+                🔧 Debug Info (Module {moduleId}, Session {sessionId})
+              </summary>
+              <div className="mt-3 space-y-2 text-sm">
+                <p><strong>Database ID:</strong> {sessionData?.id}</p>
+                <p><strong>Title:</strong> {sessionData?.title}</p>
+                <p><strong>Scripture:</strong> {scriptureReference}</p>
+                <p><strong>Has Content:</strong> {sessionData?.content ? '✅' : '❌'}</p>
+                <p><strong>Has Video:</strong> {sessionData?.video_url ? '✅' : '❌'}</p>
+                <p><strong>Has Case Study:</strong> {sessionData?.case_study ? '✅' : '❌'}</p>
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-blue-600">Raw Database Content</summary>
+                  <pre className="mt-2 bg-white p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(sessionData, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            </details>
+
+            {currentChunk === 0 && <PreviousActionsReview />}
+            
+            {currentChunk === 1 && (
+              <div className="space-y-6">
+                <div className="bg-pink-50 border-l-4 border-pink-400 p-6 rounded-r-lg">
+                  <h4 className="font-semibold text-pink-800 mb-3 flex items-center">
+                    ❤️ Grace Reminder
+                  </h4>
+                  <p className="text-gray-700 italic mb-4">
+                    "You don't need to convince anyone - just share what God's love did in your life"
+                  </p>
+                  <div className="bg-white p-4 rounded-lg">
+                    <h5 className="font-medium text-gray-800 mb-2">💭 Reflection Prompt:</h5>
+                    <p className="text-gray-600">How has God's love freed you from pressure recently?</p>
+                    <textarea 
+                      className="w-full mt-3 p-3 border border-gray-300 rounded-lg"
+                      rows={3}
+                      placeholder="Your reflection..."
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentChunk === 2 && (
+              <div className="space-y-6">
+                <div className="bg-purple-50 border-l-4 border-purple-400 p-6 rounded-r-lg">
+                  <h4 className="font-semibold text-purple-800 mb-3 flex items-center">
+                    <BookOpen className="w-5 h-5 mr-2" />
+                    Scripture Reading: {sessionData.title}
+                  </h4>
+                  <div className="text-gray-700">
+                    <blockquote className="border-l-4 border-blue-400 pl-4 italic mb-4">
+                      <EnhancedScriptureReference reference={scriptureReference}>
+                        <strong>{scriptureReference}</strong>
+                      </EnhancedScriptureReference>
+                      {" - "}"{scriptureText}"
+                    </blockquote>
+                    
+                    <div className="space-y-4">
+                      <p>The Bible gives us a beautiful foundation for having natural, grace-filled conversations about faith through business.</p>
+                      
+                      <p>Notice that Peter doesn't say we should force conversations or pressure people. Instead, we should:</p>
+                      <ul className="list-disc list-inside space-y-2 ml-4">
+                        <li><strong>Be prepared</strong> - Know why our faith matters in business</li>
+                        <li><strong>Wait for questions</strong> - Let people ask about the hope they see</li>
+                        <li><strong>Respond with gentleness</strong> - Never be pushy or judgmental</li>
+                        <li><strong>Show respect</strong> - Honor their perspective and questions</li>
+                      </ul>
+                      
+                      <p>
+                        When we run our businesses with integrity, serve our customers well, and treat employees fairly, 
+                        people naturally wonder: "What makes you different?" This creates organic opportunities to share about{" "}
+                        <EnhancedScriptureReference reference="Colossians 3:23">working as unto the Lord</EnhancedScriptureReference>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentChunk === 3 && (
+              <LearnTogetherContent sessionData={sessionData} readingMode={readingMode} />
+            )}
+
+            {currentChunk === 4 && (
+              <div className="text-center py-12">
+                <h4 className="text-xl font-semibold text-gray-600 mb-2">
+                  Content for {chunks[currentChunk].title}
+                </h4>
+                <p className="text-gray-500">This chunk content would be implemented here</p>
+              </div>
+            )}
+
+            {currentChunk === 5 && (
+              <div className="space-y-6">
+                <ActionBuilder onSaveAction={handleSaveAction} savedCount={savedActions.length} />
+                
+                {/* Saved Actions Display */}
+                {savedActions.length > 0 && (
+                  <div className="bg-green-50 rounded-lg p-6">
+                    <h4 className="font-semibold text-green-800 mb-4">Your Saved Actions ({savedActions.length}/4)</h4>
+                    <div className="space-y-3">
+                      {savedActions.map((action, index) => (
+                        <div key={action.id} className="bg-white p-4 rounded-lg border border-green-200">
+                          <div className="flex justify-between items-start">
+                            <p className="text-gray-700">
+                              {action.type === 'business' ? '💼' : '❤️'} {action.generatedStatement}
+                            </p>
+                            <button 
+                              onClick={() => setSavedActions(prev => prev.filter(a => a.id !== action.id))}
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="border-t p-6">
+            <div className="flex gap-4">
+              {currentChunk < 5 && (
+                <button
+                  onClick={handleChunkComplete}
+                  className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2"
+                >
+                  ✅ Complete & Continue
+                </button>
+              )}
+              
+              <button className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                📱 Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Session Navigation */}
+        <div className="flex justify-between items-center mt-8 text-sm text-gray-600">
+          <button className="flex items-center hover:text-gray-800 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Previous Session
+          </button>
+          
+          <span>Session {sessionId} of 4 • Module {moduleId}</span>
+          
+          <button className="flex items-center hover:text-gray-800 transition-colors">
+            Next Session
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Coach Button */}
+      <button className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-xl">
+        💬
+      </button>
+    </div>
+  );
+}

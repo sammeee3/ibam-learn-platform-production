@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "target": "ES2017",
+    "noImplicitAny": false,
+    "strictNullChecks": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/auth/login/page.tsx.backup2",
+    "app/dashboard/page.tsx.backup"
+, "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.one error only", "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.absolute working best backup", "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.awsome chance", "app/modules/[moduleId]/sessions/[sessionId]/6/23/25page.tsx.bak", "app/business-planner/page.jsx"  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

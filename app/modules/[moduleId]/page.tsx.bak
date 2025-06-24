@@ -1,0 +1,407 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { ArrowLeft, BookOpen, Clock, CheckCircle, PlayCircle, Lock } from 'lucide-react';
+
+interface Session {
+  id: string;
+  session_number: number;
+  title: string;
+  description: string;
+  estimated_time: string;
+  is_completed: boolean;
+  is_locked: boolean;
+}
+
+interface Module {
+  id: string;
+  module_number: number;
+  title: string;
+  description: string;
+  learning_objectives: string[];
+  total_sessions: number;
+  estimated_total_time: string;
+}
+
+interface ModuleCoverPageProps {
+  params: {
+    moduleId: string;
+  };
+}
+
+export default function ModuleCoverPage({ params }: ModuleCoverPageProps) {
+  const [module, setModule] = useState<Module | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [needsPreAssessment, setNeedsPreAssessment] = useState(false);
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const loadModuleData = async () => {
+      try {
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+//         if (!user) {
+//           router.push('/auth/login');
+//           return;
+        }
+        setUser(user);
+
+        // Check if Module 1 and user needs pre-assessment
+        if (params.moduleId === '1') {
+          const { data: existingAssessment } = await supabase
+            .from('assessment_responses')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7')
+            .single();
+
+          if (!existingAssessment) {
+            setNeedsPreAssessment(true);
+            // Redirect to pre-assessment for first-time Module 1 access
+            router.push('/assessment/pre');
+            return;
+          }
+        }
+
+        // Load module data (you may need to adjust table/column names)
+        const moduleData = getModuleData(params.moduleId);
+        setModule(moduleData);
+
+        // Load sessions for this module
+        const sessionsData = await loadSessionsFromDatabase(params.moduleId, user.id);
+        setSessions(sessionsData);
+
+      } catch (error) {
+        console.error('Error loading module data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadModuleData();
+  }, [params.moduleId, router, supabase]);
+
+  // Hardcoded module data (replace with database query when ready)
+  const getModuleData = (moduleId: string): Module => {
+    const moduleMap: { [key: string]: Module } = {
+      '1': {
+        id: '1',
+        module_number: 1,
+        title: 'Foundational Principles',
+        description: 'Business as God\'s gift - Understanding how business can be a calling and mission field for faithful disciples.',
+        learning_objectives: [
+          'Understand business as a good gift from God',
+          'Learn how business leaders work with church leaders',
+          'Develop integrity in business practices',
+          'Practice stewardship and resource management'
+        ],
+        total_sessions: 4,
+        estimated_total_time: '60-80 minutes'
+      },
+      '2': {
+        id: '2',
+        module_number: 2,
+        title: 'Success & Failure Factors',
+        description: 'Keys to thriving - Learn the critical factors that determine business success or failure in the marketplace.',
+        learning_objectives: [
+          'Identify key success factors in business',
+          'Recognize common failure patterns',
+          'Develop resilience and persistence',
+          'Build sustainable business practices'
+        ],
+        total_sessions: 4,
+        estimated_total_time: '60-80 minutes'
+      },
+      '3': {
+        id: '3',
+        module_number: 3,
+        title: 'Marketing Excellence',
+        description: 'Reaching your audience - Master marketing strategies that build authentic relationships with customers.',
+        learning_objectives: [
+          'Develop authentic marketing strategies',
+          'Build customer relationships',
+          'Create compelling value propositions',
+          'Implement digital marketing effectively',
+          'Measure marketing ROI'
+        ],
+        total_sessions: 5,
+        estimated_total_time: '75-100 minutes'
+      },
+      '4': {
+        id: '4',
+        module_number: 4,
+        title: 'Financial Management',
+        description: 'Stewardship & growth - Learn biblical principles of financial management and business growth.',
+        learning_objectives: [
+          'Apply biblical financial principles',
+          'Master cash flow management',
+          'Understand business financing',
+          'Plan for sustainable growth'
+        ],
+        total_sessions: 4,
+        estimated_total_time: '60-80 minutes'
+      },
+      '5': {
+        id: '5',
+        module_number: 5,
+        title: 'Business Planning',
+        description: 'Your roadmap to success - Create a comprehensive business plan that honors God and serves others.',
+        learning_objectives: [
+          'Develop mission and vision statements',
+          'Create actionable business strategies',
+          'Build financial projections',
+          'Prepare for implementation'
+        ],
+        total_sessions: 3,
+        estimated_total_time: '45-60 minutes'
+      }
+    };
+
+    return moduleMap[moduleId] || moduleMap['1'];
+  };
+
+  // Load sessions from database (replace with actual database query)
+  const loadSessionsFromDatabase = async (moduleId: string, userId: string): Promise<Session[]> => {
+    // This should query your sessions table
+    // For now, using mock data based on the module structure
+    const sessionMap: { [key: string]: Session[] } = {
+      '1': [
+        {
+          id: '1-1',
+          session_number: 1,
+          title: 'Business is a Good Gift from God',
+          description: 'Exploring Genesis 1:26-28 and understanding business as divine calling',
+          estimated_time: '15-20 min',
+          is_completed: false,
+          is_locked: false
+        },
+        {
+          id: '1-2', 
+          session_number: 2,
+          title: 'Business Leaders Work with Church Leaders',
+          description: 'Understanding partnership between marketplace and ministry (1 Cor 12:12-14)',
+          estimated_time: '15-20 min',
+          is_completed: false,
+          is_locked: true
+        },
+        {
+          id: '1-3',
+          session_number: 3,
+          title: 'Integrity in Business Practices', 
+          description: 'Biblical principles of honesty and integrity (Proverbs 11:1)',
+          estimated_time: '15-20 min',
+          is_completed: false,
+          is_locked: true
+        },
+        {
+          id: '1-4',
+          session_number: 4,
+          title: 'Stewardship and Resource Management',
+          description: 'Faithful stewardship in business operations (Luke 16:10)',
+          estimated_time: '15-20 min', 
+          is_completed: false,
+          is_locked: true
+        }
+      ]
+      // Add other modules as needed
+    };
+
+    return sessionMap[moduleId] || [];
+  };
+
+  const handleSessionClick = (session: Session) => {
+    if (session.is_locked) {
+      return; // Don't navigate if locked
+    }
+    router.push(`/modules/${params.moduleId}/sessions/${session.id}`);
+  };
+
+  const getSessionIcon = (session: Session) => {
+    if (session.is_completed) {
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    } else if (session.is_locked) {
+      return <Lock className="h-5 w-5 text-gray-400" />;
+    } else {
+      return <PlayCircle className="h-5 w-5 text-teal-500" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full mx-4">
+          <div className="animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!module) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full mx-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Module Not Found</h2>
+          <p className="text-gray-600 mb-4">Sorry, this module could not be loaded.</p>
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="w-full bg-gradient-to-r from-teal-500 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold text-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-200"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-teal-500 to-blue-600 text-white py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center text-white/80 hover:text-white transition-colors mb-4"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Dashboard
+          </button>
+          
+          <div className="flex items-center space-x-4">
+            <div className="bg-white/20 rounded-full p-3">
+              <BookOpen className="h-8 w-8" />
+            </div>
+            <div>
+              <p className="text-white/80 text-sm font-medium">Module {module.module_number}</p>
+              <h1 className="text-3xl md:text-4xl font-bold">{module.title}</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Module Overview */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8 mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Module Overview</h2>
+          <p className="text-lg text-gray-700 mb-6">{module.description}</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="bg-teal-100 rounded-full p-2">
+                <BookOpen className="h-5 w-5 text-teal-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800">{module.total_sessions} Sessions</p>
+                <p className="text-sm text-gray-600">Interactive learning modules</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="bg-blue-100 rounded-full p-2">
+                <Clock className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800">{module.estimated_total_time}</p>
+                <p className="text-sm text-gray-600">Estimated completion time</p>
+              </div>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h3>
+          <ul className="space-y-2">
+            {module.learning_objectives.map((objective, index) => (
+              <li key={index} className="flex items-start space-x-3">
+                <div className="bg-teal-100 rounded-full p-1 mt-1">
+                  <CheckCircle className="h-4 w-4 text-teal-600" />
+                </div>
+                <span className="text-gray-700">{objective}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Sessions List */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Course Sessions</h2>
+          
+          <div className="space-y-4">
+            {sessions.map((session, index) => (
+              <div
+                key={session.id}
+                onClick={() => handleSessionClick(session)}
+                className={`
+                  border rounded-xl p-4 transition-all duration-200 
+                  ${session.is_locked 
+                    ? 'bg-gray-50 border-gray-200 cursor-not-allowed' 
+                    : 'bg-white border-gray-200 hover:border-teal-300 hover:shadow-md cursor-pointer'
+                  }
+                  ${session.is_completed ? 'border-green-300 bg-green-50' : ''}
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                      {getSessionIcon(session)}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className={`text-lg font-semibold ${
+                        session.is_locked ? 'text-gray-400' : 'text-gray-800'
+                      }`}>
+                        Session {session.session_number}: {session.title}
+                      </h3>
+                      <p className={`text-sm ${
+                        session.is_locked ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        {session.description}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className={`text-sm font-medium ${
+                      session.is_locked ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {session.estimated_time}
+                    </p>
+                    {session.is_completed && (
+                      <p className="text-xs text-green-600 font-medium">Completed</p>
+                    )}
+                    {session.is_locked && (
+                      <p className="text-xs text-gray-400 font-medium">Locked</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Module Progress */}
+          <div className="mt-8 p-4 bg-teal-50 rounded-xl border border-teal-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-teal-800 font-medium">Module Progress</span>
+              <span className="text-teal-800 text-sm">
+                {sessions.filter(s => s.is_completed).length} of {sessions.length} sessions completed
+              </span>
+            </div>
+            <div className="w-full bg-teal-200 rounded-full h-2">
+              <div 
+                className="bg-teal-500 h-2 rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${(sessions.filter(s => s.is_completed).length / sessions.length) * 100}%` 
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

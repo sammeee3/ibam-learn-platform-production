@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* IBAM Official Brand Colors */
+:root {
+  /* Primary IBAM Colors */
+  --ibam-navy: #2C3E50;
+  --ibam-navy-dark: #1a252f;
+  --ibam-turquoise: #4ECDC4;
+  --ibam-turquoise-dark: #3fb8b1;
+  
+  /* Supporting Colors */
+  --ibam-white: #ffffff;
+  --ibam-gray-light: #f8f9fa;
+  --ibam-gray-medium: #6c757d;
+  --ibam-gray-dark: #343a40;
+}
+
+/* IBAM Brand System */
+.bg-ibam-navy {
+  background-color: var(--ibam-navy);
+}
+
+.bg-ibam-navy-dark {
+  background-color: var(--ibam-navy-dark);
+}
+
+.bg-ibam-turquoise {
+  background-color: var(--ibam-turquoise);
+}
+
+.bg-ibam-turquoise-dark {
+  background-color: var(--ibam-turquoise-dark);
+}
+
+.text-ibam-navy {
+  color: var(--ibam-navy);
+}
+
+.text-ibam-turquoise {
+  color: var(--ibam-turquoise);
+}
+
+.hover\:bg-ibam-turquoise-dark:hover {
+  background-color: var(--ibam-turquoise-dark);
+}
+
+.border-ibam-turquoise {
+  border-color: var(--ibam-turquoise);
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: var(--ibam-turquoise);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: var(--ibam-turquoise-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--ibam-turquoise);
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid var(--ibam-turquoise);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: var(--ibam-gray-light);
+}
+
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--ibam-white);
+    border-top: 1px solid #e9ecef;
+    padding: 0.5rem 0;
+    z-index: 1000;
+  }
+}
+
+/* Desktop Sidebar */
+@media (min-width: 1024px) {
+  .desktop-sidebar {
+    width: 280px;
+    background-color: var(--ibam-navy);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .desktop-main-content {
+    margin-left: 280px;
+  }
+}
+
+/* Typography */
+h1, h2, h3 {
+  color: var(--ibam-navy);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  color: var(--ibam-gray-dark);
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Focus States */
+button:focus, a:focus {
+  outline: 2px solid var(--ibam-turquoise);
+  outline-offset: 2px;
+}
+
+/* Additional IBAM Utility Classes */
+.text-ibam-turquoise-hover:hover {
+  color: var(--ibam-turquoise);
+}
+
+.bg-ibam-turquoise-hover:hover {
+  background-color: var(--ibam-turquoise);
+}
