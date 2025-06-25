@@ -58,7 +58,8 @@ interface SessionData {
   session_number: number;
   title: string;
   subtitle?: string;
-  content: {
+  becoming_gods_entrepreneur?: { video_url?: string; };
+  content?: {
     written_curriculum?: {
       main_content?: string;
       quick_version?: string;
@@ -146,6 +147,140 @@ interface AIMessage {
   content: string;
   followUp?: string; // Added optional followUp property
 }
+
+// ENHANCED VIMEO VIDEO COMPONENT WITH DEBUGGING
+const VimeoVideo = ({ url, title }: { url: string; title: string }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  console.log(`🎥 VimeoVideo Component - ${title}:`, url);
+
+  // Extract video ID and hash from various Vimeo URL formats
+  const extractVimeoData = (vimeoUrl: string): { videoId: string; hash?: string } | null => {
+    console.log('🔗 Processing Vimeo URL:', vimeoUrl);
+    
+    if (!vimeoUrl) {
+      console.log('❌ No URL provided');
+      return null;
+    }
+    
+    // Handle different Vimeo URL formats:
+    // https://vimeo.com/123456789/abcdef (with hash - PRIVATE VIDEOS)
+    // https://vimeo.com/123456789
+    // https://player.vimeo.com/video/123456789
+    const patterns = [
+      { regex: /vimeo\.com\/(\d+)\/([\w\d]+)/, hasHash: true },  // with hash first (private videos)
+      { regex: /vimeo\.com\/(\d+)/, hasHash: false },
+      { regex: /player\.vimeo\.com\/video\/(\d+)/, hasHash: false },
+      { regex: /vimeo\.com\/video\/(\d+)/, hasHash: false }
+    ];
+
+    for (const pattern of patterns) {
+      const match = vimeoUrl.match(pattern.regex);
+      if (match && match[1]) {
+        const result = {
+          videoId: match[1],
+          hash: pattern.hasHash && match[2] ? match[2] : undefined
+        };
+        console.log('✅ Extracted video data:', result);
+        return result;
+      }
+    }
+    
+    console.log('❌ Failed to match Vimeo URL pattern');
+    return null;
+  };
+
+  const vimeoData = extractVimeoData(url);
+
+  // If we can't extract video data, show error state
+  if (!vimeoData || !vimeoData.videoId) {
+    console.log('🚨 Video Configuration Error for:', title);
+    return (
+      <div className="relative w-full bg-red-100 border-2 border-red-300 rounded-lg" style={{ paddingBottom: '56.25%' }}>
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-red-700">
+          <div className="text-center p-4">
+            <AlertCircle className="w-16 h-16 mx-auto mb-4" />
+            <p className="font-semibold text-lg mb-2">Video Configuration Error</p>
+            <p className="text-sm mb-2">Could not load video from: {url}</p>
+            <div className="bg-red-50 p-3 rounded border text-xs text-left">
+              <p className="font-medium mb-1">Expected Vimeo URL formats:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>https://vimeo.com/123456789</li>
+                <li>https://player.vimeo.com/video/123456789</li>
+                <li>https://vimeo.com/123456789/abcdef123</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Create proper Vimeo embed URL with hash if available (for private videos)
+  const embedUrl = vimeoData.hash 
+    ? `https://player.vimeo.com/video/${vimeoData.videoId}?h=${vimeoData.hash}&badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0`
+    : `https://player.vimeo.com/video/${vimeoData.videoId}?badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0`;
+    
+  if (vimeoData.hash) {
+    console.log('🔐 Private video detected - using hash:', vimeoData.hash);
+  }
+  console.log('✅ Generated embed URL:', embedUrl);
+
+  return (
+    <div className="relative w-full bg-gray-900 rounded-lg overflow-hidden shadow-lg" style={{ paddingBottom: '56.25%' }}>
+      {/* Loading state */}
+      {isLoading && (
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-800 text-white z-10">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" />
+            <p className="font-semibold">Loading {title}...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Error state */}
+      {hasError && (
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-red-100 text-red-700 z-10">
+          <div className="text-center p-4">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+            <p className="font-semibold">Failed to Load Video</p>
+            <p className="text-sm">Please check your internet connection</p>
+            <button 
+              onClick={() => {
+                setHasError(false);
+                setIsLoading(true);
+              }}
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Vimeo iframe */}
+      <iframe
+        src={embedUrl}
+        className="absolute top-0 left-0 w-full h-full"
+        frameBorder="0"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+        title={title}
+        loading="lazy"
+        onLoad={() => {
+          console.log('✅ Video loaded successfully');
+          setIsLoading(false);
+        }}
+        onError={() => {
+          console.log('❌ Video failed to load');
+          setIsLoading(false);
+          setHasError(true);
+        }}
+      />
+    </div>
+  );
+};
 
 // Enhanced Scripture Reference Component
 const EnhancedScriptureReference: React.FC<{ reference: string; children?: React.ReactNode }> = ({ reference, children }) => {
@@ -302,19 +437,6 @@ const aiCoachingResponses: Record<string, { response: string; followUp: string; 
     followUp: "What opportunities for natural conversation do you see in your current business interactions?"
   }
 };
-
-// Vimeo Video Component
-const VimeoVideo = ({ url, title }: { url: string; title: string }) => (
-  <div className="relative w-full bg-gray-900 rounded-lg" style={{ paddingBottom: '56.25%' }}>
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white">
-      <div className="text-center">
-        <Play className="w-16 h-16 mx-auto mb-4" />
-        <p className="font-semibold">{title}</p>
-        <p className="text-sm text-gray-300">Video: {url}</p>
-      </div>
-    </div>
-  </div>
-);
 
 // AI Coaching Chat Component
 const AIChatInterface = () => {
@@ -482,9 +604,9 @@ const EnhancedLookingBack = ({ sessionData, pathwayMode, onComplete }: {
   });
   const [prayerCompleted, setPrayerCompleted] = useState(false);
 
-  const isFirstSession = sessionData.content.look_back?.is_first_session || sessionData.session_number === 1;
-  const previousActions = sessionData.content.look_back?.previous_actions || [];
-  const previousSharingCommitment = sessionData.content.look_back?.previous_sharing_commitment;
+  const isFirstSession = sessionData.content?.look_back?.is_first_session || sessionData.session_number === 1;
+  const previousActions = sessionData.content?.look_back?.previous_actions || [];
+  const previousSharingCommitment = sessionData.content?.look_back?.previous_sharing_commitment;
 
   const failureReasons = [
     "Didn't schedule specific time",
@@ -1505,31 +1627,34 @@ export default function SessionPage({ params }: SessionPageProps) {
     const fetchSessionData = async () => {
       try {
         setLoading(true);
-        console.log('Fetching session data for:', { moduleId, sessionId });
+        console.log('🔍 Fetching session data for:', { moduleId, sessionId });
         
         const { data, error } = await supabase
           .from('sessions')
-          .select('*')
+          .select('*, becoming_gods_entrepreneur')
           .eq('module_id', parseInt(moduleId))
           .eq('session_number', parseInt(sessionId))
           .single();
 
         if (error) {
-          console.error('Supabase error:', error);
+          console.error('❌ Supabase error:', error);
           setError(`Failed to load session: ${error.message}`);
           return;
         }
 
         if (!data) {
+          console.error('❌ No session found');
           setError(`No session found for Module ${moduleId}, Session ${sessionId}`);
           return;
         }
 
-        console.log('Session data loaded:', data);
+        console.log('✅ Session data loaded successfully:', data);
+        console.log('📊 becoming_gods_entrepreneur data:', data.becoming_gods_entrepreneur);
+        
         setSessionData(data);
         setError(null);
       } catch (err) {
-        console.error('Error fetching session:', err);
+        console.error('💥 Error fetching session:', err);
         setError('Failed to load session data');
       } finally {
         setLoading(false);
@@ -1724,7 +1849,7 @@ export default function SessionPage({ params }: SessionPageProps) {
     </div>
   );
 
-  // Looking Up Tab Content
+  // Looking Up Tab Content with FIXED VIDEO URL HANDLING
   const renderTabContent = () => {
     const currentSection = lookingUpSections[activeTab];
     
@@ -1735,7 +1860,10 @@ export default function SessionPage({ params }: SessionPageProps) {
             <div className="bg-green-50 p-6 rounded-lg border-l-4 border-green-400">
               <h4 className="font-bold text-green-800 mb-3">💰 Growing Wealth: Biblical Business Principles</h4>
               <div className="mb-4">
-                <VimeoVideo url={sessionData.content?.growing_wealth?.video_url || sessionData.video_url || "https://vimeo.com/wealth123/abc456"} title="Growing Wealth Video" />
+                <VimeoVideo 
+                  url={sessionData.content?.growing_wealth?.video_url || sessionData.video_url || "https://vimeo.com/wealth123/abc456"} 
+                  title="Growing Wealth Video" 
+                />
               </div>
               <div className="prose max-w-none">
                 <div dangerouslySetInnerHTML={{ 
@@ -1767,9 +1895,59 @@ export default function SessionPage({ params }: SessionPageProps) {
           <div className="space-y-6">
             <div className="bg-purple-50 p-6 rounded-lg border-l-4 border-purple-400">
               <h4 className="font-bold text-purple-800 mb-3">👥 Growing People: Becoming God's Entrepreneur</h4>
+              
+              {/* ENHANCED VIDEO URL DEBUGGING FOR GROWING PEOPLE */}
+              {(() => {
+                console.log('🔍 DEBUGGING Growing People Videos:');
+                console.log('sessionData:', sessionData);
+                console.log('becoming_gods_entrepreneur object:', sessionData.becoming_gods_entrepreneur);
+                console.log('video_url from becoming_gods_entrepreneur:', sessionData.becoming_gods_entrepreneur?.video_url);
+                console.log('content.growing_people.video_url:', sessionData.content?.growing_people?.video_url);
+                
+                // Try multiple possible video URL sources with priority order
+                const growingPeopleVideoUrl = 
+                  sessionData.becoming_gods_entrepreneur?.video_url ||
+                  sessionData.content?.growing_people?.video_url ||
+                  "https://vimeo.com/people456/def789";
+                  
+                console.log('✅ Final Growing People video URL selected:', growingPeopleVideoUrl);
+                
+                return null; // This is just for logging
+              })()}
+              
               <div className="mb-4">
-                <VimeoVideo url={sessionData.content?.growing_people?.video_url || "https://vimeo.com/people456/def789"} title="Becoming God's Entrepreneur" />
+                <VimeoVideo 
+                  url={sessionData.becoming_gods_entrepreneur?.video_url || 
+                       sessionData.content?.growing_people?.video_url || 
+                       "https://vimeo.com/people456/def789"} 
+                  title="Becoming God's Entrepreneur" 
+                />
               </div>
+              
+              {/* Show debugging info if video URL is missing from expected source */}
+              {!sessionData.becoming_gods_entrepreneur?.video_url && (
+                <div className="mb-6 bg-yellow-100 border border-yellow-400 p-4 rounded">
+                  <h5 className="font-semibold text-yellow-800 mb-2">🔧 DEBUG: Growing People Video</h5>
+                  <p className="text-sm text-yellow-700">
+                    Video URL not found in becoming_gods_entrepreneur.video_url
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-2">
+                    Fallback: Using {sessionData.content?.growing_people?.video_url ? 'content.growing_people.video_url' : 'default URL'}
+                  </p>
+                </div>
+              )}
+
+              {/* Show private video notice if hash is detected */}
+              {sessionData.becoming_gods_entrepreneur?.video_url?.includes('/') && 
+               sessionData.becoming_gods_entrepreneur.video_url.split('/').length > 4 && (
+                <div className="mb-6 bg-blue-100 border border-blue-400 p-4 rounded">
+                  <h5 className="font-semibold text-blue-800 mb-2">🔐 Private Video Detected</h5>
+                  <p className="text-sm text-blue-700">
+                    This is a private Vimeo video with restricted access. The video player will use the security hash for proper authentication.
+                  </p>
+                </div>
+              )}
+              
               <div className="prose max-w-none">
                 <div dangerouslySetInnerHTML={{ 
                   __html: sessionData.content?.growing_people?.main_content || `
