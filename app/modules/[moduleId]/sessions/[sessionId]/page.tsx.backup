@@ -479,9 +479,18 @@ const generateChunkTitle = (content: string, index: number): string => {
 
 // GLOBAL BEAUTIFUL TYPOGRAPHY FORMATTER - MOVED OUTSIDE COMPONENT
 const formatContentWithBeautifulTypography = (content: string) => {
-  if (!content) return "Content is being prepared for this section.";
+    if (!content) return "Content is being prepared for this section.";
   
   return content
+// Convert Markdown to HTML first - IMPROVED PATTERNS
+    .replace(/###\s*(.+?)(\n|$)/g, "<h3>$1</h3>")
+    .replace(/##\s*(.+?)(\n|$)/g, "<h2>$1</h2>") 
+    .replace(/#\s*(.+?)(\n|$)/g, "<h1>$1</h1>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*\n]+?)\*/g, "<em>$1</em>")
+    .replace(/\n\s*\n/g, "</p><p>")
+    .replace(/^(?!<[h|p|u|o|l|s])/gm, "<p>")
+    .replace(/(?<![>])\n(?!<)/g, " ")
     // Format headings with gorgeous blue styling - FULL RESTORATION
     .replace(/<h1[^>]*>/g, '<h1 class="text-4xl font-bold text-blue-800 mb-6 mt-8 leading-tight">')
     .replace(/<h2[^>]*>/g, '<h2 class="text-3xl font-bold text-blue-800 mb-4 mt-6 leading-tight">')
@@ -497,11 +506,7 @@ const formatContentWithBeautifulTypography = (content: string) => {
     .replace(/<li[^>]*>/g, '<li class="text-gray-800 leading-relaxed text-lg mb-2">')
     // Format emphasis beautifully - RESTORED
     .replace(/<strong[^>]*>/g, '<strong class="font-bold text-gray-900">')
-    .replace(/<em[^>]*>/g, '<em class="italic text-gray-700">')
-    // Format blockquotes for scripture - RESTORED
-    .replace(/<blockquote[^>]*>/g, '<blockquote class="bg-blue-50 border-l-4 border-blue-400 pl-6 py-4 my-6 rounded-r-lg italic text-blue-800">')
-    .replace(/<\/blockquote>/g, '</blockquote>');
-};
+    .replace(/<em[^>]*>/g, '<em class="italic text-gray-700">');}
 
 // GLOBAL CASE STUDY FORMATTER - MOVED OUTSIDE COMPONENT  
 const formatCaseStudyContent = (content: string) => {
@@ -1013,7 +1018,7 @@ const BeautifulCaseStudyComponent = ({ caseStudyContent, sessionTitle }: { caseS
             <div className="prose prose-xl max-w-none formatted-content" style={{ fontSize: '1.125rem', lineHeight: '1.7' }}>
               <div 
                 className="text-gray-700 leading-relaxed formatted-content"
-                dangerouslySetInnerHTML={{ __html: formatCaseStudyContent(caseStudyContent) }} 
+                dangerouslySetInnerHTML={{ __html: formatContentWithBeautifulTypography(caseStudyContent) }}
               />
             </div>
           )}

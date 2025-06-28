@@ -2,429 +2,602 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { User } from '@supabase/supabase-js';
-import { BookOpen, CheckCircle, Lock, Play, Award, ArrowRight } from 'lucide-react';
+import { Calendar, User, BookOpen, Award, TrendingUp, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff } from 'lucide-react';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Supabase configuration
+const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM4MTQ4MDEsImV4cCI6MjAyOTM5MDgwMX0.VhWbNcOjwqoOTI32qByfOV46lJKUKiPG0qV3rvYJvlY';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-interface DashboardState {
-  user: User | null;
-  hasCompletedPreAssessment: boolean;
-  hasCompletedPostAssessment: boolean;
-  completedModules: number[];
-  isLoading: boolean;
-  error: string | null;
+// IBAM Logo Component
+interface IBAMLogoProps {
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-interface Module {
+const IBAMLogo: React.FC<IBAMLogoProps> = ({
+  size = 'medium',
+  className = '',
+  style = {}
+}: IBAMLogoProps) => {
+  const sizeMap = {
+    small: { width: '24px', height: 'auto' },
+    medium: { width: '40px', height: 'auto' },
+    large: { width: '60px', height: 'auto' },
+    xlarge: { width: '120px', height: 'auto' }
+  };
+
+  const logoFile = size === 'small' 
+    ? '/images/branding/mini-logo.png'
+    : '/images/branding/ibam-logo.png';
+
+  return (
+    <img
+      src={logoFile}
+      alt="IBAM Logo"
+      className={className}
+      style={{ ...sizeMap[size], ...style }}
+      onError={(e) => {
+        e.currentTarget.src = '/images/branding/ibam-logo.png';
+      }}
+    />
+  );
+};
+
+// Type Definitions - Fixed to match Supabase return types
+interface UserProgressRaw {
+  session_id: number;
+  completion_percentage: number;
+  last_accessed_at: string;
+}
+
+interface UserProgress {
   id: number;
-  title: string;
-  sessions: number;
-  description: string;
-  isLocked: boolean;
-  isCompleted: boolean;
+  session_id: number;
+  completion_percentage: number;
+  completed_at: string | null;
+  last_accessed_at: string;
+  quiz_score: number | null;
 }
 
-const Dashboard: React.FC = () => {
-  const [state, setState] = useState<DashboardState>({
-    user: null,
-    hasCompletedPreAssessment: false,
-    hasCompletedPostAssessment: false,
-    completedModules: [],
-    isLoading: true,
-    error: null,
-  });
+interface SessionData {
+  id: number;
+  module_id: number;
+  session_number: number;
+  title: string;
+  subtitle: string;
+}
 
-  const modules: Module[] = [
-    {
-      id: 1,
-      title: "Foundational Principles",
-      sessions: 4,
-      description: "Business as God's gift, working with church leaders, godly guidelines",
-      isLocked: !state.hasCompletedPreAssessment,
-      isCompleted: state.completedModules.includes(1),
-    },
-    {
-      id: 2,
-      title: "Success and Failure Factors", 
-      sessions: 4,
-      description: "Understanding failure reasons, success factors, and God's will",
-      isLocked: !state.completedModules.includes(1),
-      isCompleted: state.completedModules.includes(2),
-    },
-    {
-      id: 3,
-      title: "Marketing Excellence",
-      sessions: 5,
-      description: "Marketing triangle, selling process, market research, competition",
-      isLocked: !state.completedModules.includes(2),
-      isCompleted: state.completedModules.includes(3),
-    },
-    {
-      id: 4,
-      title: "Financial Management",
-      sessions: 4,
-      description: "Funding, budgeting, investor requirements, listening to your business",
-      isLocked: !state.completedModules.includes(3),
-      isCompleted: state.completedModules.includes(4),
-    },
-    {
-      id: 5,
-      title: "Business Planning",
-      sessions: 3,
-      description: "Homework, writing your plan, implementation and launch",
-      isLocked: !state.completedModules.includes(4),
-      isCompleted: state.completedModules.includes(5),
-    },
+interface ModuleProgress {
+  module_id: number;
+  total_sessions: number;
+  completed_sessions: number;
+  completion_percentage: number;
+}
+
+interface RecentActivityRaw {
+  session_id: number;
+  completion_percentage: number;
+  last_accessed_at: string;
+  sessions: {
+    title: string;
+    module_id: number;
+    session_number: number;
+  };
+}
+
+interface RecentActivity {
+  session_id: number;
+  completion_percentage: number;
+  last_accessed_at: string;
+  sessions: {
+    title: string;
+    module_id: number;
+    session_number: number;
+  };
+}
+
+// Known module structure from database
+const MODULE_CONFIG = [
+  { id: 1, title: "Foundational Principles", sessions: 4, color: "from-blue-400 to-blue-600", description: "Biblical foundations for business" },
+  { id: 2, title: "Success and Failure Factors", sessions: 4, color: "from-green-400 to-green-600", description: "Learning from setbacks and victories" },
+  { id: 3, title: "Marketing Excellence", sessions: 5, color: "from-purple-400 to-purple-600", description: "Ethical marketing and sales strategies" },
+  { id: 4, title: "Financial Management", sessions: 4, color: "from-orange-400 to-orange-600", description: "Biblical approach to business finances" },
+  { id: 5, title: "Business Planning", sessions: 3, color: "from-indigo-400 to-indigo-600", description: "Strategic planning with divine guidance" }
+];
+
+const IBAMDashboard: React.FC = () => {
+  const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showTrainersModal, setShowTrainersModal] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string>('');
+  const [dataSource, setDataSource] = useState<'real' | 'mock'>('mock');
+
+  // Mock data for fallback
+  const mockModuleProgress: ModuleProgress[] = [
+    { module_id: 1, total_sessions: 4, completed_sessions: 4, completion_percentage: 100 },
+    { module_id: 2, total_sessions: 4, completed_sessions: 2, completion_percentage: 50 },
+    { module_id: 3, total_sessions: 5, completed_sessions: 0, completion_percentage: 0 },
+    { module_id: 4, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
+    { module_id: 5, total_sessions: 3, completed_sessions: 0, completion_percentage: 0 }
   ];
 
-  const checkPreAssessmentCompletion = async (userId: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('assessment_responses')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking pre-assessment:', error);
-        return false;
-      }
-      return !!data;
-    } catch (error) {
-      console.error('Error checking pre-assessment:', error);
-      return false;
+  const mockRecentActivity: RecentActivity[] = [
+    {
+      session_id: 26,
+      completion_percentage: 75,
+      last_accessed_at: '2025-06-27T18:30:00Z',
+      sessions: { title: 'Reasons for Success - Faith-Driven Principles', module_id: 2, session_number: 2 }
+    },
+    {
+      session_id: 25,
+      completion_percentage: 100,
+      last_accessed_at: '2025-06-26T14:20:00Z',
+      sessions: { title: 'Reasons for Failure - Learning from Mistakes', module_id: 2, session_number: 1 }
+    },
+    {
+      session_id: 4,
+      completion_percentage: 100,
+      last_accessed_at: '2025-06-25T16:45:00Z',
+      sessions: { title: 'Faith-Driven Business - The AVODAH Model', module_id: 1, session_number: 4 }
     }
-  };
+  ];
 
-  const checkPostAssessmentCompletion = async (userId: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('assessment_responses')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853')
-        .maybeSingle();
+  const trainers = [
+    { name: "John", experience: "30+ years", expertise: ["Entrepreneurship", "Cross-Cultural Ministry"], background: "Business mentorship across cultures" },
+    { name: "Jeff", experience: "30+ years", expertise: ["Business", "Closed Countries Ministry"], background: "Marketplace ministry in challenging environments" },
+    { name: "Steve", experience: "30+ years", expertise: ["Retail", "Marketplace Ministry"], background: "Retail industry and faith integration" },
+    { name: "Daniel", experience: "30+ years", expertise: ["Consultancy", "Cross-Cultural Living"], background: "International business consultancy" },
+    { name: "Roy", experience: "30+ years", expertise: ["Business Ownership", "Family Leadership"], background: "Business ownership and leadership development" },
+    { name: "Dan", experience: "30+ years", expertise: ["Diverse Industries", "Discipleship"], background: "Multi-industry experience and discipleship" }
+  ];
 
-      if (error) {
-        console.error('Error checking post-assessment:', error);
-        return false;
-      }
-      return !!data;
-    } catch (error) {
-      console.error('Error checking post-assessment:', error);
-      return false;
-    }
-  };
-
-  const checkModuleCompletion = async (userId: string): Promise<number[]> => {
+  // Get test user ID with proper error handling
+  const getTestUserId = async (): Promise<string> => {
     try {
       const { data, error } = await supabase
         .from('user_progress')
-        .select('session_id, completion_percentage')
-        .eq('user_id', userId)
-        .gte('completion_percentage', 100);
-
-      if (error) {
-        console.error('Error checking session completion:', error);
-        return [];
+        .select('user_id')
+        .limit(1)
+        .maybeSingle(); // Use maybeSingle to avoid errors when no data exists
+      
+      if (!error && data?.user_id) {
+        console.log('✅ Found real user:', data.user_id);
+        return data.user_id;
       }
+    } catch (error) {
+      console.log('ℹ️ No user progress found, using mock user ID');
+    }
+    
+    console.log('ℹ️ Using fallback mock user ID');
+    return '550e8400-e29b-41d4-a716-446655440000';
+  };
 
-      const completedSessions: number[] = data?.map(progress => progress.session_id) || [];
-      const completedModules: number[] = [];
+  // Calculate module progress from raw data
+  const calculateModuleProgress = (sessions: SessionData[], progress: UserProgressRaw[]): ModuleProgress[] => {
+    const progressMap = new Map<number, { total: number; completed: number }>();
+    
+    // Initialize all modules
+    MODULE_CONFIG.forEach(module => {
+      progressMap.set(module.id, { total: module.sessions, completed: 0 });
+    });
 
-      const moduleSessionRanges = {
-        1: [1, 2, 3, 4],
-        2: [5, 6, 7, 8],  
-        3: [9, 10, 11, 12, 13],
-        4: [14, 15, 16, 17],
-        5: [18, 19, 20]
-      };
+    // Count actual sessions from database
+    sessions.forEach(session => {
+      const moduleId = Number(session.module_id);
+      if (!progressMap.has(moduleId)) {
+        progressMap.set(moduleId, { total: 0, completed: 0 });
+      }
+      // Update total if different from config (use actual database count)
+      const current = progressMap.get(moduleId)!;
+      progressMap.set(moduleId, { ...current, total: current.total });
+    });
 
-      for (let moduleId = 1; moduleId <= 5; moduleId++) {
-        const requiredSessions = moduleSessionRanges[moduleId as keyof typeof moduleSessionRanges];
-        const moduleComplete = requiredSessions.every(sessionId => 
-          completedSessions.includes(sessionId)
-        );
-
-        if (moduleComplete) {
-          completedModules.push(moduleId);
+    // Count completed sessions
+    progress.forEach(p => {
+      const session = sessions.find(s => s.id === p.session_id);
+      if (session && p.completion_percentage === 100) {
+        const moduleId = Number(session.module_id);
+        const current = progressMap.get(moduleId);
+        if (current) {
+          progressMap.set(moduleId, { ...current, completed: current.completed + 1 });
         }
       }
+    });
 
-      return completedModules;
+    // Convert to final format
+    return Array.from(progressMap.entries())
+      .map(([moduleId, stats]) => ({
+        module_id: moduleId,
+        total_sessions: stats.total,
+        completed_sessions: stats.completed,
+        completion_percentage: stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
+      }))
+      .sort((a, b) => a.module_id - b.module_id);
+  };
+
+  // Load dashboard data with comprehensive error handling
+  const loadDashboardData = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      
+      // Get user ID
+      const currentUserId = await getTestUserId();
+      setUserId(currentUserId);
+      
+      // Try to get sessions data
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('id, module_id, session_number, title, subtitle');
+      
+      if (sessionsError) {
+        throw new Error(`Sessions query failed: ${sessionsError.message}`);
+      }
+
+      if (!sessions || sessions.length === 0) {
+        console.log('⚠️ No sessions found in database, using mock data');
+        setDataSource('mock');
+        setModuleProgress(mockModuleProgress);
+        setRecentActivity(mockRecentActivity);
+        return;
+      }
+
+      // Try to get user progress
+      const { data: progress, error: progressError } = await supabase
+        .from('user_progress')
+        .select('session_id, completion_percentage, last_accessed_at')
+        .eq('user_id', currentUserId);
+
+      if (progressError) {
+        console.log('⚠️ User progress query failed, using sessions data only');
+      }
+
+      // Calculate module progress
+      const moduleData = calculateModuleProgress(sessions, progress || []);
+      setModuleProgress(moduleData);
+
+      // Get recent activity
+      const { data: activityData, error: activityError } = await supabase
+        .from('user_progress')
+        .select(`
+          session_id, 
+          completion_percentage, 
+          last_accessed_at,
+          sessions!inner(title, module_id, session_number)
+        `)
+        .eq('user_id', currentUserId)
+        .order('last_accessed_at', { ascending: false })
+        .limit(5);
+
+      if (!activityError && activityData && activityData.length > 0) {
+        console.log('✅ Using real activity data');
+        // Transform the data to match our interface
+        const transformedActivity: RecentActivity[] = activityData.map((item: any) => ({
+          session_id: item.session_id,
+          completion_percentage: item.completion_percentage,
+          last_accessed_at: item.last_accessed_at,
+          sessions: {
+            title: item.sessions.title,
+            module_id: item.sessions.module_id,
+            session_number: item.sessions.session_number
+          }
+        }));
+        setRecentActivity(transformedActivity);
+        setDataSource('real');
+      } else {
+        console.log('ℹ️ No recent activity found, using mock data');
+        setRecentActivity(mockRecentActivity);
+      }
+
+      console.log('✅ Dashboard data loaded successfully');
+      
     } catch (error) {
-      console.error('Error checking module completion:', error);
-      return [];
+      console.error('❌ Error loading dashboard data:', error);
+      setDataSource('mock');
+      setModuleProgress(mockModuleProgress);
+      setRecentActivity(mockRecentActivity);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'Authentication error', 
-            isLoading: false 
-          }));
-          return;
-        }
-
-        const [hasCompletedPre, hasCompletedPost, completedModules] = await Promise.all([
-          checkPreAssessmentCompletion(user.id),
-          checkPostAssessmentCompletion(user.id),
-          checkModuleCompletion(user.id)
-        ]);
-
-        setState({
-          user,
-          hasCompletedPreAssessment: hasCompletedPre,
-          hasCompletedPostAssessment: hasCompletedPost,
-          completedModules,
-          isLoading: false,
-          error: null,
-        });
-
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        setState(prev => ({ 
-          ...prev, 
-          error: 'Failed to load user data', 
-          isLoading: false 
-        }));
-      }
-    };
-
-    loadUserData();
+    loadDashboardData();
   }, []);
 
-  const handlePreAssessmentClick = () => {
-    window.location.href = '/assessment/pre';
+  // Helper functions
+  const getModuleProgress = (moduleId: number): number => {
+    const progress = moduleProgress.find(m => m.module_id === moduleId);
+    return progress?.completion_percentage ?? 0;
   };
 
-  const handleModuleClick = (moduleId: number) => {
-    const module = modules.find(m => m.id === moduleId);
-    if (module?.isLocked) {
-      return;
-    }
-    window.location.href = `/modules/${moduleId}`;
+  const getModuleStatus = (moduleId: number): 'completed' | 'in-progress' | 'available' | 'locked' => {
+    const progress = getModuleProgress(moduleId);
+    if (progress === 100) return 'completed';
+    if (progress > 0) return 'in-progress';
+    if (moduleId === 1) return 'available';
+    
+    const prevProgress = getModuleProgress(moduleId - 1);
+    return prevProgress === 100 ? 'available' : 'locked';
   };
 
-  const handleContinueLearning = () => {
-    const nextModule = modules.find(module => !module.isCompleted && !module.isLocked);
-    if (nextModule) {
-      window.location.href = `/modules/${nextModule.id}/sessions/1`;
-    }
+  const getModuleInfo = (moduleId: number) => {
+    return MODULE_CONFIG.find(m => m.id === moduleId) ?? MODULE_CONFIG[0];
   };
 
-  const calculateProgress = () => {
-    let totalSteps = 6;
-    let completedSteps = 0;
-
-    if (state.hasCompletedPreAssessment) completedSteps++;
-    completedSteps += state.completedModules.length;
-
-    return Math.round((completedSteps / totalSteps) * 100);
-  };
-
-  if (state.isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (state.error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <h2 className="text-red-800 font-semibold mb-2">Error</h2>
-          <p className="text-red-600">{state.error}</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
-
-  const progress = calculateProgress();
-  const allModulesCompleted = state.completedModules.length === 5;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-teal-400 to-slate-700 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Learning Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, {state.user?.email}</p>
+            <div className="flex items-center space-x-4">
+              <IBAMLogo size="large" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold">Welcome Back, Entrepreneur!</h1>
+                <p className="text-teal-100 mt-1">Your faith-driven business journey continues</p>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">{progress}%</div>
-              <div className="text-sm text-gray-600">Complete</div>
+            <div className="hidden sm:flex items-center space-x-4">
+              <Calendar className="w-5 h-5" />
+              <span className="text-sm">{new Date().toLocaleDateString()}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-            <div 
-              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Pre-Assessment: {state.hasCompletedPreAssessment ? '✓' : '○'}</span>
-            <span>Modules: {state.completedModules.length}/5</span>
-            <span>Post-Assessment: {state.hasCompletedPostAssessment ? '✓' : '○'}</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Data Source Status */}
+        <div className={`border rounded-lg p-4 mb-6 ${
+          dataSource === 'real' 
+            ? 'bg-green-50 border-green-200' 
+            : 'bg-blue-50 border-blue-200'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full animate-pulse ${
+              dataSource === 'real' ? 'bg-green-500' : 'bg-blue-500'
+            }`}></div>
+            <p className={`text-sm ${
+              dataSource === 'real' ? 'text-green-700' : 'text-blue-700'
+            }`}>
+              <strong>{dataSource === 'real' ? 'Live Data:' : 'Demo Mode:'}</strong> 
+              {dataSource === 'real' 
+                ? ' Connected to your Supabase database' 
+                : ' Using sample data for demonstration'
+              }
+              {userId && (
+                <span className="ml-2 text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                  User: {userId.slice(0, 8)}...
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
-        {!state.hasCompletedPreAssessment && (
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg p-8 mb-8">
-            <div className="flex items-center mb-4">
-              <BookOpen className="w-8 h-8 mr-3" />
-              <h2 className="text-2xl font-bold">Start Your Journey</h2>
+        {/* Vision Statement */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-l-4 border-teal-500">
+          <div className="flex items-start space-x-4">
+            <div className="bg-teal-100 rounded-lg p-3">
+              <TrendingUp className="w-6 h-6 text-teal-600" />
             </div>
-            <p className="text-blue-100 mb-6 text-lg">
-              Take the pre-assessment to unlock your Faith-Driven Business learning path and begin Module 1.
-            </p>
-            <button
-              onClick={handlePreAssessmentClick}
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Take Pre-Assessment
-            </button>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Your Mission</h2>
+              <p className="text-gray-700 leading-relaxed">
+                "To multiply <strong>Followers of Jesus Christ</strong> while building profitable businesses through faith-driven entrepreneurship in the marketplace."
+              </p>
+            </div>
           </div>
-        )}
+        </div>
 
-        {state.hasCompletedPreAssessment && !allModulesCompleted && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <button 
+            onClick={() => window.location.href = '/business-planner'}
+            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+          >
+            <div className="flex items-center space-x-4">
+              <PlaneTakeoff className="w-8 h-8" />
+              <div className="text-left">
+                <h3 className="text-xl font-bold">Business Planner</h3>
+                <p className="text-orange-100">Build your faith-driven business plan</p>
+              </div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => setShowTrainersModal(true)}
+            className="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+          >
+            <div className="flex items-center space-x-4">
+              <Users className="w-8 h-8" />
+              <div className="text-left">
+                <h3 className="text-xl font-bold">Meet Your Trainers</h3>
+                <p className="text-purple-100">180+ years combined experience</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Learning Modules */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Learning Journey</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {MODULE_CONFIG.map((module) => {
+              const status = getModuleStatus(module.id);
+              const progress = getModuleProgress(module.id);
+              
+              return (
+                <div key={module.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                  <div className={`bg-gradient-to-r ${module.color} p-4`}>
+                    <div className="flex items-center justify-between text-white">
+                      <div className="flex items-center space-x-2">
+                        <BookOpen className="w-5 h-5" />
+                        <span className="font-semibold">Module {module.id}</span>
+                      </div>
+                      {status === 'completed' && <CheckCircle className="w-5 h-5" />}
+                      {status === 'locked' && <Lock className="w-5 h-5" />}
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{module.title}</h3>
+                    <p className="text-gray-600 text-sm mb-4">{module.description}</p>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <span>{module.sessions} Sessions</span>
+                      <span>{progress}% Complete</span>
+                    </div>
+                    
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                      <div 
+                        className={`bg-gradient-to-r ${module.color} h-2 rounded-full transition-all duration-300`}
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => window.location.href = `/modules/${module.id}`}
+                      disabled={status === 'locked'}
+                      className={`w-full py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
+                        status === 'locked' 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : `bg-gradient-to-r ${module.color} text-white hover:shadow-lg hover:scale-105`
+                      }`}
+                    >
+                      {status === 'locked' ? 'Complete Previous Module' : 
+                       status === 'completed' ? 'Review Module' : 
+                       status === 'in-progress' ? 'Continue Learning' : 'Start Module'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Course Information Link */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 border border-teal-200">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-green-800">Ready to Continue Learning?</h3>
-                <p className="text-green-600">Jump back into your Faith-Driven Business training</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Want to Learn More?</h3>
+                <p className="text-gray-600">Explore our complete course curriculum, meet all trainers, and see success stories.</p>
               </div>
-              <button
-                onClick={handleContinueLearning}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center"
+              <button 
+                onClick={() => window.location.href = '/course-info'}
+                className="bg-gradient-to-r from-teal-400 to-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200 whitespace-nowrap ml-4"
               >
-                Continue Learning
-                <ArrowRight className="w-5 h-5 ml-2" />
+                Course Information
               </button>
             </div>
           </div>
-        )}
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {modules.map((module) => (
-            <div
-              key={module.id}
-              className={`
-                bg-white rounded-lg shadow-md p-6 transition-all duration-200
-                ${module.isLocked 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:shadow-lg cursor-pointer hover:-translate-y-1'
-                }
-                ${module.isCompleted ? 'ring-2 ring-green-200' : ''}
-              `}
-              onClick={() => handleModuleClick(module.id)}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center mr-3
-                    ${module.isCompleted 
-                      ? 'bg-green-100 text-green-600' 
-                      : module.isLocked 
-                        ? 'bg-gray-100 text-gray-400'
-                        : 'bg-blue-100 text-blue-600'
-                    }
-                  `}>
-                    {module.isCompleted ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : module.isLocked ? (
-                      <Lock className="w-6 h-6" />
-                    ) : (
-                      <span className="font-bold">{module.id}</span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Module {module.id}</h3>
-                    <p className="text-sm text-gray-600">{module.sessions} sessions</p>
-                  </div>
-                </div>
-              </div>
-              
-              <h4 className="font-semibold text-lg mb-2">{module.title}</h4>
-              <p className="text-gray-600 text-sm mb-4">{module.description}</p>
-              
-              <div className="flex items-center justify-between">
-                <span className={`
-                  text-sm px-3 py-1 rounded-full
-                  ${module.isCompleted 
-                    ? 'bg-green-100 text-green-800' 
-                    : module.isLocked 
-                      ? 'bg-gray-100 text-gray-600'
-                      : 'bg-blue-100 text-blue-800'
-                  }
-                `}>
-                  {module.isCompleted ? 'Completed' : module.isLocked ? 'Locked' : 'Available'}
-                </span>
-              </div>
-            </div>
-          ))}
         </div>
 
-        {allModulesCompleted && !state.hasCompletedPostAssessment && (
-          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg shadow-lg p-8 mb-8">
-            <div className="flex items-center mb-4">
-              <Award className="w-8 h-8 mr-3" />
-              <h2 className="text-2xl font-bold">Almost There!</h2>
+        {/* Recent Activity */}
+        {recentActivity.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+            <div className="space-y-3">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                  <Play className="w-5 h-5 text-teal-600" />
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{activity.sessions.title}</p>
+                    <p className="text-sm text-gray-500">Module {activity.sessions.module_id} • {activity.completion_percentage}% complete</p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(activity.last_accessed_at).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-yellow-100 mb-6 text-lg">
-              You've completed all modules! Take your final assessment to measure your transformation and earn your Faith-Driven Business certificate.
-            </p>
-            <button 
-              onClick={() => window.location.href = '/assessment/post'}
-              className="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-colors flex items-center"
-            >
-              <Award className="w-5 h-5 mr-2" />
-              Take Final Assessment
-            </button>
-          </div>
-        )}
-
-        {allModulesCompleted && state.hasCompletedPostAssessment && (
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-lg p-8">
-            <div className="flex items-center mb-4">
-              <Award className="w-8 h-8 mr-3" />
-              <h2 className="text-2xl font-bold">Congratulations!</h2>
-            </div>
-            <p className="text-green-100 mb-6 text-lg">
-              You've earned your Faith-Driven Business certificate! Your transformation journey is complete and your business is equipped for Kingdom impact.
-            </p>
-            <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center">
-              <Award className="w-5 h-5 mr-2" />
-              View Certificate
-            </button>
           </div>
         )}
       </div>
+
+      {/* Trainers Modal */}
+      {showTrainersModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Meet Your Trainers</h2>
+                <button 
+                  onClick={() => setShowTrainersModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-gray-600 mt-2">180+ years of combined marketplace ministry experience</p>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {trainers.map((trainer, index) => (
+                <div key={index} className="border rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {trainer.name[0]}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{trainer.name}</h3>
+                      <p className="text-sm text-gray-600">{trainer.experience}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-3">{trainer.background}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {trainer.expertise.map((skill, i) => (
+                      <span key={i} className="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IBAM Footer */}
+      <footer className="bg-white border-t border-gray-200 py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex items-center space-x-4 mb-4 md:mb-0">
+              <IBAMLogo size="medium" />
+              <div className="text-sm text-gray-600">
+                <p className="font-semibold">International Business As Mission</p>
+                <p>Multiplying Followers of Jesus through marketplace entrepreneurship</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-6 text-sm text-gray-600">
+              <span>© 2025 IBAM</span>
+              <a 
+                href="https://www.ibam.org" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-teal-600 transition-colors"
+              >
+                www.ibam.org
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
 
-export default Dashboard;
+export default IBAMDashboard;
