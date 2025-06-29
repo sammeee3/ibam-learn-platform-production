@@ -534,6 +534,336 @@ const formatCaseStudyContent = (content: string) => {
     .replace(/<\/blockquote>/g, '</blockquote>');
 };
 
+// NEW UNIVERSAL READING COMPONENT - Works for ALL modules
+const UniversalReadingWithToggle = ({ sessionData, title }: { 
+  sessionData: SessionData; 
+  title: string 
+}) => {
+  const [showQuickVersion, setShowQuickVersion] = useState(true);
+  const readingRef = useRef<HTMLDivElement>(null);
+
+  // Smart content detection - works for ALL module structures
+  const chunks = sessionData.content?.written_curriculum?.quick_version?.chunks || [];
+  const mainContent = sessionData.content?.written_curriculum?.main_content;
+  
+  // CRITICAL: Handle ALL possible content structures
+  const hasChunks = chunks.length > 0;
+  const hasMainContent = mainContent && mainContent.length > 100;
+  
+  // If no proper content structure, create fallback
+  const effectiveContent = hasMainContent ? mainContent : 
+    hasChunks ? chunks.map(c => c.content).join('\n\n') : 
+    'Content is being prepared for this session.';
+
+  const handleToggle = (showFull: boolean) => {
+    setShowQuickVersion(!showFull);
+    setTimeout(() => {
+      if (readingRef.current) {
+        readingRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }
+    }, 100);
+  };
+
+  // Extract quick summary from content
+  const getQuickSummary = () => {
+    if (hasChunks) {
+      return chunks.slice(0, 3).map((chunk, index) => (
+        <div key={index} className="mb-4">
+          <h6 className="font-semibold text-gray-800 mb-2">{chunk.title || `Section ${index + 1}`}</h6>
+          <p className="text-gray-700">{chunk.key_thought || chunk.content?.substring(0, 200) + '...'}</p>
+        </div>
+      ));
+    } else if (hasMainContent) {
+      // Extract first few paragraphs as quick version
+      const paragraphs = effectiveContent.split('\n\n').filter(p => p.trim().length > 50);
+      return paragraphs.slice(0, 3).map((para, index) => (
+        <div key={index} className="mb-4">
+          <p className="text-gray-700">{para.substring(0, 300)}...</p>
+        </div>
+      ));
+    }
+    return <p className="text-gray-700">Core concepts and principles for faith-driven business.</p>;
+  };
+
+  return (
+    <div className="space-y-6" ref={readingRef}>
+      {/* Universal Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-bold mb-2 flex items-center">
+              <BookOpen className="w-8 h-8 mr-3" />
+              📖 {title}
+            </h3>
+            <p className="text-blue-100 text-lg">
+              Master biblical business principles through comprehensive learning
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="bg-white/20 backdrop-blur rounded-lg p-3">
+              <div className="text-2xl font-bold">✓</div>
+              <div className="text-sm text-blue-100">Ready to Learn</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* UNIVERSAL TOGGLE BUTTONS - Same as Module 1 */}
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={() => handleToggle(false)}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+            showQuickVersion 
+              ? 'bg-blue-500 text-white shadow-lg transform scale-105' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <Zap className="w-5 h-5 mr-2" />
+          📖 Quick Overview (5 min)
+        </button>
+        <button
+          onClick={() => handleToggle(true)}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+            !showQuickVersion 
+              ? 'bg-indigo-500 text-white shadow-lg transform scale-105' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <FileText className="w-5 h-5 mr-2" />
+          📚 Full Content (15 min)
+        </button>
+      </div>
+
+      {/* UNIVERSAL CONTENT DISPLAY */}
+      <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-400 to-indigo-500 text-white p-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xl font-bold">
+              {showQuickVersion ? '⚡ Quick Overview' : '📚 Complete Content'}
+            </h4>
+            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+              {showQuickVersion ? '5 Minutes' : '15 Minutes'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="p-8">
+          {showQuickVersion ? (
+            // QUICK VERSION - Works for all modules
+            <div className="space-y-6">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                <h5 className="text-xl font-semibold text-blue-800 mb-3">⚡ Key Concepts</h5>
+                <p className="text-gray-700 leading-relaxed text-lg mb-4">
+                  Essential principles for today's learning - perfect for busy schedules.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                {getQuickSummary()}
+              </div>
+              
+              <div className="text-center">
+                <button
+                  onClick={() => handleToggle(true)}
+                  className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+                >
+                  📚 Read Full Content
+                </button>
+              </div>
+            </div>
+          ) : (
+            // FULL CONTENT - Works for all modules
+            <div className="space-y-6">
+              <div className="bg-indigo-50 border-l-4 border-indigo-400 p-6 rounded-r-lg">
+                <h5 className="text-xl font-semibold text-indigo-800 mb-3">📚 Complete Learning Content</h5>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  Comprehensive curriculum with detailed explanations and practical applications.
+                </p>
+              </div>
+              
+              <div className="prose prose-xl max-w-none formatted-content" style={{ fontSize: '1.125rem', lineHeight: '1.7' }}>
+                <div 
+                  className="text-gray-700 leading-relaxed formatted-content"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatContentWithBeautifulTypography(effectiveContent) 
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// NEW UNIVERSAL CASE STUDY COMPONENT - Works for ALL modules
+const UniversalCaseStudyWithToggle = ({ sessionData, sessionTitle }: { 
+  sessionData: SessionData; 
+  sessionTitle: string 
+}) => {
+  const [showQuickVersion, setShowQuickVersion] = useState(true);
+  const caseStudyRef = useRef<HTMLDivElement>(null);
+
+  // Smart case study content detection
+  const caseStudyContent = sessionData.case_study || 
+    `
+    <h3>Business Transformation Case Study</h3>
+    <p>This case study demonstrates how biblical business principles create both financial success and kingdom impact.</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+      <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem;">
+        <h4 style="color: #dc2626; margin-bottom: 0.5rem;">🚨 The Challenge</h4>
+        <p style="margin: 0;">Struggling with profitability and unclear business direction</p>
+      </div>
+      <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem;">
+        <h4 style="color: #16a34a; margin-bottom: 0.5rem;">🎉 The Results</h4>
+        <p style="margin: 0;">40% revenue increase + kingdom impact</p>
+      </div>
+    </div>
+    <p>The transformation demonstrates how faith-driven business practices create sustainable success.</p>
+    `;
+
+  const handleToggle = (showFull: boolean) => {
+    setShowQuickVersion(!showFull);
+    setTimeout(() => {
+      if (caseStudyRef.current) {
+        caseStudyRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }
+    }, 100);
+  };
+
+  return (
+    <div className="space-y-6" ref={caseStudyRef}>
+      {/* Universal Case Study Header */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-bold mb-2 flex items-center">
+              <Target className="w-8 h-8 mr-3" />
+              📊 Real Business Transformation
+            </h3>
+            <p className="text-orange-100 text-lg">
+              Discover how biblical principles create both profit and kingdom impact
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="bg-white/20 backdrop-blur rounded-lg p-3">
+              <div className="text-2xl font-bold">40%</div>
+              <div className="text-sm text-orange-100">Revenue Increase</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* UNIVERSAL CASE STUDY TOGGLE - Same as Module 1 */}
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={() => handleToggle(false)}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+            showQuickVersion 
+              ? 'bg-orange-500 text-white shadow-lg transform scale-105' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <Zap className="w-5 h-5 mr-2" />
+          📊 Quick Overview (5 min)
+        </button>
+        <button
+          onClick={() => handleToggle(true)}
+          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+            !showQuickVersion 
+              ? 'bg-red-500 text-white shadow-lg transform scale-105' 
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <FileText className="w-5 h-5 mr-2" />
+          📖 Full Case Study (15 min)
+        </button>
+      </div>
+
+      {/* UNIVERSAL CASE STUDY CONTENT */}
+      <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-400 to-red-500 text-white p-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xl font-bold">
+              {showQuickVersion ? '⚡ Quick Summary' : '📖 Complete Case Study'}
+            </h4>
+            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+              {showQuickVersion ? '5 Minutes' : '15 Minutes'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="p-8">
+          {showQuickVersion ? (
+            // QUICK CASE STUDY OVERVIEW
+            <div className="space-y-6">
+              <div className="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-r-lg">
+                <h5 className="text-xl font-semibold text-orange-800 mb-3">⚡ Quick Summary</h5>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  This case study demonstrates how biblical business principles led to both financial success and kingdom impact. 
+                  The transformation shows practical steps you can apply in your own business journey.
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
+                  <h6 className="font-semibold text-red-800 mb-3 text-lg flex items-center">
+                    <AlertCircle className="w-6 h-6 mr-2" />
+                    🚨 The Challenge
+                  </h6>
+                  <p className="text-gray-800 text-lg leading-relaxed">Struggling with profitability and purpose alignment</p>
+                </div>
+                <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
+                  <h6 className="font-semibold text-green-800 mb-3 text-lg flex items-center">
+                    <CheckCircle className="w-6 h-6 mr-2" />
+                    🎉 The Results
+                  </h6>
+                  <p className="text-gray-800 text-lg leading-relaxed">40% revenue increase + kingdom impact</p>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <button
+                  onClick={() => handleToggle(true)}
+                  className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                >
+                  📖 Read Full Case Study
+                </button>
+              </div>
+            </div>
+          ) : (
+            // FULL CASE STUDY CONTENT
+            <div className="space-y-6">
+              <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-r-lg">
+                <h5 className="text-xl font-semibold text-red-800 mb-3">📖 Complete Case Study</h5>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  Comprehensive business transformation story with detailed analysis and actionable insights.
+                </p>
+              </div>
+              
+              <div className="prose prose-xl max-w-none formatted-content" style={{ fontSize: '1.125rem', lineHeight: '1.7' }}>
+                <div 
+                  className="text-gray-700 leading-relaxed formatted-content"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatCaseStudyContent(caseStudyContent) 
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ENHANCED: Beautiful Step-by-Step Reading Chunks with Quick/Full Toggle
 const EnhancedReadingChunks = ({ chunks, title }: { chunks: ReadingChunk[], title: string }) => {
   const [currentChunk, setCurrentChunk] = useState(0);
@@ -548,24 +878,6 @@ const EnhancedReadingChunks = ({ chunks, title }: { chunks: ReadingChunk[], titl
       const newSet = new Set(prev);
       if (newSet.has(chunkIndex)) {
         newSet.delete(chunkIndex);
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
       } else {
         newSet.add(chunkIndex);
       }
@@ -577,24 +889,6 @@ const EnhancedReadingChunks = ({ chunks, title }: { chunks: ReadingChunk[], titl
     setCompletedChunks(prev => new Set([...prev, currentChunk]));
     if (currentChunk < chunks.length - 1) {
       setCurrentChunk(currentChunk + 1);
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
     } else {
       setIsCompleted(true);
     }
@@ -897,207 +1191,6 @@ const EnhancedReadingChunks = ({ chunks, title }: { chunks: ReadingChunk[], titl
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-// ENHANCED: Beautiful Case Study Component with Fixed Screen Jump Issue
-const BeautifulCaseStudyComponent = ({ caseStudyContent, sessionTitle }: { caseStudyContent: string; sessionTitle: string }) => {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [showQuickVersion, setShowQuickVersion] = useState(true);
-  const caseStudyRef = useRef<HTMLDivElement>(null);
-
-  const generateQuestions = () => {
-    return [
-      {
-        id: 'challenge',
-        question: `What was the biggest challenge faced in this case study, and how does it relate to your current business situation?`,
-        placeholder: 'Describe the main challenge and how it connects to your experience...'
-      },
-      {
-        id: 'application', 
-        question: `Which specific strategy or principle from this case study could you implement in your business this week?`,
-        placeholder: 'Name one specific action you could take...'
-      },
-      {
-        id: 'outcome',
-        question: `If you applied the same faith-driven approach, what positive outcome would you most hope to see in your business?`,
-        placeholder: 'Describe your hoped-for result...'
-      }
-    ];
-  };
-
-  const questions = generateQuestions();
-
-  const updateAnswer = (questionId: string, answer: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answer }));
-  };
-
-  // Fixed: Handle toggle with proper scroll positioning
-  const handleToggle = (showFull: boolean) => {
-    setShowQuickVersion(!showFull);
-    
-    // Smooth scroll to keep case study content visible
-    setTimeout(() => {
-      if (caseStudyRef.current) {
-        caseStudyRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      }
-    }, 100);
-  };
-
-  return (
-    <div className="space-y-6" ref={caseStudyRef}>
-      {/* Beautiful Header Section (Matching our sample) */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold mb-2 flex items-center">
-              <Target className="w-8 h-8 mr-3" />
-              📊 Real Business Transformation
-            </h3>
-            <p className="text-orange-100 text-lg">
-              Discover how biblical principles create both profit and Faith-Driven impact
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="bg-white/20 backdrop-blur rounded-lg p-3">
-              <div className="text-2xl font-bold">40%</div>
-              <div className="text-sm text-orange-100">Revenue Increase</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Reading Mode Toggle with Fixed Positioning */}
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => handleToggle(false)}
-          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
-            showQuickVersion 
-              ? 'bg-orange-500 text-white shadow-lg transform scale-105' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <Zap className="w-5 h-5 mr-2" />
-          Quick Overview (5 min)
-        </button>
-        <button
-          onClick={() => handleToggle(true)}
-          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
-            !showQuickVersion 
-              ? 'bg-blue-500 text-white shadow-lg transform scale-105' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <FileText className="w-5 h-5 mr-2" />
-          Full Case Study (15 min)
-        </button>
-      </div>
-
-      {/* Case Study Content with Smooth Transitions */}
-      <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
-        <div className="bg-gradient-to-r from-orange-400 to-red-500 text-white p-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xl font-bold">
-              {showQuickVersion ? '⚡ Quick Summary' : '📖 Complete Case Study'}
-            </h4>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
-              {showQuickVersion ? '5 Minutes' : '15 Minutes'}
-            </span>
-          </div>
-        </div>
-        
-        <div className="p-8">
-          {showQuickVersion ? (
-            // Quick Overview with Beautiful Structure
-            <div className="space-y-6">
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
-                <h5 className="text-xl font-semibold text-blue-800 mb-3">⚡ Quick Summary</h5>
-                <p className="text-gray-700 leading-relaxed text-lg">
-                  This case study demonstrates how biblical business principles led to both financial success and Faith-Driven impact. 
-                  The transformation shows practical steps you can apply in your own business journey.
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
-                  <h6 className="font-semibold text-red-800 mb-3 text-lg flex items-center">
-                    <AlertCircle className="w-6 h-6 mr-2" />
-                    🚨 The Challenge
-                  </h6>
-                  <p className="text-gray-800 text-lg leading-relaxed">Struggling with profitability and purpose alignment</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
-                  <h6 className="font-semibold text-green-800 mb-3 text-lg flex items-center">
-                    <CheckCircle className="w-6 h-6 mr-2" />
-                    🎉 The Results
-                  </h6>
-                  <p className="text-gray-800 text-lg leading-relaxed">40% revenue increase + Faith-Driven impact</p>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <button
-                  onClick={() => handleToggle(true)}
-                  className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold"
-                >
-                  📖 Read Full Case Study
-                </button>
-              </div>
-            </div>
-          ) : (
-            // Full Case Study with Gorgeous Typography - RESTORED
-            <div className="prose prose-xl max-w-none formatted-content" style={{ fontSize: '1.125rem', lineHeight: '1.7' }}>
-              <div 
-                className="text-gray-700 leading-relaxed formatted-content"
-                dangerouslySetInnerHTML={{ __html: formatContentWithBeautifulTypography(caseStudyContent) }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Interactive Questions */}
-      {!showQuickVersion && (
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
-          <h4 className="text-xl font-bold text-purple-800 mb-4 flex items-center">
-            <MessageCircle className="w-6 h-6 mr-2" />
-            💭 Reflection Questions
-          </h4>
-          <p className="text-purple-700 mb-6 text-lg">
-            Take a few minutes to reflect on how this case study applies to your business journey:
-          </p>
-          
-          <div className="space-y-6">
-            {questions.map((q, index) => (
-              <div key={q.id} className="bg-white rounded-lg p-5 border border-purple-200">
-                <h5 className="font-semibold text-gray-800 mb-3 text-lg">
-                  {index + 1}. {q.question}
-                </h5>
-                <textarea
-                  value={answers[q.id] || ''}
-                  onChange={(e) => updateAnswer(q.id, e.target.value)}
-                  placeholder={q.placeholder}
-                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none text-base"
-                  rows={4}
-                />
-              </div>
-            ))}
-          </div>
-          
-          {Object.keys(answers).length > 0 && (
-            <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-medium text-lg">
-                ✅ Great work on your reflections! These insights will help you apply the case study lessons to your own business.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
@@ -1791,24 +1884,6 @@ const ActionBuilderComponent = ({ savedActions, onSaveAction, pathwayMode }: {
     
     if (actionType === 'business') {
       setBusinessForm({ specific: '', measurable: '', achievable: '', relevant: '', timed: '' });
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
     } else {
       setDiscipleshipForm({ specific: '', ministryMinded: '', achievable: '', relational: '', timed: '' });
     }
@@ -1818,24 +1893,6 @@ const ActionBuilderComponent = ({ savedActions, onSaveAction, pathwayMode }: {
   const generateActionStatement = (): string => {
     if (actionType === 'business') {
       return `I will ${businessForm.specific} ${businessForm.timed ? '| When: ' + businessForm.timed : ''}`;
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
     } else {
       return `I will ${discipleshipForm.specific} ${discipleshipForm.timed ? '| When: ' + discipleshipForm.timed : ''}`;
     }
@@ -2546,111 +2603,16 @@ const BeautifulLookingUpSection = ({
           </div>
         );
 
-case 'reading':
-  const chunks = sessionData.content?.written_curriculum?.quick_version?.chunks || [];
-  
-  return (
-    <div className="space-y-6">
-      <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-400">
-        <h4 className="font-bold text-blue-800 mb-3">📖 Session Reading Content</h4>
-        
-        {chunks.length > 0 ? (
-          <EnhancedReadingChunks 
-            chunks={chunks} 
-            title="Session Reading" 
-          />
-        ) : (
-          (() => {
-            const mainContent = sessionData.content?.written_curriculum?.main_content;
-            if (mainContent) {
-              const parsedChunks = parseMainContentIntoChunks(mainContent);
-              return (
-                <EnhancedReadingChunks 
-                  chunks={parsedChunks} 
-                  title="Session Reading" 
-                />
-              );
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
-            } else {
-              return (
-                <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
-                    <h3 className="text-xl font-bold">📖 Session Reading Content</h3>
-                  </div>
-                  <div className="p-8">
-                    <div className="text-center py-12">
-                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                      <h3 className="text-xl font-semibold text-gray-600 mb-2">Session Content Loading</h3>
-                      <p className="text-gray-500">The reading content for this session is being prepared.</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-          })()
-        )}
-      </div>
-      <button 
-        onClick={() => onMarkComplete('reading')}
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
-      >
-        ✅ Complete Reading
-      </button>
-    </div>
-  );        
-const readingChunks = sessionData.content?.written_curriculum?.quick_version?.chunks || [];        
+      case 'reading':
         return (
           <div className="space-y-6">
             <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-400">
               <h4 className="font-bold text-blue-800 mb-3">📖 Session Reading Content</h4>
               
-              {chunks.length > 0 ? (
-                <EnhancedReadingChunks 
-                  chunks={chunks} 
-                  title="Session Reading" 
-                />
-              ) : (
-                <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
-                    <h3 className="text-xl font-bold">📖 Session Reading Content</h3>
-                  </div>
-                  
-                  <div className="p-8">
-                    {/* Beautiful Typography for Main Content - RESTORED */}
-                    <div className="prose prose-xl max-w-none formatted-content" style={{ fontSize: '1.125rem', lineHeight: '1.7' }}>
-                      {sessionData.content?.written_curriculum?.main_content ? (
-                        <div 
-                          className="formatted-content"
-                    dangerouslySetInnerHTML={{ __html: formatContentWithBeautifulTypography(sessionData.content?.written_curriculum?.main_content || '') }}
-                        />
-                      ) : (
-                        <div className="text-center py-12">
-                          <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                          <h3 className="text-xl font-semibold text-gray-600 mb-2">Session Content Loading</h3>
-                          <p className="text-gray-500">The reading content for this session is being prepared.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+              <UniversalReadingWithToggle 
+                sessionData={sessionData}
+                title="Session Reading" 
+              />
             </div>
             <button 
               onClick={() => onMarkComplete('reading')}
@@ -2713,22 +2675,8 @@ const readingChunks = sessionData.content?.written_curriculum?.quick_version?.ch
       case 'case':
         return (
           <div className="space-y-6">
-            <BeautifulCaseStudyComponent 
-              caseStudyContent={sessionData.case_study || `
-                <h3>Case Study: Business Transformation</h3>
-                <p>This case study demonstrates how biblical business principles create both financial success and Faith-Driven impact.</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
-                  <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem;">
-                    <h4 style="color: #dc2626; margin-bottom: 0.5rem;">🚨 The Challenge</h4>
-                    <p style="margin: 0;">Inconsistent profits and unclear business direction</p>
-                  </div>
-                  <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem;">
-                    <h4 style="color: #16a34a; margin-bottom: 0.5rem;">🎉 The Results</h4>
-                    <p style="margin: 0;">40% revenue increase + Faith-Driven impact</p>
-                  </div>
-                </div>
-                <p>The transformation process demonstrates how faith-driven business practices create sustainable success.</p>
-              `}
+            <UniversalCaseStudyWithToggle 
+              sessionData={sessionData}
               sessionTitle={sessionData.title}
             />
             <button 
@@ -3106,24 +3054,6 @@ const EnhancedQuizSection = ({ sessionData }: { sessionData: SessionData }) => {
     setTimeout(() => {
       if (questionIndex < questions.length - 1) {
         setCurrentQuestion(questionIndex + 1);
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
       } else {
         setIsCompleted(true);
       }
@@ -3249,24 +3179,6 @@ const EnhancedQuizSection = ({ sessionData }: { sessionData: SessionData }) => {
                 buttonStyle = "border-2 border-green-500 bg-green-50 text-green-800";
               } else if (index === selectedAnswer && index !== question.correct) {
                 buttonStyle = "border-2 border-red-500 bg-red-50 text-red-800";
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
               } else {
                 buttonStyle = "border-2 border-gray-200 bg-gray-50 text-gray-600";
               }
@@ -3370,6 +3282,22 @@ export default function SessionPage({ params }: SessionPageProps) {
     practice: false,
     resources: false
   });
+  const handleNextSession = () => {
+    const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 3 };
+    const maxSessionInModule = moduleSessionCounts[parseInt(moduleId)];
+    const currentSession = parseInt(sessionId);
+    
+    if (currentSession < maxSessionInModule) {
+      window.location.href = `/modules/${moduleId}/sessions/${currentSession + 1}`;
+    } else {
+      const nextModule = parseInt(moduleId) + 1;
+      if (nextModule <= 5) {
+        window.location.href = `/modules/${nextModule}/sessions/1`;
+      } else {
+        window.location.href = '/dashboard';
+      }
+    }
+  };
   
   const [pathwayMode, setPathwayMode] = useState<'individual' | 'small_group'>('individual');
   const [savedActions, setSavedActions] = useState<ActionCommitment[]>([]);
@@ -3495,7 +3423,6 @@ export default function SessionPage({ params }: SessionPageProps) {
 
   // FIXED: Navigation functions with proper Next.js router and correct module progression
   const navigateToSession = (direction: 'prev' | 'next') => {
-    console.log("🔥 DEBUG: navigateToSession called with direction:", direction, "Module:", sessionData?.module_id, "Session:", sessionData?.session_number);
     const currentModuleId = sessionData?.module_id || 1;
     const currentSessionNumber = sessionData?.session_number || 1;
     
@@ -3513,46 +3440,10 @@ export default function SessionPage({ params }: SessionPageProps) {
       } else if (currentModuleId === 2 && currentSessionNumber === 4) {
         // Move to Module 3 Session 1
         router.push(`/modules/3/sessions/1`);
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
       } else {
         // For other modules, increment session within module
         router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
       }
-      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
-        // Stay in Module 3 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
-        // Move to Module 4 Session 1
-        router.push(`/modules/4/sessions/1`);
-      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
-        // Stay in Module 4 (has 4 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
-        // Move to Module 5 Session 1
-        router.push(`/modules/5/sessions/1`);
-      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
-        // Stay in Module 5 (has 5 sessions)
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
-        // Module 5 complete - go to completion
-        router.push('/graduation');
     } else {
       // Previous direction
       if (currentSessionNumber > 1) {
@@ -3681,7 +3572,7 @@ export default function SessionPage({ params }: SessionPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Success Status Banner */}
       <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 text-center text-sm">
-        🎯 <strong>✅ SCOPING FIXED:</strong> Typography functions moved to global scope | Beautiful formatting fully restored | Ready to test!
+        🎯 <strong>✅ UNIVERSAL TOGGLE FIX:</strong> Reading & Case Study toggles now work in ALL modules (1-5) | Same blue buttons as Module 1!
       </div>
 
       {/* Header */}
@@ -3730,7 +3621,7 @@ export default function SessionPage({ params }: SessionPageProps) {
             </div>
             
             <button 
-              onClick={() => navigateToSession('next')}
+              onClick={handleNextSession}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             >
               {sessionData.module_id === 1 && sessionData.session_number === 4 ? 'Module 2 →' :
