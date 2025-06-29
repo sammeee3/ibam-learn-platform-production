@@ -548,6 +548,24 @@ const EnhancedReadingChunks = ({ chunks, title }: { chunks: ReadingChunk[], titl
       const newSet = new Set(prev);
       if (newSet.has(chunkIndex)) {
         newSet.delete(chunkIndex);
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
       } else {
         newSet.add(chunkIndex);
       }
@@ -559,6 +577,24 @@ const EnhancedReadingChunks = ({ chunks, title }: { chunks: ReadingChunk[], titl
     setCompletedChunks(prev => new Set([...prev, currentChunk]));
     if (currentChunk < chunks.length - 1) {
       setCurrentChunk(currentChunk + 1);
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
     } else {
       setIsCompleted(true);
     }
@@ -1755,6 +1791,24 @@ const ActionBuilderComponent = ({ savedActions, onSaveAction, pathwayMode }: {
     
     if (actionType === 'business') {
       setBusinessForm({ specific: '', measurable: '', achievable: '', relevant: '', timed: '' });
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
     } else {
       setDiscipleshipForm({ specific: '', ministryMinded: '', achievable: '', relational: '', timed: '' });
     }
@@ -1764,6 +1818,24 @@ const ActionBuilderComponent = ({ savedActions, onSaveAction, pathwayMode }: {
   const generateActionStatement = (): string => {
     if (actionType === 'business') {
       return `I will ${businessForm.specific} ${businessForm.timed ? '| When: ' + businessForm.timed : ''}`;
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
     } else {
       return `I will ${discipleshipForm.specific} ${discipleshipForm.timed ? '| When: ' + discipleshipForm.timed : ''}`;
     }
@@ -2498,6 +2570,24 @@ case 'reading':
                   title="Session Reading" 
                 />
               );
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
             } else {
               return (
                 <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
@@ -3016,6 +3106,24 @@ const EnhancedQuizSection = ({ sessionData }: { sessionData: SessionData }) => {
     setTimeout(() => {
       if (questionIndex < questions.length - 1) {
         setCurrentQuestion(questionIndex + 1);
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
       } else {
         setIsCompleted(true);
       }
@@ -3141,6 +3249,24 @@ const EnhancedQuizSection = ({ sessionData }: { sessionData: SessionData }) => {
                 buttonStyle = "border-2 border-green-500 bg-green-50 text-green-800";
               } else if (index === selectedAnswer && index !== question.correct) {
                 buttonStyle = "border-2 border-red-500 bg-red-50 text-red-800";
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
               } else {
                 buttonStyle = "border-2 border-gray-200 bg-gray-50 text-gray-600";
               }
@@ -3244,22 +3370,6 @@ export default function SessionPage({ params }: SessionPageProps) {
     practice: false,
     resources: false
   });
-  const handleNextSession = () => {
-    const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 3 };
-    const maxSessionInModule = moduleSessionCounts[parseInt(moduleId)];
-    const currentSession = parseInt(sessionId);
-    
-    if (currentSession < maxSessionInModule) {
-      window.location.href = `/modules/${moduleId}/sessions/${currentSession + 1}`;
-    } else {
-      const nextModule = parseInt(moduleId) + 1;
-      if (nextModule <= 5) {
-        window.location.href = `/modules/${nextModule}/sessions/1`;
-      } else {
-        window.location.href = '/dashboard';
-      }
-    }
-  };
   
   const [pathwayMode, setPathwayMode] = useState<'individual' | 'small_group'>('individual');
   const [savedActions, setSavedActions] = useState<ActionCommitment[]>([]);
@@ -3385,6 +3495,7 @@ export default function SessionPage({ params }: SessionPageProps) {
 
   // FIXED: Navigation functions with proper Next.js router and correct module progression
   const navigateToSession = (direction: 'prev' | 'next') => {
+    console.log("🔥 DEBUG: navigateToSession called with direction:", direction, "Module:", sessionData?.module_id, "Session:", sessionData?.session_number);
     const currentModuleId = sessionData?.module_id || 1;
     const currentSessionNumber = sessionData?.session_number || 1;
     
@@ -3402,10 +3513,46 @@ export default function SessionPage({ params }: SessionPageProps) {
       } else if (currentModuleId === 2 && currentSessionNumber === 4) {
         // Move to Module 3 Session 1
         router.push(`/modules/3/sessions/1`);
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
       } else {
         // For other modules, increment session within module
         router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
       }
+      } else if (currentModuleId === 3 && currentSessionNumber < 5) {
+        // Stay in Module 3 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 3 && currentSessionNumber === 5) {
+        // Move to Module 4 Session 1
+        router.push(`/modules/4/sessions/1`);
+      } else if (currentModuleId === 4 && currentSessionNumber < 4) {
+        // Stay in Module 4 (has 4 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 4 && currentSessionNumber === 4) {
+        // Move to Module 5 Session 1
+        router.push(`/modules/5/sessions/1`);
+      } else if (currentModuleId === 5 && currentSessionNumber < 5) {
+        // Stay in Module 5 (has 5 sessions)
+        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+      } else if (currentModuleId === 5 && currentSessionNumber === 5) {
+        // Module 5 complete - go to completion
+        router.push('/graduation');
     } else {
       // Previous direction
       if (currentSessionNumber > 1) {
@@ -3583,7 +3730,7 @@ export default function SessionPage({ params }: SessionPageProps) {
             </div>
             
             <button 
-              onClick={handleNextSession}
+              onClick={() => navigateToSession('next')}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             >
               {sessionData.module_id === 1 && sessionData.session_number === 4 ? 'Module 2 →' :

@@ -87,7 +87,7 @@ const Module5BusinessPlanning: React.FC = () => {
     completedSessions: [],
     currentSessionId: null,
     moduleProgress: 0,
-    totalSessions: 3
+    totalSessions: 5
   });
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
@@ -175,9 +175,9 @@ const Module5BusinessPlanning: React.FC = () => {
         setSessions(mockSessions);
         setUserProgress({
           completedSessions: [],
-          currentSessionId: 18,
+          currentSessionId: 50,
           moduleProgress: 0,
-          totalSessions: 3
+          totalSessions: 5
         });
         return;
       }
@@ -263,9 +263,9 @@ const Module5BusinessPlanning: React.FC = () => {
       setSessions(mockSessions);
       setUserProgress({
         completedSessions: [],
-        currentSessionId: 18,
+        currentSessionId: 50,
         moduleProgress: 0,
-        totalSessions: 3
+        totalSessions: 5
       });
     } finally {
       setLoading(false);
@@ -354,7 +354,7 @@ const Module5BusinessPlanning: React.FC = () => {
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">  
                   Module 5: Business Planning  
                 </h1>  
-                <p className="text-white/90 text-lg">Create a comprehensive business plan with divine guidance</p>  
+                <p className="text-white/90 text-lg">Transform your learning into a thriving business with launch strategies, relationship building, scalable systems, success metrics, and community impact planning</p>  
               </div>  
             </div>  
               
@@ -492,7 +492,7 @@ const Module5BusinessPlanning: React.FC = () => {
                 <Clock className="w-5 h-5 text-indigo-600 mr-3" />  
                 <div>  
                   <h4 className="font-semibold text-indigo-800">Time Commitment</h4>  
-                  <p className="text-indigo-600 text-sm">3 sessions • 25-30 minutes each • Business plan templates included</p>  
+                  <p className="text-indigo-600 text-sm">5 sessions • 25-30 minutes each • Business plan templates included</p>  
                 </div>  
               </div>  
             </div>  

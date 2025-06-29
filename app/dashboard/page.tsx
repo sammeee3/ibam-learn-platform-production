@@ -104,7 +104,7 @@ const MODULE_CONFIG = [
   { id: 2, title: "Success and Failure Factors", sessions: 4, color: "from-green-400 to-green-600", description: "Learning from setbacks and victories" },
   { id: 3, title: "Marketing Excellence", sessions: 5, color: "from-purple-400 to-purple-600", description: "Ethical marketing and sales strategies" },
   { id: 4, title: "Financial Management", sessions: 4, color: "from-orange-400 to-orange-600", description: "Biblical approach to business finances" },
-  { id: 5, title: "Business Planning", sessions: 3, color: "from-indigo-400 to-indigo-600", description: "Strategic planning with divine guidance" }
+  { id: 5, title: "Business Planning", sessions: 5, color: "from-indigo-400 to-indigo-600", description: "Strategic planning with divine guidance" }
 ];
 
 const IBAMDashboard: React.FC = () => {
@@ -121,7 +121,7 @@ const IBAMDashboard: React.FC = () => {
     { module_id: 2, total_sessions: 4, completed_sessions: 2, completion_percentage: 50 },
     { module_id: 3, total_sessions: 5, completed_sessions: 0, completion_percentage: 0 },
     { module_id: 4, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
-    { module_id: 5, total_sessions: 3, completed_sessions: 0, completion_percentage: 0 }
+    { module_id: 5, total_sessions: 5, completed_sessions: 0, completion_percentage: 0 }
   ];
 
   const mockRecentActivity: RecentActivity[] = [
