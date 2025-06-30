@@ -1,5 +1,5 @@
-console.log('Dashboard page loaded!');
 'use client';
+console.log('Dashboard page loaded!');
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
