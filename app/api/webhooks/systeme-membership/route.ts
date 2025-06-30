@@ -32,13 +32,13 @@ const TIER_MAPPING = {
   'startup_business_v3': { 
     subscription_tier: 'startup_business', 
     tier_level: 2,
-    monthly_amount: 59.00,
+    monthly_amount: 15.00,
     trial_days: 7
   },
   'advanced_business_v3': { 
     subscription_tier: 'advanced_business', 
     tier_level: 3,
-    monthly_amount: 59.00,
+    monthly_amount: 15.00,
     trial_days: 7
   },
   'church_leader_small_v3': { 
