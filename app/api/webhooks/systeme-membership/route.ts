@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
       subscription_tier: tierInfo.subscription_tier,
       tier_level: tierInfo.tier_level,
       monthly_amount: tierInfo.monthly_amount,
-      member_type_key: 'individual', // adjust as needed
+      member_type_key: 'impact_business_startup', // adjust as needed
       primary_role_key: 'course_student',
       created_via_webhook: true,
       last_webhook_update: new Date().toISOString(),
