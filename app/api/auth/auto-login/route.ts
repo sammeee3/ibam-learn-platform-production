@@ -44,10 +44,10 @@ export async function POST(req: NextRequest) {
    
    // Generate magic link
    const { data: magicLink, error } = await supabase.auth.admin.generateLink({
-     type: 'magiclink',
+     type: 'recovery',
      email: email,
      options: {
-redirectTo: '/auth/callback?next=/dashboard'
+redirectTo: '/dashboard'
      }
    });
    
