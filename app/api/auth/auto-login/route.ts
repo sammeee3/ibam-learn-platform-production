@@ -63,3 +63,8 @@ export async function OPTIONS(req: NextRequest) {
     },
   });
 }
+export async function GET() {
+  return NextResponse.json({ 
+    message: 'Auto-login endpoint active. Use POST method.' 
+  });
+}
