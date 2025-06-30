@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
      type: 'magiclink',
      email: email,
      options: {
-       redirectTo: '/dashboard'
+redirectTo: '/auth/callback?next=/dashboard'
      }
    });
    
