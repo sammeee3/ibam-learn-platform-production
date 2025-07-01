@@ -1,5 +1,4 @@
 'use client';
-import { renderFinancial } from './page-part2';
 import React, { useState, useEffect, useRef } from 'react';  
 import { createClient } from '@supabase/supabase-js';
 import {   
@@ -2027,7 +2026,7 @@ default:
     </div>
   );
 }
-  };  // Return the main component JSX
+  // Return the main component JSX
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
       {/* Your main component JSX here */}
@@ -2036,4 +2035,5 @@ default:
       </div>
     </div>
   );
+};
 export default IBAMBusinessPlanner;
