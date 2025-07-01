@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';  
+console.log("Business planner file loaded!");import React, { useState, useEffect, useRef } from 'react';  
 import { createClient } from '@supabase/supabase-js';
 import {   
   ChevronLeft,   
@@ -65,8 +65,8 @@ const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supa
 
 const IBAMBusinessPlanner = () => {  
   const colors = {  
-    primary: '#2563eb',  
-    secondary: '#059669',   
+console.log("IBAMBusinessPlanner component initialized!");    primary: '#2563eb',  
+  if (typeof window !== "undefined") alert("Component is running!");    secondary: '#059669',   
     accent: '#dc2626',  
     success: '#10b981',  
     warning: '#f59e0b',  
