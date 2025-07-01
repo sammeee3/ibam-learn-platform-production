@@ -2027,7 +2027,6 @@ default:
     </div>
   );
 }
-
   // Return the main component JSX
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
