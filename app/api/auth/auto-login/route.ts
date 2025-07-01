@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from database - Fix the type issue here
+    // Get user from database
     const { data: listUsersResponse, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (listError || !listUsersResponse) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Now we can safely access the users array
+    // Find the user
     const user = listUsersResponse.users.find(u => u.email === email);
     
     if (!user) {
@@ -77,12 +77,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate magic link
+    // Generate magic link with CORRECT redirect to dashboard
     const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: user.email!,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+        // THIS IS THE KEY FIX - redirect directly to the dashboard
+        redirectTo: 'https://ibam-learn-platform-v3.vercel.app/dashboard'
       }
     });
 
@@ -99,7 +100,6 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         url: magicLinkData.properties.action_link,
-        // Alternative naming for compatibility
         magicLink: magicLinkData.properties.action_link
       },
       { headers: corsHeaders }
