@@ -2038,4 +2038,4 @@ default:
     </div>
   );
 };
-export default IBAMBusinessPlanner;
+export default IBAMBusinessPlanner;export default IBAMBusinessPlanner;
