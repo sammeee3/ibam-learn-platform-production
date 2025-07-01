@@ -1,6 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -11,23 +9,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Create a response that redirects to dashboard
-  const response = NextResponse.redirect(new URL(redirect, request.url));
+  // Create a special one-time token
+  const token = Buffer.from(`${userId}:${Date.now()}`).toString('base64');
   
-  // Set a simple session cookie that marks them as logged in
-  response.cookies.set('ibam-user-id', userId, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7 // 7 days
-  });
+  // Redirect to dashboard with special token
+  const dashboardUrl = new URL(redirect, request.url);
+  dashboardUrl.searchParams.set('authToken', token);
+  dashboardUrl.searchParams.set('userId', userId);
   
-  response.cookies.set('ibam-auth-status', 'authenticated', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7 // 7 days
-  });
-
-  return response;
+  return NextResponse.redirect(dashboardUrl);
 }
