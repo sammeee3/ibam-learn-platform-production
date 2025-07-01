@@ -1,4 +1,3 @@
-cd ~/Desktop/ibam-learn-platform-v2 && cat > app/api/auth/auto-login/route.ts << 'EOF'
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -114,4 +113,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-EOF
