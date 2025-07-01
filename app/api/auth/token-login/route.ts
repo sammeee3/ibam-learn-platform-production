@@ -1,10 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,22 +18,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid secret' }, { status: 401, headers: corsHeaders });
     }
     
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (error || !data) {
-      return NextResponse.json({ error: 'Failed to get users' }, { status: 500, headers: corsHeaders });
-    }
-    
-    const user = data.users.find((u: any) => u.email === email);
-    
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404, headers: corsHeaders });
-    }
-    
-    // Use the auto-session route instead
+    // Go directly to the bypass page
     return NextResponse.json({
       success: true,
-      loginUrl: `https://ibam-learn-platform-v3.vercel.app/auth/auto-session?userId=${user.id}&redirect=/dashboard`
+      loginUrl: 'https://ibam-learn-platform-v3.vercel.app/direct-access'
     }, { headers: corsHeaders });
     
   } catch (error) {
