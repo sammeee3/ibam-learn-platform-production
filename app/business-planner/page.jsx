@@ -65,9 +65,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 const IBAMBusinessPlanner = () => {  
-  const colors = {  
+  console.log("Component mounted!");  console.log("Component mounted!");  const colors = {  
     primary: '#2563eb',  
-    secondary: '#059669',   
+console.log("Business Planner Loading!");    secondary: '#059669',   
     accent: '#dc2626',  
     success: '#10b981',  
     warning: '#f59e0b',  
@@ -134,7 +134,7 @@ const IBAMBusinessPlanner = () => {
       }
     };
 
-    return (
+  console.log("About to return JSX");  console.log("About to return JSX");    return (
       <div className="relative">
         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
         <input
@@ -1232,7 +1232,7 @@ const IBAMBusinessPlanner = () => {
       saveData();
     }, 2000); // Save 2 seconds after last change
 
-    return () => clearTimeout(saveTimeout);
+  console.log("About to return JSX");  console.log("About to return JSX");    return () => clearTimeout(saveTimeout);
   }, [formData, completedSections, user, businessPlanId]);
 
   // Auto-save every 30 seconds
@@ -1251,7 +1251,7 @@ const IBAMBusinessPlanner = () => {
       setLastSaved(new Date());
     }, 30000); // 30 seconds
 
-    return () => clearInterval(interval);
+  console.log("About to return JSX");  console.log("About to return JSX");    return () => clearInterval(interval);
   }, [formData, completedSections, user, businessPlanId]);
 
   // Validation with encouragement  
@@ -1368,7 +1368,7 @@ const IBAMBusinessPlanner = () => {
     if (fishApproach === 'overview') return null;  
       
     const approach = threeFishApproach[fishApproach];  
-    return (  
+  console.log("About to return JSX");  console.log("About to return JSX");    return (  
       <div className="mb-6 p-4 rounded-xl border-l-4 shadow-sm" style={{   
         backgroundColor: `${approach.color}15`,   
         borderColor: approach.color   
@@ -1392,7 +1392,7 @@ const IBAMBusinessPlanner = () => {
   // Progress indicator  
   const ProgressIndicator = () => {  
     const progress = calculateProgress();  
-    return (  
+  console.log("About to return JSX");  console.log("About to return JSX");    return (  
       <div className="bg-white p-4 rounded-lg shadow-sm border" style={{ borderColor: colors.border }}>  
         <div className="flex items-center justify-between mb-2">  
           <span className="text-sm font-medium text-gray-700">Your Progress</span>  
@@ -1430,7 +1430,7 @@ const IBAMBusinessPlanner = () => {
     const totalMonthlyFixed = standardFixedCosts + customFixedCosts;  
     const recentWins = formData.winsTracking.dailyWins.slice(0, 3);
 
-    return (  
+  console.log("About to return JSX");  console.log("About to return JSX");    return (  
       <div className="space-y-6">  
         {/* Welcome Header */}  
         <div className="rounded-xl p-6 text-white" style={{   
@@ -1989,7 +1989,7 @@ const IBAMBusinessPlanner = () => {
 
   // Main render function
   const renderCurrentSection = () => {
-    switch (sections[currentSection].id) {
+  console.log("renderCurrentSection called");  console.log("renderCurrentSection called");  console.log("renderCurrentSection called");    switch (sections[currentSection].id) {
       case 'dashboard':
         return renderDashboard();
       case 'readinessAssessment':
@@ -2019,7 +2019,7 @@ case 'financial':
     setFormData
   });
 default:
-  return (
+  console.log("About to return JSX");  console.log("About to return JSX");  return (
     <div className="text-center py-12">
       <div className="text-6xl mb-4">🚧</div>
       <h3 className="text-xl font-bold mb-2">Section Under Construction</h3>
@@ -2028,7 +2028,7 @@ default:
   );
 }
   // Return the main component JSX
-  return (
+  console.log("About to return JSX");  console.log("About to return JSX");  return (
     <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
       {/* Your main component JSX here */}
       <div className="max-w-4xl mx-auto p-4">
