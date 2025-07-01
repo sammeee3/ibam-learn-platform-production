@@ -1,6 +1,6 @@
 'use client';
 import { renderFinancial } from './page-part2';
-
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {   
   ChevronLeft,   
