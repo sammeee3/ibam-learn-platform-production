@@ -36,9 +36,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404, headers: corsHeaders });
     }
     
+    // Use the auto-session route instead
     return NextResponse.json({
       success: true,
-      loginUrl: `https://ibam-learn-platform-v3.vercel.app/dashboard?userId=${user.id}`
+      loginUrl: `https://ibam-learn-platform-v3.vercel.app/auth/auto-session?userId=${user.id}&redirect=/dashboard`
     }, { headers: corsHeaders });
     
   } catch (error) {
