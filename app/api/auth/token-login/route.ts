@@ -24,8 +24,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid secret' }, { status: 401, headers: corsHeaders });
     }
     
-    const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-    const user = users.users.find(u => u.email === email);
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (error || !data) {
+      return NextResponse.json({ error: 'Failed to get users' }, { status: 500, headers: corsHeaders });
+    }
+    
+    const user = data.users.find((u: any) => u.email === email);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404, headers: corsHeaders });
