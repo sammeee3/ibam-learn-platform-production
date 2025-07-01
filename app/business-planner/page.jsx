@@ -1,6 +1,6 @@
 'use client';
 import { renderFinancial } from './page-part2';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';  
 import { createClient } from '@supabase/supabase-js';
 import {   
   ChevronLeft,   
@@ -65,9 +65,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 const IBAMBusinessPlanner = () => {  
-  console.log("Component mounted!");  console.log("Component mounted!");  const colors = {  
+  const colors = {  
     primary: '#2563eb',  
-console.log("Business Planner Loading!");    secondary: '#059669',   
+    secondary: '#059669',   
     accent: '#dc2626',  
     success: '#10b981',  
     warning: '#f59e0b',  
@@ -134,7 +134,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
       }
     };
 
-  console.log("About to return JSX");  console.log("About to return JSX");    return (
+    return (
       <div className="relative">
         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
         <input
@@ -1232,7 +1232,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
       saveData();
     }, 2000); // Save 2 seconds after last change
 
-  console.log("About to return JSX");  console.log("About to return JSX");    return () => clearTimeout(saveTimeout);
+    return () => clearTimeout(saveTimeout);
   }, [formData, completedSections, user, businessPlanId]);
 
   // Auto-save every 30 seconds
@@ -1251,7 +1251,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
       setLastSaved(new Date());
     }, 30000); // 30 seconds
 
-  console.log("About to return JSX");  console.log("About to return JSX");    return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, [formData, completedSections, user, businessPlanId]);
 
   // Validation with encouragement  
@@ -1368,7 +1368,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
     if (fishApproach === 'overview') return null;  
       
     const approach = threeFishApproach[fishApproach];  
-  console.log("About to return JSX");  console.log("About to return JSX");    return (  
+    return (  
       <div className="mb-6 p-4 rounded-xl border-l-4 shadow-sm" style={{   
         backgroundColor: `${approach.color}15`,   
         borderColor: approach.color   
@@ -1392,7 +1392,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
   // Progress indicator  
   const ProgressIndicator = () => {  
     const progress = calculateProgress();  
-  console.log("About to return JSX");  console.log("About to return JSX");    return (  
+    return (  
       <div className="bg-white p-4 rounded-lg shadow-sm border" style={{ borderColor: colors.border }}>  
         <div className="flex items-center justify-between mb-2">  
           <span className="text-sm font-medium text-gray-700">Your Progress</span>  
@@ -1430,7 +1430,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
     const totalMonthlyFixed = standardFixedCosts + customFixedCosts;  
     const recentWins = formData.winsTracking.dailyWins.slice(0, 3);
 
-  console.log("About to return JSX");  console.log("About to return JSX");    return (  
+    return (  
       <div className="space-y-6">  
         {/* Welcome Header */}  
         <div className="rounded-xl p-6 text-white" style={{   
@@ -1989,7 +1989,7 @@ console.log("Business Planner Loading!");    secondary: '#059669',
 
   // Main render function
   const renderCurrentSection = () => {
-  console.log("renderCurrentSection called");  console.log("renderCurrentSection called");  console.log("renderCurrentSection called");    switch (sections[currentSection].id) {
+    switch (sections[currentSection].id) {
       case 'dashboard':
         return renderDashboard();
       case 'readinessAssessment':
@@ -2019,7 +2019,7 @@ case 'financial':
     setFormData
   });
 default:
-  console.log("About to return JSX");  console.log("About to return JSX");  return (
+  return (
     <div className="text-center py-12">
       <div className="text-6xl mb-4">🚧</div>
       <h3 className="text-xl font-bold mb-2">Section Under Construction</h3>
@@ -2027,8 +2027,8 @@ default:
     </div>
   );
 }
-  // Return the main component JSX
-  console.log("About to return JSX");  console.log("About to return JSX");  return (
+  };  // Return the main component JSX
+  return (
     <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
       {/* Your main component JSX here */}
       <div className="max-w-4xl mx-auto p-4">
@@ -2036,5 +2036,4 @@ default:
       </div>
     </div>
   );
-};
 export default IBAMBusinessPlanner;
