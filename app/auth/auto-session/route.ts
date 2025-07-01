@@ -1,10 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -15,30 +11,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  try {
-    // Get user details
-    const { data: user } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
-    if (!user || !user.user) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // Create a response that redirects to dashboard
+  const response = NextResponse.redirect(new URL(redirect, request.url));
+  
+  // Set a simple session cookie that marks them as logged in
+  response.cookies.set('ibam-user-id', userId, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  });
+  
+  response.cookies.set('ibam-auth-status', 'authenticated', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  });
 
-    // Generate magic link for immediate use
-    const { data: magicLink } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: user.user.email!,
-      options: {
-        redirectTo: `${request.nextUrl.origin}${redirect}`
-      }
-    });
-
-    if (magicLink?.properties?.action_link) {
-      // Redirect to the magic link which will log them in
-      return NextResponse.redirect(magicLink.properties.action_link);
-    }
-  } catch (error) {
-    console.error('Auto-session error:', error);
-  }
-
-  return NextResponse.redirect(new URL('/login', request.url));
+  return response;
 }
