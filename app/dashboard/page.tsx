@@ -129,6 +129,29 @@ const IBAMDashboard: React.FC = () => {
  const [userId, setUserId] = useState<string>('');
  const [dataSource, setDataSource] = useState<'real' | 'mock'>('mock');
 
+  // Continue Where You Left Off State
+  const [continueSession, setContinueSession] = useState<{
+    module_id: number;
+    session_id: number;
+    last_section: string;
+    completion_percentage: number;
+  } | null>(null);
+
+  // Fetch last accessed session
+  const fetchLastAccessedSession = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_session_progress')
+      .select('module_id, session_id, last_section, last_subsection, completion_percentage')
+      .eq('user_id', userId)
+      .order('last_accessed', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+    return data;
+  };
+
+
 
  // Mock data for fallback
  const mockModuleProgress: ModuleProgress[] = [
@@ -336,7 +359,16 @@ const IBAMDashboard: React.FC = () => {
 
  useEffect(() => {
    loadDashboardData();
- }, []);
+ 
+    // Load continue session data
+    const loadContinueData = async () => {
+      if (user?.id) {
+        const lastSession = await fetchLastAccessedSession(user.id);
+        setContinueSession(lastSession);
+      }
+    };
+    loadContinueData();
+}, []);
 
 
  // Helper functions
@@ -386,6 +418,43 @@ const IBAMDashboard: React.FC = () => {
                <h1 className="text-2xl sm:text-3xl font-bold">Welcome Back, Entrepreneur!</h1>
                <p className="text-teal-100 mt-1">Your faith-driven business journey continues</p>
              </div>
+
+      {/* Continue Where You Left Off Section */}
+      {continueSession && (
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 shadow-xl mb-8">
+          <div className="flex items-center justify-between">
+            <div className="text-white">
+              <h2 className="text-2xl font-bold mb-2 flex items-center">
+                <Play className="w-8 h-8 mr-3" />
+                Continue Your Journey
+              </h2>
+              <p className="text-blue-100 text-lg">
+                Module {continueSession.module_id}, Session {continueSession.session_id}
+              </p>
+              <div className="flex items-center mt-2">
+                <div className="bg-white/20 rounded-full h-2 w-48 mr-3">
+                  <div 
+                    className="bg-white rounded-full h-2 transition-all"
+                    style={{ width: `${continueSession.completion_percentage}%` }}
+                  />
+                </div>
+                <span className="text-sm text-blue-100">
+                  {continueSession.completion_percentage}% complete
+                </span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`)}
+              className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
+            >
+              Continue Session
+              <ArrowRight className="w-6 h-6 ml-2" />
+            </button>
+          </div>
+        </div>
+      )}
+
            </div>
            <div className="hidden sm:flex items-center space-x-4">
              <Calendar className="w-5 h-5" />
