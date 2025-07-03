@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Calendar, User, BookOpen, Award, TrendingUp, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff } from 'lucide-react';
-
+import { Calendar, User, BookOpen, Award, TrendingUp, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // Supabase configuration
 const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
@@ -128,6 +128,7 @@ const IBAMDashboard: React.FC = () => {
  const [showTrainersModal, setShowTrainersModal] = useState<boolean>(false);
  const [userId, setUserId] = useState<string>('');
  const [dataSource, setDataSource] = useState<'real' | 'mock'>('mock');
+ const router = useRouter();
 
   // Continue Where You Left Off State
   const [continueSession, setContinueSession] = useState<{
@@ -361,12 +362,16 @@ const IBAMDashboard: React.FC = () => {
    loadDashboardData();
  
     // Load continue session data
-    const loadContinueData = async () => {
-      if (user?.id) {
-        const lastSession = await fetchLastAccessedSession(user.id);
-        setContinueSession(lastSession);
-      }
-    };
+const loadContinueData = async () => {
+  // First, ask Supabase "who is logged in?"
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Now we can use 'user' because we just got it from Supabase
+  if (user?.id) {
+    const lastSession = await fetchLastAccessedSession(user.id);
+    setContinueSession(lastSession);
+  }
+};
     loadContinueData();
 }, []);
 
