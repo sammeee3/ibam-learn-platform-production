@@ -196,26 +196,27 @@ const IBAMDashboard: React.FC = () => {
  ];
 
 
- // Get test user ID with proper error handling
- const getTestUserId = async (): Promise<string> => {
-   try {
-     const { data, error } = await supabase
-       .from('user_progress')
-       .select('user_id')
-       .limit(1)
-       .maybeSingle(); // Use maybeSingle to avoid errors when no data exists
+// Get the actual logged-in user ID
+const getCurrentUserId = async (): Promise<string | null> => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
     
-     if (!error && data?.user_id) {
-       console.log('✅ Found real user:', data.user_id);
-       return data.user_id;
-     }
-   } catch (error) {
-     console.log('ℹ️ No user progress found, using mock user ID');
-   }
-  
-   console.log('ℹ️ Using fallback mock user ID');
-   return '550e8400-e29b-41d4-a716-446655440000';
- };
+    if (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+    
+    if (!user) {
+      console.log('No user logged in');
+      return null;
+    }
+    
+    return user.id; // Returns the actual logged-in user's ID
+  } catch (error) {
+    console.error('Error in getCurrentUserId:', error);
+    return null;
+  }
+};
 
 
  // Calculate module progress from raw data
@@ -271,8 +272,14 @@ const IBAMDashboard: React.FC = () => {
      setLoading(true);
     
      // Get user ID
-     const currentUserId = await getTestUserId();
-     setUserId(currentUserId);
+     const currentUserId = await getCurrentUserId();
+     if (!userId) {
+      window.location.href = '/auth/login';
+      return;
+}
+     if (currentUserId) {
+  setUserId(currentUserId);
+}
     
      // Try to get sessions data
      const { data: sessions, error: sessionsError } = await supabase
@@ -499,7 +506,6 @@ const loadContinueData = async () => {
   </div>
 </div>
 */}
-
 
        {/* Vision Statement */}
        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-l-4 border-teal-500">
