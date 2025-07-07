@@ -1,7 +1,7 @@
 'use client';
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -545,9 +545,11 @@ const UniversalReadingWithToggle = ({ sessionData, title }: {
   // Smart content detection - works for ALL module structures
   const chunks = sessionData.content?.written_curriculum?.quick_version?.chunks || [];
   const mainContent = sessionData.content?.written_curriculum?.main_content;
+  const hasChunks = chunks.length > 0;
   
   // CRITICAL: Handle ALL possible content structures
-  const hasChunks = chunks.length > 0;
+  const hasAnyContent = chunks.length > 0 || (mainContent && mainContent.length > 500);
+  const shouldShowToggle = hasAnyContent;
   const hasMainContent = mainContent && mainContent.length > 100;
   
   // If no proper content structure, create fallback
@@ -611,31 +613,33 @@ const UniversalReadingWithToggle = ({ sessionData, title }: {
         </div>
       </div>
 
-      {/* UNIVERSAL TOGGLE BUTTONS - Same as Module 1 */}
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => handleToggle(false)}
-          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
-            showQuickVersion 
-              ? 'bg-blue-500 text-white shadow-lg transform scale-105' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <Zap className="w-5 h-5 mr-2" />
-          📖 Quick Overview (5 min)
-        </button>
-        <button
-          onClick={() => handleToggle(true)}
-          className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
-            !showQuickVersion 
-              ? 'bg-indigo-500 text-white shadow-lg transform scale-105' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <FileText className="w-5 h-5 mr-2" />
-          📚 Full Content (15 min)
-        </button>
-      </div>
+{/* UNIVERSAL TOGGLE BUTTONS - Same as Module 1 */}
+{(hasChunks || hasMainContent) && (
+  <div className="flex gap-4 mb-6">
+    <button
+      onClick={() => handleToggle(false)}
+      className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+        showQuickVersion
+          ? 'bg-blue-500 text-white shadow-lg transform scale-105'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      <Zap className="w-5 h-5 mr-2" />
+      📖 Quick Overview (5 min)
+    </button>
+    <button
+      onClick={() => handleToggle(true)}
+      className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+        !showQuickVersion
+          ? 'bg-indigo-500 text-white shadow-lg transform scale-105'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      <FileText className="w-5 h-5 mr-2" />
+      📚 Full Content (15 min)
+    </button>
+  </div>
+)}
 
       {/* UNIVERSAL CONTENT DISPLAY */}
       <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
@@ -711,11 +715,9 @@ const BeautifulCaseStudyComponent = ({ sessionData, sessionTitle }: {
     transformation: ''
   });
   const [answersSaved, setAnswersSaved] = useState(false);
-
-  // Get case study content
-  const caseStudyContent = sessionData.case_study || 
-    `<h3>Business Transformation Case Study</h3>
-    <p>This case study demonstrates how biblical business principles create both financial success and kingdom impact.</p>`;
+const caseStudyContent = sessionData.case_study ||
+`<h3>Business Transformation Case Study</h3>...
+  <p>This case study demonstrates how biblical business principles create both financial success and Faith-Driven Impact.</p>`;
 
   // Format case study content properly
   const formatCaseStudyContent = (content: string) => {
@@ -1288,6 +1290,7 @@ const ActionAccountabilityReview = ({
   useEffect(() => {
     const loadPreviousActions = async () => {
       try {
+          console.log('🔍 LOADING PREVIOUS - Current session:', sessionData.session_number, 'module:', sessionData.module_id);
         setLoading(true);
         
         // Calculate previous session
@@ -1300,54 +1303,73 @@ const ActionAccountabilityReview = ({
           prevModule = currentModule - 1;
           prevSession = 4; // Assuming 4 sessions per module
         }
-        
+        console.log('🔧 CALCULATED: prevModule =', prevModule, 'prevSession =', prevSession);
         if (prevModule < 1) {
           // No previous session
           setLoading(false);
           return;
         }
 
-        // Try to fetch from a hypothetical user_action_steps table
-        // For now, we'll simulate this data
-        const mockPreviousActions: ActionStep[] = [
-          {
-            id: 'action_1',
-            session_id: `${prevModule}_${prevSession}`,
-            module_id: prevModule,
-            session_number: prevSession,
-            type: 'business',
-            specific: 'Call 5 potential customers to discuss their biggest business challenges',
-            achievable: 'Realistic within my current skill level and available time',  // ✅ FIXED: Added required field
-            timed: 'Wednesday and Thursday between 2-4 PM',
-            generated_statement: 'I will call 5 potential customers to discuss their biggest business challenges | When: Wednesday and Thursday between 2-4 PM',
-            person_to_tell: 'Sarah',
-            completed: false,
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 'action_2',
-            session_id: `${prevModule}_${prevSession}`,
-            module_id: prevModule,
-            session_number: prevSession,
-            type: 'discipleship',
-            specific: 'Have coffee with John from accounting and ask about his family',
-            achievable: 'Appropriate given my existing relationship with John',  // ✅ FIXED: Added required field
-            timed: 'Friday at 3 PM at the coffee shop',
-            generated_statement: 'I will have coffee with John from accounting and ask about his family | When: Friday at 3 PM',
-            person_to_tell: 'Mary',
-            completed: false,
-            created_at: new Date().toISOString()
-          }
-        ];
+  // Get real previous actions from database
+  console.log('🔧 ABOUT TO QUERY DATABASE');
+const { data: { user } } = await supabase.auth.getUser();
+const userId = user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f';
 
-        setPreviousActions(mockPreviousActions);
+console.log('🔍 USER CHECK:', user?.id);
+if (user?.id) {
+  const { data: realActions, error } = await supabase
+    .from('user_action_steps')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('module_id', prevModule)
+    .eq('session_id', prevSession);
+} else {
+  console.log('🔧 NO USER - trying hardcoded user ID for testing');
+  const { data: realActions, error } = await supabase
+    .from('user_action_steps')
+    .select('*')
+    .eq('user_id', '0571f8be-e6d4-4158-9301-a6cf2183e40f')
+    .eq('module_id', prevModule)
+    .eq('session_id', prevSession);console.log('🔍 QUERY SEARCHING FOR: module =', prevModule, 'session =', prevSession);
+console.log('🔍 ACTIONS FOUND:', realActions ? realActions.length : 'null');
+if (realActions && realActions[0]) console.log('🔍 SAMPLE ACTION:', realActions[0]);
+console.log('🔧 TRYING TO SET ACTIONS:', realActions?.length);
+setPreviousActions(realActions || []);
+console.log('🔧 SET ACTIONS COMPLETE');
+}
+if (user?.id) {
+  const { data: realActions, error } = await supabase
+    .from('user_action_steps')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('module_id', prevModule)
+
+    .eq('session_id', prevSession);
+console.log('🔍 DATABASE QUERY: user_id =', user.id, 'module_id =', prevModule, 'session_number =', prevSession);
+console.log('🔍 DATABASE RESULT:', realActions ? realActions.length : 'null', 'actions found');
+  console.log('🔍 SAMPLE ACTION:', realActions?.[0]);
+  console.log('🔧 TRYING TO SET ACTIONS:', realActions?.length);
+setPreviousActions(realActions || []);
+console.log('🔧 SET ACTIONS COMPLETE');
+  if (realActions && realActions.length > 0) {
+  setPreviousActions(realActions);
+  console.log('🎉 SETTING PREVIOUS ACTIONS:', realActions.length);
+} else {
+  setPreviousActions([]);
+}
+
+if (realActions && realActions.length > 0) {
+    setPreviousActions(realActions);
+  } else {
+    setPreviousActions([]); // No previous actions
+  }
+}
       } catch (error) {
         console.error('Error loading previous actions:', error);
       } finally {
         setLoading(false);
       }
     };
-
     loadPreviousActions();
   }, [sessionData]);
 
@@ -1392,7 +1414,7 @@ const ActionAccountabilityReview = ({
       </div>
     );
   }
-
+console.log('🔧 ACCOUNTABILITY DEBUG: previousActions.length =', previousActions.length, 'Actions:', previousActions);
   if (previousActions.length === 0) {
     return (
       <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
@@ -3294,6 +3316,50 @@ const EnhancedQuizSection = ({ sessionData }: { sessionData: SessionData }) => {
     </div>
   );
 };
+// AUTO-SAVE HOOK FUNCTION  
+const useAutoSave = (sessionData, savedActions, caseAnswers, sharingCommitment) => {
+  const [saveStatus, setSaveStatus] = useState('idle');
+const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const supabase = createClientComponentClient();
+
+  const saveAllUserData = useCallback(async () => {
+      console.log('🔥 saveAllUserData called!', { sessionData, savedActions }); // ADD THIS LINE
+  if (!sessionData || savedActions.length === 0) return;
+    
+    try {
+      setSaveStatus('saving');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      for (const action of savedActions) {
+        await supabase.from('user_action_steps').upsert({
+          user_id: user?.id || '550e8400-e29b-41d4-a716-446655440000',
+          module_id: sessionData.module_id,
+// NEW (matches database):
+          session_id: sessionData.session_number,
+          action_type: action.type,
+          specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
+          timed: action.smartData?.timed || 'No time specified',
+          generated_statement: action.generatedStatement,
+          person_to_tell: sharingCommitment,
+          completed: false,
+          created_at: new Date().toISOString()
+        });
+      }
+
+      setSaveStatus('saved');
+      setLastSaved(new Date());
+      console.log('✅ Actions saved!');
+      
+    } catch (error) {
+      console.error('Save failed:', error);
+      setSaveStatus('error');
+    }
+  }, [sessionData, savedActions, sharingCommitment, supabase]);
+
+  return { saveStatus, lastSaved, saveNow: saveAllUserData };
+};
 
 // Main Session Page Component
 export default function SessionPage({ params }: SessionPageProps) {
@@ -3337,12 +3403,16 @@ export default function SessionPage({ params }: SessionPageProps) {
   
   const [pathwayMode, setPathwayMode] = useState<'individual' | 'small_group'>('individual');
   const [savedActions, setSavedActions] = useState<ActionCommitment[]>([]);
+  const [actionsLoaded, setActionsLoaded] = useState(false);
+
   const [sharingCommitment, setSharingCommitment] = useState('');
 
   // Real database connection
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // ADD AUTO-SAVE HOOK
+const { saveStatus, lastSaved, saveNow } = useAutoSave(sessionData, savedActions, {}, sharingCommitment);
 
   // Add beautiful typography styles - RESTORED AND ENHANCED
   useEffect(() => {
@@ -3407,15 +3477,59 @@ export default function SessionPage({ params }: SessionPageProps) {
       document.head.removeChild(style);
     };
   }, []);
+// Direct action save function
+const saveActionToDatabase = async (action: ActionCommitment) => {
+  try {
+console.log('💾 Saving single action:', action);
+console.log('🔍 Action details:', {
+  id: action.id,
+  type: action.type,
+  smartData: action.smartData,
+  generatedStatement: action.generatedStatement
+});    
+const { data: { user } } = await supabase.auth.getUser();
+const testUserId = user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f'; // Test user ID
+console.log('🔑 Using user ID:', testUserId);
 
-  // Handle saved actions
-  const handleSaveAction = (action: ActionCommitment) => {
-    if (savedActions.length >= 4) {
-      alert('Maximum 4 actions allowed per session');
+    if (!sessionData) {
+      console.log('❌ No session data');
       return;
     }
-    setSavedActions(prev => [...prev, action]);
-  };
+
+    const { error } = await supabase.from('user_action_steps').upsert({
+      user_id: user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f',
+      module_id: sessionData.module_id,
+// NEW (matches database):
+session_id: sessionData.session_number,
+action_type: action.type,
+specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
+      timed: action.smartData?.timed || 'No time specified',
+      generated_statement: action.generatedStatement,
+      person_to_tell: sharingCommitment,
+      completed: false,
+      created_at: new Date().toISOString()
+    });
+
+    if (error) {
+      console.error('❌ Save failed:', error);
+    } else {
+      console.log('✅ Action saved to database!');
+    }
+  } catch (error) {
+    console.error('❌ Save error:', error);
+  }
+};
+const handleSaveAction = (action: ActionCommitment) => {
+  if (savedActions.length >= 4) {
+    alert('Maximum 4 actions allowed per session');
+    return;
+  }
+  setSavedActions(prev => [...prev, action]);
+  
+  // Save this specific action immediately
+  saveActionToDatabase(action); // NEW: Direct save function
+  alert('Action saved to database!');
+};
 
   // Data fetching with real Supabase
   useEffect(() => {
@@ -3456,7 +3570,47 @@ export default function SessionPage({ params }: SessionPageProps) {
       fetchSessionData();
     }
   }, [moduleId, sessionId]);
+  // Load saved actions when page loads
+  useEffect(() => {
+    const loadSavedActions = async () => {
+      if (!sessionData) return;
+      
+      try {
+        const { data: actions } = await supabase
+          .from('user_action_steps')
+          .select('*')
+          .eq('user_id', '0571f8be-e6d4-4158-9301-a6cf2183e40f')
+          .eq('session_id', sessionData.id)
+          .eq('module_id', sessionData.module_id);
+        
+        if (actions && actions.length > 0) {
+          // Convert database format back to action format
 
+          const convertedActions = actions.map(action => ({
+  id: action.id,
+  type: action.action_type,
+  smartData: {
+    specific: action.specific_action || '',
+    measurable: action.measurable || '',
+    ministryMinded: action.ministry_minded || '',
+    achievable: action.achievable || 'Achievable within current resources',
+    relevant: action.relevant || '',
+    relational: action.relational || '',
+    timed: action.timed || ''
+  },
+  generatedStatement: action.generated_statement || '',
+  completed: action.completed || false
+}));
+          console.log('✅ Loaded saved actions:', convertedActions);
+          setActionsLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error loading actions:', error);
+      }
+    };
+
+    loadSavedActions();
+  }, [sessionData]);
   // FIXED: Navigation functions with proper Next.js router and correct module progression
   const navigateToSession = (direction: 'prev' | 'next') => {
     const currentModuleId = sessionData?.module_id || 1;
@@ -3774,7 +3928,7 @@ export default function SessionPage({ params }: SessionPageProps) {
                 />
 
                 {/* Saved Actions Display */}
-                {savedActions.length > 0 && (
+                {actionsLoaded && savedActions.length > 0 && (
                   <div className="bg-green-50 rounded-lg p-6">
                     <h4 className="font-semibold text-green-800 mb-4">Your Saved Actions ({savedActions.length}/4)</h4>
                     <div className="space-y-3">
