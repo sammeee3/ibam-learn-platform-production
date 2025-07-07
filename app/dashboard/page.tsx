@@ -274,7 +274,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
      // Get user ID
      const currentUserId = await getCurrentUserId();
      if (!userId) {
-      window.location.href = '/auth/login';
       return;
 }
      if (currentUserId) {
