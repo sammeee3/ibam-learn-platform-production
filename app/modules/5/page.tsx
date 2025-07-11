@@ -286,7 +286,7 @@ const Module5BusinessPlanning: React.FC = () => {
               <IBAMLogo size="medium" className="mr-3" />
               <div className="text-sm">  
                 <p className="font-semibold">International Business As Mission</p>
-                <p>© 2025 IBAM. Multiplying Followers of Jesus through marketplace entrepreneurship.</p>
+                <p>© 2025 IBAM. Multiplying followers of Jesus through excellent, Faith-Driven businesses.</p>
               </div>  
             </div>  
             <a   

@@ -434,7 +434,7 @@ const IBAMDashboard: React.FC = () => {
            <div>
              <h2 className="text-xl font-semibold text-gray-900 mb-2">Your Mission</h2>
              <p className="text-gray-700 leading-relaxed">
-               "To multiply <strong>Followers of Jesus Christ</strong> while building profitable businesses through faith-driven entrepreneurship in the marketplace."
+               "Multiplying followers of Jesus through excellent, Faith-Driven businesses."
              </p>
            </div>
          </div>

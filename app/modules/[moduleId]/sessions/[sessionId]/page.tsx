@@ -357,7 +357,7 @@ const VisionStatement: React.FC = () => {
       <div className="relative z-10 text-center">
         <div className="text-3xl md:text-4xl mb-4 animate-pulse">✨</div>
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 leading-tight">
-          Multiplying Followers of Jesus while building profitable businesses
+          Multiplying followers of Jesus through excellent, Faith-Driven businesses.
         </h2>
         <p className="text-teal-100 text-sm md:text-base lg:text-lg max-w-2xl mx-auto">
           Your journey of faith-driven entrepreneurship transforms lives and communities
@@ -1808,7 +1808,7 @@ if (newValue) {
           <div className="text-center">
             <h4 className="text-xl font-bold mb-3">✨ Our Vision</h4>
             <p className="text-lg">
-              Multiplying Followers of Jesus while building profitable businesses
+              Multiplying followers of Jesus through excellent, Faith-Driven businesses.
             </p>
           </div>
         </div>
