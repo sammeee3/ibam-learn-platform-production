@@ -729,7 +729,7 @@ const CourseInformationPage: React.FC = () => {
               <IBAMLogo size="medium" />
               <div className="text-sm">
                 <p className="font-semibold">International Business As Mission</p>
-                <p>Multiplying Followers of Jesus through marketplace entrepreneurship</p>
+                <p>Multiplying Followers of Jesus Christ through excellent, Faith-Driven Businesses.</p>
               </div>
             </div>
             <div className="flex items-center space-x-6 text-sm">

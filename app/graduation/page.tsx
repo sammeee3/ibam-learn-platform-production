@@ -290,7 +290,7 @@ export default function GraduationPage() {
               <IBAMLogo size="medium" className="mr-3" />
               <div className="text-sm">
                 <p className="font-semibold">International Business As Mission</p>
-                <p>© 2025 IBAM. Multiplying Followers of Jesus through marketplace entrepreneurship.</p>
+                <p>© 2025 IBAM. Multiplying Followers of Jesus Christ through excellent, Faith-Driven Businesses.</p>
               </div>
             </div>
             <div className="text-center md:text-right">

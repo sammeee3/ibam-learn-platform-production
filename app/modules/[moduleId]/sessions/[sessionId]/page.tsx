@@ -1808,7 +1808,7 @@ if (newValue) {
           <div className="text-center">
             <h4 className="text-xl font-bold mb-3">✨ Our Vision</h4>
             <p className="text-lg">
-              Multiplying followers of Jesus through excellent, Faith-Driven businesses.
+              Multiplying Followers of Jesus Christ through excellent, Faith-Driven Businesses.
             </p>
           </div>
         </div>
