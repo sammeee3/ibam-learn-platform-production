@@ -515,7 +515,7 @@ const loadContinueData = async () => {
            <div>
              <h2 className="text-xl font-semibold text-gray-900 mb-2">Your Mission</h2>
              <p className="text-gray-700 leading-relaxed">
-               "Multiplying followers of Jesus through excellent, Faith-Driven businesses."
+               "Multiplying Followers of Jesus Christ through excellent, Faith-Driven Businesses."
              </p>
            </div>
          </div>
