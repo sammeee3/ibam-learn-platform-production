@@ -1770,7 +1770,6 @@ if (newValue) {
 }}
   className="mr-3 w-4 h-4"
 />
-<span style={{color: 'red', fontSize: '12px'}}>State: {prayerCompleted ? 'TRUE' : 'FALSE'}</span>
 <label htmlFor="prayer-check" className="text-gray-700">
   {pathwayMode === 'individual' ?
     "I have prayed this prayer (or my own version)" :
