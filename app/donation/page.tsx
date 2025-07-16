@@ -283,15 +283,17 @@ export default function DonationPage() {
   }, [formData, updateErrors]);
 
   const validateForm = useCallback((): boolean => {
-    const fieldsToValidate: (keyof DonationFormData)[] = [
-      'amount', 'firstName', 'lastName', 'email', 'address', 'city', 'state', 'zipCode'
-    ];
+    const fieldsToValidate: (keyof DonationFormData)[] = ['amount'];
 
+    // Add required fields based on payment method
     if (formData.paymentMethod === 'credit-card') {
+      fieldsToValidate.push('firstName', 'lastName', 'email', 'address', 'city', 'state', 'zipCode');
       fieldsToValidate.push('cardNumber', 'expiryDate', 'cvv', 'cardholderName');
-    } else {
+    } else if (formData.paymentMethod === 'ach') {
+      fieldsToValidate.push('firstName', 'lastName', 'email', 'address', 'city', 'state', 'zipCode');
       fieldsToValidate.push('bankName', 'routingNumber', 'accountNumber', 'accountHolderName');
     }
+    // For 'check' payment method, only amount is required
 
     let isValid = true;
     const newTouched: Record<string, boolean> = {};
@@ -332,6 +334,12 @@ export default function DonationPage() {
       return;
     }
 
+    // For check payments, just show success without processing
+    if (formData.paymentMethod === 'check') {
+      setShowSuccess(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -361,7 +369,7 @@ export default function DonationPage() {
           billingCity: formData.city,
           billingState: formData.state,
           billingZip: formData.zipCode
-        } : formData.paymentMethod === 'ach' ? {
+        } : {
           accountType: formData.accountType,
           routingNumber: formData.routingNumber,
           accountNumber: formData.accountNumber,
@@ -371,7 +379,7 @@ export default function DonationPage() {
           billingCity: formData.city,
           billingState: formData.state,
           billingZip: formData.zipCode
-        } : {}
+        }
       };
 
       const response = await fetch('/donation/api/create', {
