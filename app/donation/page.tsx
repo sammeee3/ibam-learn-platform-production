@@ -345,42 +345,44 @@ export default function DonationPage() {
     try {
       const { fee, total } = calculateFees();
       
-      // Format the payload to match what the API expects
+      // Format payload to match the original working API structure exactly
       const payload = {
         donor: {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          phone: formData.phone,
-          prayerRequests: formData.prayerRequest
+          phone: formData.phone || '',
+          prayerRequests: formData.prayerRequest || ''
         },
         amount: parseFloat(formData.amount),
-        frequency: formData.frequency,
+        frequency: formData.frequency || 'one-time',
         paymentMethod: formData.paymentMethod,
         coverFees: formData.coverFees,
         totalAmount: total,
         processingFees: fee,
         paymentDetails: formData.paymentMethod === 'credit-card' ? {
           cardNumber: formData.cardNumber,
-          expirationDate: formData.expiryDate,
+          expirationDate: formData.expiryDate.replace('/', ''), // Remove slash like working version
           cardCode: formData.cvv,
           cardholderName: formData.cardholderName,
-          billingAddress: formData.address,
+          billingAddress: formData.address,  // Correct field names
           billingCity: formData.city,
           billingState: formData.state,
-          billingZip: formData.zipCode
+          billingZip: formData.zipCode        // billingZip not billingZipCode
         } : {
           accountType: formData.accountType,
           routingNumber: formData.routingNumber,
           accountNumber: formData.accountNumber,
           accountHolderName: formData.accountHolderName,
           bankName: formData.bankName,
-          billingAddress: formData.address,
+          billingAddress: formData.address,  // Correct field names  
           billingCity: formData.city,
           billingState: formData.state,
-          billingZip: formData.zipCode
+          billingZip: formData.zipCode        // billingZip not billingZipCode
         }
       };
+
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch('/donation/api/create', {
         method: 'POST',
@@ -389,6 +391,7 @@ export default function DonationPage() {
       });
 
       const result = await response.json();
+      console.log('API Response:', result);
 
       if (response.ok) {
         setShowSuccess(true);
@@ -398,11 +401,14 @@ export default function DonationPage() {
         setTouched({});
         setErrors({});
       } else {
-        alert(`Error: ${result.error || 'Payment failed. Please try again.'}`);
+        console.error('API Error Response:', result);
+        console.error('Status:', response.status);
+        console.error('Full response:', response);
+        alert(`Error: ${result.error || 'Payment failed. Please try again.'}\n\nStatus: ${response.status}\nDetails: ${JSON.stringify(result, null, 2)}`);
       }
     } catch (error) {
-      console.error('Submission error:', error);
-      alert('Network error. Please check your connection and try again.');
+      console.error('Network/Parse error:', error);
+      alert(`Network error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
