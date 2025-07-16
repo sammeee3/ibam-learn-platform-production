@@ -68,7 +68,7 @@ const CelebrationPage: React.FC = () => {
         .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853') // Your original post-assessment ID
         .single();
 
-      const postAssessmentCompleted = postAssessment && !postAssessment.error;
+const postAssessmentCompleted = postAssessment && postAssessment.completed_at;
 
       console.log('🎯 Celebration page access check:', {
         courseCompleted,
