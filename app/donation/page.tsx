@@ -401,10 +401,10 @@ export default function DonationPage() {
         setTouched({});
         setErrors({});
       } else {
-        console.error('API Error Response:', result);
+        console.error('API Error Response:', JSON.stringify(result, null, 2));
         console.error('Status:', response.status);
-        console.error('Full response:', response);
-        alert(`Error: ${result.error || 'Payment failed. Please try again.'}\n\nStatus: ${response.status}\nDetails: ${JSON.stringify(result, null, 2)}`);
+        console.error('Response Headers:', response.headers);
+        alert(`Error: ${result.error || 'Payment failed. Please try again.'}\n\nStatus: ${response.status}\nFull Error: ${JSON.stringify(result, null, 2)}`);
       }
     } catch (error) {
       console.error('Network/Parse error:', error);
