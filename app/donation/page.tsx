@@ -337,11 +337,41 @@ export default function DonationPage() {
     try {
       const { fee, total } = calculateFees();
       
+      // Format the payload to match what the API expects
       const payload = {
-        ...formData,
+        donor: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          prayerRequests: formData.prayerRequest
+        },
         amount: parseFloat(formData.amount),
-        processingFee: fee,
-        totalAmount: total
+        frequency: formData.frequency,
+        paymentMethod: formData.paymentMethod,
+        coverFees: formData.coverFees,
+        totalAmount: total,
+        processingFees: fee,
+        paymentDetails: formData.paymentMethod === 'credit-card' ? {
+          cardNumber: formData.cardNumber,
+          expirationDate: formData.expiryDate,
+          cardCode: formData.cvv,
+          cardholderName: formData.cardholderName,
+          billingAddress: formData.address,
+          billingCity: formData.city,
+          billingState: formData.state,
+          billingZip: formData.zipCode
+        } : formData.paymentMethod === 'ach' ? {
+          accountType: formData.accountType,
+          routingNumber: formData.routingNumber,
+          accountNumber: formData.accountNumber,
+          accountHolderName: formData.accountHolderName,
+          bankName: formData.bankName,
+          billingAddress: formData.address,
+          billingCity: formData.city,
+          billingState: formData.state,
+          billingZip: formData.zipCode
+        } : {}
       };
 
       const response = await fetch('/donation/api/create', {
