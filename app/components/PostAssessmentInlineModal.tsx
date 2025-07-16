@@ -1,10 +1,12 @@
+// Fixed Post-Assessment Modal Component - No Popups, Same Questions as Pre-Assessment
+// File: /components/PostAssessmentInlineModal.tsx
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { CheckCircle, ArrowRight, BookOpen } from 'lucide-react';
+import { CheckCircle, ArrowRight, Award, TrendingUp, X } from 'lucide-react';
 
-// Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -24,7 +26,15 @@ interface AssessmentState {
   error: string | null;
 }
 
-const PreAssessment: React.FC = () => {
+interface PostAssessmentInlineModalProps {
+  isOpen: boolean;
+  onComplete: () => void;
+}
+
+const PostAssessmentInlineModal: React.FC<PostAssessmentInlineModalProps> = ({
+  isOpen,
+  onComplete
+}) => {
   const [state, setState] = useState<AssessmentState>({
     currentQuestion: 0,
     answers: {},
@@ -33,7 +43,7 @@ const PreAssessment: React.FC = () => {
     error: null,
   });
 
-  // Pre-assessment questions
+  // EXACT same questions as pre-assessment for before/after comparison
   const questions: Question[] = [
     {
       id: 1,
@@ -67,12 +77,12 @@ const PreAssessment: React.FC = () => {
     },
     {
       id: 4,
-      text: "What is your primary motivation for taking this course?",
+      text: "What is your primary motivation for your business?",
       options: [
-        "To learn how to start a faith-based business",
-        "To integrate my faith more deeply into my existing business",
-        "To multiply disciples through my marketplace influence",
-        "To develop biblical business strategies and practices"
+        "Learning how to start a faith-based business",
+        "Integrating my faith more deeply into my existing business",
+        "Multiplying disciples through my marketplace influence",
+        "Developing biblical business strategies and practices"
       ]
     },
     {
@@ -137,8 +147,10 @@ const PreAssessment: React.FC = () => {
     }
   ];
 
-  // Check if user has already completed pre-assessment
+  // Check if user has already completed post-assessment
   useEffect(() => {
+    if (!isOpen) return;
+    
     const checkExistingAssessment = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -148,11 +160,12 @@ const PreAssessment: React.FC = () => {
           .from('assessment_responses')
           .select('id')
           .eq('user_id', user.id)
-          .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7')
+          .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853') // Using your original post-assessment ID
           .single();
 
         if (data && !error) {
           setState(prev => ({ ...prev, isCompleted: true }));
+          setTimeout(() => onComplete(), 1500); // Auto-complete if already done
         }
       } catch (error) {
         console.error('Error checking existing assessment:', error);
@@ -160,7 +173,7 @@ const PreAssessment: React.FC = () => {
     };
 
     checkExistingAssessment();
-  }, []);
+  }, [isOpen, onComplete]);
 
   // Handle answer selection
   const handleAnswerSelect = (answerIndex: number) => {
@@ -203,22 +216,22 @@ const PreAssessment: React.FC = () => {
         throw new Error('User not authenticated');
       }
 
-      // Prepare responses for database (match your assessment_responses structure)
+      // Prepare responses for database
       const responses = Object.entries(state.answers).map(([questionIndex, answerIndex]) => ({
         question_id: parseInt(questionIndex) + 1,
         answer_index: answerIndex,
         answer_text: questions[parseInt(questionIndex)].options[answerIndex],
       }));
 
-      // Calculate total score (for your total_score column)
+      // Calculate total score
       const totalScore = Object.values(state.answers).reduce((sum, answerIndex) => sum + (answerIndex + 1), 0);
 
-      // Insert assessment response
+      // Insert assessment response with your original post-assessment ID
       const { error } = await supabase
         .from('assessment_responses')
         .insert({
           user_id: user.id,
-          assessment_id: 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7', // Pre-assessment ID
+          assessment_id: '4a70a585-ae69-4b93-92d0-a03ba789d853', // Your original post-assessment ID
           responses: responses,
           total_score: totalScore,
           completed_at: new Date().toISOString(),
@@ -230,6 +243,11 @@ const PreAssessment: React.FC = () => {
 
       setState(prev => ({ ...prev, isSubmitting: false, isCompleted: true }));
 
+      // Auto-close after completion
+      setTimeout(() => {
+        onComplete();
+      }, 2000);
+
     } catch (error) {
       console.error('Error submitting assessment:', error);
       setState(prev => ({
@@ -240,32 +258,22 @@ const PreAssessment: React.FC = () => {
     }
   };
 
-  // Handle continue to dashboard
-  const handleContinue = () => {
-    window.location.href = '/modules/1';
-  };
+  if (!isOpen) return null;
 
-  // If already completed, show completion message
+  // If already completed, show brief success message
   if (state.isCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl mx-4">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Assessment Complete!</h1>
-            <p className="text-gray-600 mb-8 text-lg">
-              Thank you for completing the pre-assessment. You've unlocked Module 1 and can now begin your 
-              Faith-Driven Business learning journey!
-            </p>
-            <button
-              onClick={handleContinue}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center mx-auto"
-            >
-              Continue to Module 1
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </button>
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-auto text-center">
+          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Award className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Assessment Complete! 🎉</h1>
+          <p className="text-gray-600 mb-4">
+            Thank you for completing the post-course assessment. You can now access your celebration!
+          </p>
+          <div className="animate-pulse text-green-600 font-medium">
+            Redirecting to celebration...
           </div>
         </div>
       </div>
@@ -278,33 +286,45 @@ const PreAssessment: React.FC = () => {
   const progress = ((state.currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <BookOpen className="w-8 h-8 text-blue-600 mr-3" />
+              <TrendingUp className="w-8 h-8 mr-3" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Pre-Course Assessment</h1>
-                <p className="text-gray-600">Help us personalize your learning experience</p>
+                <h1 className="text-2xl font-bold">Post-Course Assessment</h1>
+                <p className="text-green-100">Compare your growth and transformation</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-gray-600">Question {state.currentQuestion + 1} of {questions.length}</div>
-              <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+              <div className="text-sm text-green-100">Question {state.currentQuestion + 1} of {questions.length}</div>
+              <div className="w-32 bg-green-400 bg-opacity-30 rounded-full h-2 mt-1">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-white h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        {/* Content */}
+        <div className="p-6">
+          {/* Progress Info */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <Award className="w-5 h-5 text-green-600 mr-3" />
+              <div>
+                <h3 className="font-semibold text-green-800">Measuring Your Growth</h3>
+                <p className="text-green-700 text-sm">
+                  These are the same questions from your pre-assessment to measure your learning progress.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Question */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
@@ -320,7 +340,7 @@ const PreAssessment: React.FC = () => {
                   className={`
                     w-full text-left p-4 rounded-lg border-2 transition-all duration-200
                     ${state.answers[state.currentQuestion] === index
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      ? 'border-green-500 bg-green-50 text-green-700'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }
                   `}
@@ -329,7 +349,7 @@ const PreAssessment: React.FC = () => {
                     <div className={`
                       w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center
                       ${state.answers[state.currentQuestion] === index
-                        ? 'border-blue-500 bg-blue-500'
+                        ? 'border-green-500 bg-green-500'
                         : 'border-gray-300'
                       }
                     `}>
@@ -386,8 +406,8 @@ const PreAssessment: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    Complete Assessment
-                    <CheckCircle className="w-5 h-5 ml-2" />
+                    Complete Course
+                    <Award className="w-5 h-5 ml-2" />
                   </>
                 )}
               </button>
@@ -399,7 +419,7 @@ const PreAssessment: React.FC = () => {
                   px-6 py-3 rounded-lg font-semibold transition-colors flex items-center
                   ${!hasAnswered
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
                   }
                 `}
               >
@@ -414,7 +434,4 @@ const PreAssessment: React.FC = () => {
   );
 };
 
-export default PreAssessment;
-
-// File: /app/assessment/pre/page.tsx  
-// This saves to database and unlocks Module 1
+export default PostAssessmentInlineModal;

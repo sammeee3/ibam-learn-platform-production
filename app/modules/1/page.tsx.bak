@@ -18,16 +18,13 @@ import {
   ChevronRight,  
   ChevronDown,  
   ChevronUp,  
-  Home,
-  AlertCircle,
-  RefreshCw
+  Home  
 } from 'lucide-react';
 
-// Supabase configuration - FIXED to use environment variables
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Supabase configuration
+const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM4MTQ4MDEsImV4cCI6MjAyOTM5MDgwMX0.VhWbNcOjwqoOTI32qByfOV46lJKUKiPG0qV3rvYJvlY';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // IBAM Logo Component
 interface IBAMLogoProps {
@@ -94,21 +91,10 @@ const Module1FoundationalPrinciples: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
-  const [preAssessmentCompleted, setPreAssessmentCompleted] = useState(false);
-  const [assessmentLoading, setAssessmentLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
-  // ENHANCED: Get user ID using multiple methods
+  // Get user ID
   const getTestUserId = async (): Promise<string> => {
     try {
-      // First try to get the real authenticated user (same as pre-assessment)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        console.log('🔐 Found authenticated user:', user.id);
-        return user.id;
-      }
-      
-      // If no authenticated user, try database fallback
       const { data, error } = await supabase
         .from('user_progress')
         .select('user_id')
@@ -116,112 +102,13 @@ const Module1FoundationalPrinciples: React.FC = () => {
         .maybeSingle();
       
       if (!error && data?.user_id) {
-        console.log('📊 Using database user ID:', data.user_id);
         return data.user_id;
       }
     } catch (error) {
-      console.log('⚠️ No user found, using mock user ID');
+      console.log('No user progress found, using mock user ID');
     }
     
-    // Last resort fallback
     return '550e8400-e29b-41d4-a716-446655440000';
-  };
-
-  // ENHANCED: Pre-assessment status check with detailed logging
-  const checkPreAssessmentStatus = async (userId: string) => {
-    try {
-      console.log('🔍 Checking pre-assessment for user:', userId);
-      
-      const { data, error } = await supabase
-        .from('assessment_responses')
-        .select('id, completed_at, user_id')
-        .eq('user_id', userId)
-        .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7') // Pre-assessment ID
-        .single();
-
-      console.log('📋 Assessment check result:', { data, error });
-      
-      if (data && !error) {
-        setPreAssessmentCompleted(true);
-        console.log('✅ Pre-assessment found - unlocking Module 1');
-      } else {
-        setPreAssessmentCompleted(false);
-        console.log('❌ No pre-assessment found - Module 1 stays locked');
-      }
-    } catch (error) {
-      console.error('🚨 Error checking pre-assessment:', error);
-      setPreAssessmentCompleted(false);
-    } finally {
-      setAssessmentLoading(false);
-    }
-  };
-
-  // NEW: Force refresh assessment status with multiple user ID methods
-  const forceRefreshAssessment = async () => {
-    console.log('🔄 Force refreshing assessment status...');
-    setRefreshing(true);
-    
-    try {
-      // Try multiple user ID methods
-      const methods = [
-        // Method 1: Real authenticated user
-        async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          return user?.id;
-        },
-        
-        // Method 2: Try all recent assessment users
-        async () => {
-          const { data, error } = await supabase
-            .from('assessment_responses')
-            .select('user_id')
-            .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7')
-            .order('completed_at', { ascending: false })
-            .limit(5);
-          
-          return data?.[0]?.user_id;
-        },
-        
-        // Method 3: Mock user fallback
-        async () => '550e8400-e29b-41d4-a716-446655440000'
-      ];
-      
-      for (const method of methods) {
-        const testUserId = await method();
-        if (!testUserId) continue;
-        
-        console.log(`🧪 Testing user ID: ${testUserId}`);
-        
-        const { data, error } = await supabase
-          .from('assessment_responses')
-          .select('id, completed_at, user_id')
-          .eq('user_id', testUserId)
-          .eq('assessment_id', 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7')
-          .single();
-        
-        console.log(`📊 Result for ${testUserId}:`, { data, error });
-        
-        if (data && !error) {
-          console.log('✅ Found assessment! Unlocking...');
-          setUserId(testUserId);
-          setPreAssessmentCompleted(true);
-          setAssessmentLoading(false);
-          setRefreshing(false);
-          return;
-        }
-      }
-      
-      console.log('❌ No assessment found with any method');
-      setPreAssessmentCompleted(false);
-      setAssessmentLoading(false);
-      
-    } catch (error) {
-      console.error('🚨 Force refresh failed:', error);
-      setPreAssessmentCompleted(false);
-      setAssessmentLoading(false);
-    } finally {
-      setRefreshing(false);
-    }
   };
 
   // Load module data
@@ -232,9 +119,6 @@ const Module1FoundationalPrinciples: React.FC = () => {
       // Get user ID
       const currentUserId = await getTestUserId();
       setUserId(currentUserId);
-
-      // Check pre-assessment status
-      await checkPreAssessmentStatus(currentUserId);
 
       // Get sessions for Module 1
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -408,97 +292,9 @@ const Module1FoundationalPrinciples: React.FC = () => {
     }
   };
 
-  // ENHANCED: useEffect with retry logic
   useEffect(() => {
-    const loadWithRetry = async () => {
-      await loadModuleData();
-      
-      // If assessment still not found, try force refresh after 2 seconds
-      setTimeout(() => {
-        if (!preAssessmentCompleted && !assessmentLoading) {
-          console.log('🔄 Assessment not found, trying force refresh...');
-          forceRefreshAssessment();
-        }
-      }, 2000);
-    };
-    
-    loadWithRetry();
+    loadModuleData();
   }, []);
-
-  // ENHANCED: Pre-Assessment Required Banner with refresh functionality
-  const PreAssessmentBanner: React.FC = () => {
-    if (assessmentLoading) {
-      return (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 mb-6 rounded-lg">
-          <div className="flex items-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-            <p className="font-medium">Checking assessment status...</p>
-          </div>
-        </div>
-      );
-    }
-    
-    if (!preAssessmentCompleted) {
-      return (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 mb-6 rounded-xl shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <AlertCircle className="w-8 h-8 mr-4" />
-              <div>
-                <h3 className="text-xl font-bold mb-1">Pre-Assessment Required</h3>
-                <p className="text-blue-100 mb-2">
-                  Complete your pre-course assessment to unlock Module 1 sessions and begin your learning journey.
-                </p>
-                <p className="text-blue-200 text-sm">
-                  Already completed? <button 
-                    onClick={forceRefreshAssessment}
-                    disabled={refreshing}
-                    className="underline hover:text-white disabled:opacity-50"
-                  >
-                    {refreshing ? 'Refreshing...' : 'Click here to refresh'}
-                  </button>
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => window.location.href = '/assessment/pre'}
-                className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors whitespace-nowrap"
-              >
-                Take Assessment
-              </button>
-              <button
-                onClick={forceRefreshAssessment}
-                disabled={refreshing}
-                className="bg-blue-400 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-300 transition-colors disabled:opacity-50 flex items-center justify-center"
-              >
-                {refreshing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Refreshing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                    Refresh Status
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="bg-green-50 border border-green-200 text-green-800 p-4 mb-6 rounded-lg">
-        <div className="flex items-center">
-          <CheckCircle className="w-5 h-5 mr-3" />
-          <p className="font-medium">Pre-assessment completed! You're ready to begin Module 1.</p>
-        </div>
-      </div>
-    );
-  };
 
   // IBAM Footer Component  
   const IBAMFooter: React.FC = () => {  
@@ -603,11 +399,10 @@ const Module1FoundationalPrinciples: React.FC = () => {
     );  
   };
 
-  // Continue Learning CTA (Red like dashboard) - Updated with pre-assessment check
+  // Continue Learning CTA (Red like dashboard)  
   const ContinueLearningCTA: React.FC = () => {
     const currentSession = sessions.find(s => s.isCurrentSession);
-    
-    if (!preAssessmentCompleted || !currentSession) return null;
+    if (!currentSession) return null;
 
     return (  
       <div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl shadow-lg p-6 mb-6">  
@@ -727,128 +522,113 @@ const Module1FoundationalPrinciples: React.FC = () => {
     );  
   };
 
-  // Sessions Grid Component (Updated with pre-assessment check)
+  // Sessions Grid Component (Colorful bars)  
   const SessionsGrid: React.FC = () => {  
     return (  
       <div className="mb-6">  
         <h2 className="text-xl font-bold text-gray-800 mb-6">Sessions in This Module</h2>  
           
         <div className="grid gap-4">  
-          {sessions.map((session) => {
-            // Lock all sessions if pre-assessment not completed
-            const isSessionLocked = !preAssessmentCompleted || session.isLocked;
-            
-            return (
-              <div  
-                key={session.id}  
-                className={`  
-                  rounded-xl shadow-sm border transition-all duration-200  
-                  ${isSessionLocked   
-                    ? 'opacity-50 cursor-not-allowed bg-gray-100'   
-                    : 'hover:shadow-lg cursor-pointer hover:-translate-y-1'  
-                  }  
-                  ${session.isCompleted   
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400'   
-                    : session.isCurrentSession && preAssessmentCompleted
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400'  
-                      : isSessionLocked
-                        ? 'bg-gray-100'  
-                        : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-400'  
-                  }  
-                `}  
-                onClick={() => {
-                  if (!preAssessmentCompleted) {
-                    window.location.href = '/assessment/pre';
-                  } else if (!session.isLocked) {
-                    window.location.href = `/modules/1/sessions/${session.session_number}`;
-                  }
-                }}
-              >  
-                <div className="p-6">  
-                  <div className="flex items-center justify-between">  
-                    <div className="flex items-center flex-1">  
-                      <div className={`  
-                        w-12 h-12 rounded-full flex items-center justify-center mr-4  
-                        ${session.isCompleted   
-                          ? 'bg-green-500 text-white'   
-                          : isSessionLocked   
-                            ? 'bg-gray-300 text-gray-500'  
-                            : session.isCurrentSession && preAssessmentCompleted
-                              ? 'bg-gradient-to-r from-blue-400 to-blue-600 text-white'  
-                              : 'bg-orange-500 text-white'  
-                        }  
-                      `}>  
-                        {session.isCompleted ? (  
-                          <CheckCircle className="w-6 h-6" />  
-                        ) : isSessionLocked ? (  
-                          <Lock className="w-6 h-6" />  
-                        ) : session.isCurrentSession && preAssessmentCompleted ? (  
-                          <Play className="w-6 h-6" />  
-                        ) : (  
-                          <span className="font-bold">{session.session_number}</span>  
-                        )}  
-                      </div>
+          {sessions.map((session) => (  
+            <div  
+              key={session.id}  
+              className={`  
+                rounded-xl shadow-sm border transition-all duration-200  
+                ${session.isLocked   
+                  ? 'opacity-50 cursor-not-allowed bg-gray-100'   
+                  : 'hover:shadow-lg cursor-pointer hover:-translate-y-1'  
+                }  
+                ${session.isCompleted   
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400'   
+                  : session.isCurrentSession  
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400'  
+                    : session.isLocked  
+                      ? 'bg-gray-100'  
+                      : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-400'  
+                }  
+              `}  
+              onClick={() => !session.isLocked && (window.location.href = `/modules/1/sessions/${session.session_number}`)}
+            >  
+              <div className="p-6">  
+                <div className="flex items-center justify-between">  
+                  <div className="flex items-center flex-1">  
+                    <div className={`  
+                      w-12 h-12 rounded-full flex items-center justify-center mr-4  
+                      ${session.isCompleted   
+                        ? 'bg-green-500 text-white'   
+                        : session.isLocked   
+                          ? 'bg-gray-300 text-gray-500'  
+                          : session.isCurrentSession  
+                            ? 'bg-gradient-to-r from-blue-400 to-blue-600 text-white'  
+                            : 'bg-orange-500 text-white'  
+                      }  
+                    `}>  
+                      {session.isCompleted ? (  
+                        <CheckCircle className="w-6 h-6" />  
+                      ) : session.isLocked ? (  
+                        <Lock className="w-6 h-6" />  
+                      ) : session.isCurrentSession ? (  
+                        <Play className="w-6 h-6" />  
+                      ) : (  
+                        <span className="font-bold">{session.session_number}</span>  
+                      )}  
+                    </div>
 
-                      <div className="flex-1">  
-                        <div className="flex items-start justify-between mb-2">  
-                          <h3 className={`font-semibold text-lg ${  
-                            session.isCompleted ? 'text-green-800' :  
-                            session.isCurrentSession && preAssessmentCompleted ? 'text-blue-800' :  
-                            isSessionLocked ? 'text-gray-500' : 'text-orange-800'  
-                          }`}>  
-                            Session {session.session_number}: {session.title}  
-                          </h3>  
-                          <div className="text-sm text-gray-500 ml-4">  
-                            20 min  
-                          </div>  
+                    <div className="flex-1">  
+                      <div className="flex items-start justify-between mb-2">  
+                        <h3 className={`font-semibold text-lg ${  
+                          session.isCompleted ? 'text-green-800' :  
+                          session.isCurrentSession ? 'text-blue-800' :  
+                          session.isLocked ? 'text-gray-500' : 'text-orange-800'  
+                        }`}>  
+                          Session {session.session_number}: {session.title}  
+                        </h3>  
+                        <div className="text-sm text-gray-500 ml-4">  
+                          20 min  
                         </div>  
-                        <p className={`text-sm mb-3 ${  
-                          isSessionLocked ? 'text-gray-400' : 'text-gray-600'  
-                        }`}>{session.subtitle}</p>  
+                      </div>  
+                      <p className={`text-sm mb-3 ${  
+                        session.isLocked ? 'text-gray-400' : 'text-gray-600'  
+                      }`}>{session.subtitle}</p>  
+                        
+                      <div className="flex items-center justify-between">  
+                        <span className={`  
+                          text-xs px-3 py-1 rounded-full font-medium  
+                          ${session.isCompleted   
+                            ? 'bg-green-200 text-green-800'   
+                            : session.isLocked   
+                              ? 'bg-gray-200 text-gray-600'  
+                              : session.isCurrentSession  
+                                ? 'bg-blue-200 text-blue-800'  
+                                : 'bg-orange-200 text-orange-800'  
+                          }  
+                        `}>  
+                          {session.isCompleted   
+                            ? 'Completed'   
+                            : session.isLocked   
+                              ? 'Locked'   
+                              : session.isCurrentSession  
+                                ? 'Current Session'  
+                                : 'Available'  
+                          }  
+                        </span>  
                           
-                        <div className="flex items-center justify-between">  
-                          <span className={`  
-                            text-xs px-3 py-1 rounded-full font-medium  
-                            ${session.isCompleted   
-                              ? 'bg-green-200 text-green-800'   
-                              : isSessionLocked   
-                                ? !preAssessmentCompleted
-                                  ? 'bg-blue-200 text-blue-800'
-                                  : 'bg-gray-200 text-gray-600'
-                                : session.isCurrentSession && preAssessmentCompleted
-                                  ? 'bg-blue-200 text-blue-800'  
-                                  : 'bg-orange-200 text-orange-800'  
-                            }  
-                          `}>  
-                            {session.isCompleted   
-                              ? 'Completed'   
-                              : !preAssessmentCompleted
-                                ? 'Pre-Assessment Required'
-                                : session.isLocked   
-                                  ? 'Locked'   
-                                  : session.isCurrentSession  
-                                    ? 'Current Session'  
-                                    : 'Available'  
-                            }  
-                          </span>  
-                            
-                          {!isSessionLocked && (  
-                            <ChevronRight className="w-5 h-5 text-gray-400" />  
-                          )}  
-                        </div>  
+                        {!session.isLocked && (  
+                          <ChevronRight className="w-5 h-5 text-gray-400" />  
+                        )}  
                       </div>  
                     </div>  
                   </div>  
                 </div>  
               </div>  
-            );
-          })}  
+            </div>  
+          ))}  
         </div>  
       </div>  
     );  
   };
 
-  if (loading || assessmentLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -865,8 +645,6 @@ const Module1FoundationalPrinciples: React.FC = () => {
 
       <div className="flex-1">  
         <div className="max-w-6xl mx-auto px-4 py-8">  
-          <PreAssessmentBanner />
-          
           <ContinueLearningCTA />
 
           <ModuleOverview />

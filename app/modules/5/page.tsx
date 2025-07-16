@@ -22,9 +22,10 @@ import {
 } from 'lucide-react';
 
 // Supabase configuration
-const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM4MTQ4MDEsImV4cCI6MjAyOTM5MDgwMX0.VhWbNcOjwqoOTI32qByfOV46lJKUKiPG0qV3rvYJvlY';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 // IBAM Logo Component
 interface IBAMLogoProps {
@@ -92,9 +93,17 @@ const Module5BusinessPlanning: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
 
-  // Get user ID
+  // Get user ID using proper authentication
   const getTestUserId = async (): Promise<string> => {
     try {
+      // First try to get the real authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log('🔐 Module 5: Found authenticated user:', user.id);
+        return user.id;
+      }
+      
+      // If no authenticated user, try database fallback
       const { data, error } = await supabase
         .from('user_progress')
         .select('user_id')
@@ -102,12 +111,15 @@ const Module5BusinessPlanning: React.FC = () => {
         .maybeSingle();
       
       if (!error && data?.user_id) {
+        console.log('📊 Module 5: Using database user ID:', data.user_id);
         return data.user_id;
       }
     } catch (error) {
-      console.log('No user progress found, using mock user ID');
+      console.log('⚠️ Module 5: No user found, using mock user ID');
     }
     
+    // Last resort fallback
+    console.log('🔄 Module 5: Using fallback user ID');
     return '550e8400-e29b-41d4-a716-446655440000';
   };
 
@@ -120,51 +132,80 @@ const Module5BusinessPlanning: React.FC = () => {
       const currentUserId = await getTestUserId();
       setUserId(currentUserId);
 
-      // Get sessions for Module 5
+      // Get sessions for Module 5 - Correct IDs 51-55
+      console.log('🔍 Module 5: Querying database for sessions...');
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('sessions')
         .select('id, session_number, title, subtitle')
         .eq('module_id', 5)
         .order('session_number');
 
+      console.log('📊 Module 5: Sessions query result:', { sessionsData, sessionsError });
+
       if (sessionsError) {
+        console.error('❌ Module 5: Sessions query failed:', sessionsError);
         throw new Error(`Sessions query failed: ${sessionsError.message}`);
       }
 
       // Get user progress for Module 5
+      console.log('🔍 Module 5: Querying user progress for user:', currentUserId);
       const { data: progressData, error: progressError } = await supabase
         .from('user_progress')
         .select('session_id, completion_percentage, completed_at')
-        .eq('user_id', currentUserId);
+        .eq('user_id', currentUserId)
+        .eq('module_id', 5);
+
+      console.log('📊 Module 5: Progress query result:', { progressData, progressError });
 
       if (!sessionsData || sessionsData.length === 0) {
-        // Fallback to mock data
+        console.log('⚠️ Module 5: No sessions found in database, using fallback data');
+        // FIXED: Fallback data with CORRECT IDs 51-55
         const mockSessions: SessionData[] = [
           {
-            id: 18,
+            id: 51,
             session_number: 1,
-            title: "Business Research Methods",
-            subtitle: "Comprehensive Market and Industry Analysis",
+            title: "Your 90-Day Launch Strategy - From Learning to Earning",
+            subtitle: "Transform your learning into immediate action",
             isCompleted: false,
             isLocked: false,
             isCurrentSession: true,
             completion_percentage: 0
           },
           {
-            id: 19,
+            id: 52,
             session_number: 2,
-            title: "Writing Your Business Plan",
-            subtitle: "Professional Business Plan Development",
+            title: "Building Relationships That Transform - People Development Through Business",
+            subtitle: "Create lasting relationships that multiply impact",
             isCompleted: false,
             isLocked: true,
             isCurrentSession: false,
             completion_percentage: 0
           },
           {
-            id: 20,
+            id: 53,
             session_number: 3,
-            title: "Implementation Strategy",
-            subtitle: "From Plan to Reality with Divine Guidance",
+            title: "Building Systems That Scale - From Solo to Team",
+            subtitle: "Develop scalable systems for sustainable growth",
+            isCompleted: false,
+            isLocked: true,
+            isCurrentSession: false,
+            completion_percentage: 0
+          },
+          {
+            id: 54,
+            session_number: 4,
+            title: "Measuring What Matters - Success Metrics & Advanced Growth",
+            subtitle: "Track kingdom impact and business success",
+            isCompleted: false,
+            isLocked: true,
+            isCurrentSession: false,
+            completion_percentage: 0
+          },
+          {
+            id: 55,
+            session_number: 5,
+            title: "Community Impact & Legacy Building - Creating Lasting Change",
+            subtitle: "Build a legacy that multiplies disciples",
             isCompleted: false,
             isLocked: true,
             isCurrentSession: false,
@@ -175,12 +216,14 @@ const Module5BusinessPlanning: React.FC = () => {
         setSessions(mockSessions);
         setUserProgress({
           completedSessions: [],
-          currentSessionId: 50,
+          currentSessionId: 51,
           moduleProgress: 0,
           totalSessions: 5
         });
         return;
       }
+
+      console.log('✅ Module 5: Found', sessionsData.length, 'sessions in database');
 
       // Process real data
       const progressMap = new Map();
@@ -225,34 +268,54 @@ const Module5BusinessPlanning: React.FC = () => {
       });
 
     } catch (error) {
-      console.error('Error loading module data:', error);
-      // Use fallback data on error
+      console.error('❌ Module 5: Error loading module data:', error);
+      // FIXED: Use correct fallback data on error
       const mockSessions: SessionData[] = [
         {
-          id: 18,
+          id: 51,
           session_number: 1,
-          title: "Business Research Methods",
-          subtitle: "Comprehensive Market and Industry Analysis",
+          title: "Your 90-Day Launch Strategy - From Learning to Earning",
+          subtitle: "Transform your learning into immediate action",
           isCompleted: false,
           isLocked: false,
           isCurrentSession: true,
           completion_percentage: 0
         },
         {
-          id: 19,
+          id: 52,
           session_number: 2,
-          title: "Writing Your Business Plan",
-          subtitle: "Professional Business Plan Development",
+          title: "Building Relationships That Transform - People Development Through Business",
+          subtitle: "Create lasting relationships that multiply impact",
           isCompleted: false,
           isLocked: true,
           isCurrentSession: false,
           completion_percentage: 0
         },
         {
-          id: 20,
+          id: 53,
           session_number: 3,
-          title: "Implementation Strategy",
-          subtitle: "From Plan to Reality with Divine Guidance",
+          title: "Building Systems That Scale - From Solo to Team",
+          subtitle: "Develop scalable systems for sustainable growth",
+          isCompleted: false,
+          isLocked: true,
+          isCurrentSession: false,
+          completion_percentage: 0
+        },
+        {
+          id: 54,
+          session_number: 4,
+          title: "Measuring What Matters - Success Metrics & Advanced Growth",
+          subtitle: "Track kingdom impact and business success",
+          isCompleted: false,
+          isLocked: true,
+          isCurrentSession: false,
+          completion_percentage: 0
+        },
+        {
+          id: 55,
+          session_number: 5,
+          title: "Community Impact & Legacy Building - Creating Lasting Change",
+          subtitle: "Build a legacy that multiplies disciples",
           isCompleted: false,
           isLocked: true,
           isCurrentSession: false,
@@ -263,7 +326,7 @@ const Module5BusinessPlanning: React.FC = () => {
       setSessions(mockSessions);
       setUserProgress({
         completedSessions: [],
-        currentSessionId: 50,
+        currentSessionId: 51,
         moduleProgress: 0,
         totalSessions: 5
       });
@@ -444,19 +507,23 @@ const Module5BusinessPlanning: React.FC = () => {
                 <ul className="space-y-2">  
                   <li className="flex items-start">  
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Advanced research methods for market and industry analysis</span>  
+                    <span className="text-gray-600 text-sm">90-day launch strategy from learning to earning</span>  
                   </li>  
                   <li className="flex items-start">  
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Professional business plan writing and structure</span>  
+                    <span className="text-gray-600 text-sm">Relationship building for business transformation</span>  
                   </li>  
                   <li className="flex items-start">  
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Strategic implementation planning with biblical principles</span>  
+                    <span className="text-gray-600 text-sm">Scalable systems development from solo to team</span>  
                   </li>  
                   <li className="flex items-start">  
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">How to seek divine guidance in business planning</span>  
+                    <span className="text-gray-600 text-sm">Success metrics and advanced growth strategies</span>  
+                  </li>  
+                  <li className="flex items-start">  
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />  
+                    <span className="text-gray-600 text-sm">Community impact and legacy building</span>  
                   </li>  
                 </ul>  
               </div>
@@ -469,19 +536,23 @@ const Module5BusinessPlanning: React.FC = () => {
                 <ul className="space-y-2">  
                   <li className="flex items-start">  
                     <Award className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Complete, professional business plan ready for investors</span>  
+                    <span className="text-gray-600 text-sm">Complete business launch strategy ready to execute</span>  
                   </li>  
                   <li className="flex items-start">  
                     <Award className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Clear roadmap for business launch and growth</span>  
+                    <span className="text-gray-600 text-sm">Relationship network for sustainable growth</span>  
                   </li>  
                   <li className="flex items-start">  
                     <Award className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Research skills for ongoing business intelligence</span>  
+                    <span className="text-gray-600 text-sm">Scalable systems for team development</span>  
                   </li>  
                   <li className="flex items-start">  
                     <Award className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />  
-                    <span className="text-gray-600 text-sm">Confidence to move from planning to action</span>  
+                    <span className="text-gray-600 text-sm">Metrics framework for kingdom impact measurement</span>  
+                  </li>  
+                  <li className="flex items-start">  
+                    <Award className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />  
+                    <span className="text-gray-600 text-sm">Legacy plan for multiplying disciples through business</span>  
                   </li>  
                 </ul>  
               </div>  
@@ -502,7 +573,7 @@ const Module5BusinessPlanning: React.FC = () => {
     );  
   };
 
-  // Sessions Grid Component (Colorful bars)  
+  // Sessions Grid Component - FIXED: Now uses session.id for routing
   const SessionsGrid: React.FC = () => {  
     return (  
       <div className="mb-6">  
@@ -527,7 +598,7 @@ const Module5BusinessPlanning: React.FC = () => {
                       : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-400'  
                 }  
               `}  
-              onClick={() => !session.isLocked && (window.location.href = `/modules/5/sessions/${session.session_number}`)}
+              onClick={() => !session.isLocked && (window.location.href = `/modules/5/sessions/${session.id}`)}
             >  
               <div className="p-6">  
                 <div className="flex items-center justify-between">  
