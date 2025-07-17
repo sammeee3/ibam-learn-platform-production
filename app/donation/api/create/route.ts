@@ -214,9 +214,9 @@ async function createAuthorizeNetSubscription(paymentData: any) {
   const subscriptionRequest = {
     ARBCreateSubscriptionRequest: {
       merchantAuthentication: {
-        name: process.env.AUTHORIZE_NET_API_LOGIN_ID,
-        transactionKey: process.env.AUTHORIZE_NET_TRANSACTION_KEY
-      },
+  name: "54HSQ2enmz",
+  transactionKey: "5zN9fB72GnG25cA7"
+},
       refId: `SUB${Date.now().toString().slice(-8)}`,
       subscription: {
         name: `${paymentData.donor.firstName} ${paymentData.donor.lastName} - ${paymentData.frequency} Ministry Support`,
@@ -303,9 +303,9 @@ async function processAuthorizeNetPayment(paymentData: any) {
     authNetRequest = {
       createTransactionRequest: {
         merchantAuthentication: {
-          name: process.env.AUTHORIZE_NET_API_LOGIN_ID,
-          transactionKey: process.env.AUTHORIZE_NET_TRANSACTION_KEY
-        },
+        name: "54HSQ2enmz",
+        transactionKey: "5zN9fB72GnG25cA7"
+},
         refId: `DON${Date.now().toString().slice(-8)}`,
         transactionRequest: {
           transactionType: "authCaptureTransaction",
