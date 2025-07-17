@@ -400,8 +400,8 @@ async function processAuthorizeNetPayment(paymentData: any) {
       const transactionResponse = result.transactionResponse;
       console.log('🔍 ONE-TIME Transaction response found:', transactionResponse);
       
-      if (transactionResponse.responseCode === "1") {
-        console.log('🔍 ONE-TIME SUCCESS: Transaction approved');
+if (transactionResponse.responseCode === "1" || transactionResponse.responseCode === "4") {
+          console.log('🔍 ONE-TIME SUCCESS: Transaction approved');
         return {
           success: true,
           transactionId: transactionResponse.transId,
