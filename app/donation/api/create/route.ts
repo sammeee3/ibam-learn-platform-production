@@ -7,9 +7,7 @@ const supabase = createClient(
 );
 
 // Authorize.Net API endpoint
-const AUTHORIZE_NET_URL = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
-  ? 'https://api.authorize.net/xml/v1/request.api'
-  : 'https://apitest.authorize.net/xml/v1/request.api';
+const AUTHORIZE_NET_URL = 'https://api.authorize.net/xml/v1/request.api';
 
 // Email sending function (framework ready for SMTP integration)
 async function sendThankYouEmail(donorData: any, transactionData: any) {
