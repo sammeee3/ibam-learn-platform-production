@@ -248,7 +248,9 @@ async function createAuthorizeNetSubscription(paymentData: any) {
     }
   };
 
-  console.log('Sending subscription request to Authorize.Net:', JSON.stringify(subscriptionRequest, null, 2));
+  console.log('🔍 SUBSCRIPTION: About to send request to Authorize.Net');
+  console.log('🔍 SUBSCRIPTION URL:', AUTHORIZE_NET_URL);
+  console.log('🔍 SUBSCRIPTION Request:', JSON.stringify(subscriptionRequest, null, 2));
 
   try {
     const response = await fetch(AUTHORIZE_NET_URL, {
@@ -260,8 +262,9 @@ async function createAuthorizeNetSubscription(paymentData: any) {
       body: JSON.stringify(subscriptionRequest)
     });
 
+    console.log('🔍 SUBSCRIPTION Response status:', response.status);
     const result = await response.json();
-    console.log('Authorize.Net subscription response:', JSON.stringify(result, null, 2));
+    console.log('🔍 SUBSCRIPTION Full response:', JSON.stringify(result, null, 2));
 
     if (result.subscriptionId) {
       return {
@@ -282,7 +285,7 @@ async function createAuthorizeNetSubscription(paymentData: any) {
       };
     }
   } catch (error) {
-    console.error('Authorize.Net Subscription API Error:', error);
+    console.error('🔍 SUBSCRIPTION FETCH ERROR:', error);
     return {
       success: false,
       error: 'Subscription creation system temporarily unavailable'
@@ -290,7 +293,7 @@ async function createAuthorizeNetSubscription(paymentData: any) {
   }
 }
 
-// One-time payment processing (existing function)
+// One-time payment processing with enhanced debug logging
 async function processAuthorizeNetPayment(paymentData: any) {
   console.log('Processing one-time payment:', paymentData.paymentMethod);
 
@@ -377,6 +380,10 @@ async function processAuthorizeNetPayment(paymentData: any) {
     };
   }
 
+  console.log('🔍 ONE-TIME: About to send request to Authorize.Net');
+  console.log('🔍 ONE-TIME URL:', AUTHORIZE_NET_URL);
+  console.log('🔍 ONE-TIME Request:', JSON.stringify(authNetRequest, null, 2));
+
   try {
     const response = await fetch(AUTHORIZE_NET_URL, {
       method: 'POST',
@@ -387,12 +394,16 @@ async function processAuthorizeNetPayment(paymentData: any) {
       body: JSON.stringify(authNetRequest)
     });
 
+    console.log('🔍 ONE-TIME Response status:', response.status);
     const result = await response.json();
+    console.log('🔍 ONE-TIME Full response:', JSON.stringify(result, null, 2));
     
     if (result.transactionResponse) {
       const transactionResponse = result.transactionResponse;
+      console.log('🔍 ONE-TIME Transaction response found:', transactionResponse);
       
       if (transactionResponse.responseCode === "1") {
+        console.log('🔍 ONE-TIME SUCCESS: Transaction approved');
         return {
           success: true,
           transactionId: transactionResponse.transId,
@@ -402,6 +413,8 @@ async function processAuthorizeNetPayment(paymentData: any) {
           description: transactionResponse.messages?.[0]?.description
         };
       } else {
+        console.log('🔍 ONE-TIME DECLINE: Transaction declined by Authorize.Net');
+        console.log('🔍 ONE-TIME Decline reason:', transactionResponse.errors?.[0]?.errorText);
         return {
           success: false,
           error: transactionResponse.errors?.[0]?.errorText || transactionResponse.messages?.[0]?.description || 'Transaction declined',
@@ -410,18 +423,23 @@ async function processAuthorizeNetPayment(paymentData: any) {
         };
       }
     } else if (result.messages) {
+      console.log('🔍 ONE-TIME API ERROR: Messages found in response');
+      console.log('🔍 ONE-TIME API Error details:', result.messages);
       return {
         success: false,
         error: result.messages.message?.[0]?.text || 'Payment processing failed'
       };
     } else {
+      console.log('🔍 ONE-TIME UNKNOWN ERROR: Unexpected response format');
       return {
         success: false,
         error: 'Unknown payment processing error'
       };
     }
   } catch (error) {
-    console.error('Authorize.Net API Error:', error);
+    console.error('🔍 ONE-TIME FETCH ERROR: Request failed before reaching Authorize.Net');
+    console.error('🔍 ONE-TIME Error details:', error);
+    console.error('🔍 ONE-TIME Error message:', error.message);
     return {
       success: false,
       error: 'Payment processing system temporarily unavailable'
