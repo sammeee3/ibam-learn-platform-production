@@ -574,7 +574,7 @@ export async function POST(request: NextRequest) {
         paymentMethod,
         frequency,
         cardNumber: paymentDetails?.cardNumber,
-        expirationDate: paymentDetails?.expirationDate?.replace('/', ''),
+        expirationDate: paymentDetails?.expirationDate,
         cardCode: paymentDetails?.cardCode,
         accountType: paymentDetails?.accountType,
         routingNumber: paymentDetails?.routingNumber,
