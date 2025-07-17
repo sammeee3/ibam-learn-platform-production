@@ -7,9 +7,7 @@ const supabase = createClient(
 );
 
 // Authorize.Net API endpoint
-const AUTHORIZE_NET_URL = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
-  ? 'https://api.authorize.net/xml/v1/request.api'
-  : 'https://apitest.authorize.net/xml/v1/request.api';
+const AUTHORIZE_NET_URL = 'https://api.authorize.net/xml/v1/request.api';
 
 // Email sending function (framework ready for SMTP integration)
 async function sendThankYouEmail(donorData: any, transactionData: any) {
@@ -215,7 +213,8 @@ async function createAuthorizeNetSubscription(paymentData: any) {
     ARBCreateSubscriptionRequest: {
       merchantAuthentication: {
   name: "54HSQ2enmz",
-transactionKey: "5zN9fB72GnG25cA7"},
+  transactionKey: "5zN9fB72GnG25cA7"
+},
       refId: `SUB${Date.now().toString().slice(-8)}`,
       subscription: {
         name: `${paymentData.donor.firstName} ${paymentData.donor.lastName} - ${paymentData.frequency} Ministry Support`,
