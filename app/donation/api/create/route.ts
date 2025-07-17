@@ -338,10 +338,10 @@ async function processAuthorizeNetPayment(paymentData: any) {
   } else {
     authNetRequest = {
       createTransactionRequest: {
-        merchantAuthentication: {
-          name: process.env.AUTHORIZE_NET_API_LOGIN_ID,
-          transactionKey: process.env.AUTHORIZE_NET_TRANSACTION_KEY
-        },
+merchantAuthentication: {
+  name: "54HSQ2enmz",
+  transactionKey: "5zN9fB72GnG25cA7"
+},
         refId: `ACH${Date.now().toString().slice(-8)}`,
         transactionRequest: {
           transactionType: "authCaptureTransaction",
