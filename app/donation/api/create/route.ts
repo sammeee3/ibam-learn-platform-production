@@ -303,8 +303,7 @@ async function processAuthorizeNetPayment(paymentData: any) {
       createTransactionRequest: {
         merchantAuthentication: {
         name: "54HSQ2enmz",
-        transactionKey: "5zN9fB72GnG25cA7"
-},
+transactionKey: process.env.AUTHORIZE_NET_TRANSACTION_KEY},
         refId: `DON${Date.now().toString().slice(-8)}`,
         transactionRequest: {
           transactionType: "authCaptureTransaction",
