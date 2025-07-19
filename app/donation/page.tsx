@@ -520,7 +520,7 @@ export default function DonationPage() {
                 
                 <p className="text-slate-600">
                   Join strategic partners investing in sustainable ministry infrastructure across Central Asia, 
-                  Indonesia, and Central Africa.
+                  Indonesia, and Central Africa. Our goal is 2,000 dollars a monthly increase in partners by Christmas 2025.
                 </p>
               </div>
 
