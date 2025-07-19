@@ -1170,7 +1170,7 @@ export default function DonationPage() {
                 </button>
 
                 <div className="text-center text-sm text-slate-600 pt-4 border-t">
-                  <p>Questions? Contact Jeff & Julie at <a href="mailto:samfamteam@gmail.com" className="text-teal-600 hover:underline">jeff.julie@ibam.org</a></p>
+                  <p>Questions? Contact Jeff & Julie at <a href="mailto:samfamteam@gmail.com" className="text-teal-600 hover:underline">samfamteam@gmail.com</a></p>
                   <p className="mt-1">Donations are tax-deductible • 501(c)(3) Organization</p>
                 </div>
               </form>
@@ -1211,7 +1211,7 @@ export default function DonationPage() {
                   </a>
                 </div>
                 <div className="text-sm text-slate-300">
-                  Email: <a href="mailto:admin@ibam.org" className="text-teal-400 hover:text-teal-300">hello@ibam.org</a>
+                  Email: <a href="mailto:admin@ibam.org" className="text-teal-400 hover:text-teal-300">admin@ibam.org</a>
                 </div>
                 <div className="text-sm text-slate-300">
                   Phone: <a href="tel:+17036521226" className="text-teal-400 hover:text-teal-300">+1 (703) 652-IBAM (4226)</a>
