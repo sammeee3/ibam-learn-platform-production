@@ -26,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json({
       current: goal?.current_amount || 0,
-      target: goal?.target_amount || 24000,
+      target: goal?.target_amount || 2000,
       progress: progress,
       description: goal?.description || 'Jeff & Julie 2026 Ministry Launch Fund'
     });
