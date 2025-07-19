@@ -8,42 +8,42 @@ export default function TrainersPage() {
       experience: "30+ years",
       background: "Entrepreneurship & Cross-Cultural Ministry",
       impact: "Multiple business launches across developing nations",
-      photoPlaceholder: "J"
+      photoPath: "/john.png"
     },
     {
       name: "Jeff", 
       experience: "30+ years",
       background: "Business & Missionary Work in Closed Countries",
       impact: "Extensive experience in multiple developing nations traditionally closed to the Gospel",
-      photoPlaceholder: "J"
+      photoPath: "/jeff.png"
     },
     {
       name: "Steve",
       experience: "30+ years", 
       background: "Retail & Marketplace Ministry",
       impact: "Built sustainable businesses impacting local communities",
-      photoPlaceholder: "S"
+      photoPath: "/steve.png"
     },
     {
       name: "Daniel",
       experience: "30+ years",
       background: "Consultancy & Cross-Cultural Living", 
       impact: "Established Faith Driven businesses in unreached areas",
-      photoPlaceholder: "D"
+      photoPath: "/daniel.png"
     },
     {
       name: "Roy",
       experience: "30+ years",
       background: "Business Ownership & Family Leadership",
       impact: "Mentored entrepreneurs while raising families on mission",
-      photoPlaceholder: "R"
+      photoPath: "/roy.png"
     },
     {
       name: "Dan",
       experience: "30+ years",
       background: "Diverse Industries & Discipleship",
       impact: "Led business owners to follow Jesus through marketplace ministry",
-      photoPlaceholder: "D"
+      photoPath: "/dan.png"
     }
   ]
 
@@ -133,17 +133,13 @@ export default function TrainersPage() {
             {trainers.map((trainer, index) => (
               <div key={index} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                 <div className="text-center mb-4">
-                  {/* Photo Placeholder - Ready for real photos */}
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 relative overflow-hidden">
-                    {/* Placeholder for photo */}
-                    <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-blue-600 text-2xl font-bold mb-1">
-                          {trainer.photoPlaceholder}
-                        </div>
-                        <div className="text-xs text-gray-500">Photo Slot</div>
-                      </div>
-                    </div>
+                  {/* Professional Photo */}
+                  <div className="w-32 h-32 mx-auto mb-4 relative overflow-hidden rounded-full border-4 border-blue-100">
+                    <img 
+                      src={trainer.photoPath}
+                      alt={`${trainer.name} - IBAM Trainer`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">{trainer.name}</h3>
                   <p className="text-blue-600 font-medium">{trainer.experience}</p>
