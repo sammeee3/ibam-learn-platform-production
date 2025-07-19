@@ -414,7 +414,7 @@ export default function DonationPage() {
     }
   };
 
-  const progressPercentage = Math.min(((goal.current_amount || 0) / (goal.target_amount || 24000)) * 100, 100);
+  const progressPercentage = Math.min(((goal.current_amount || 0) / (goal.target_amount || 2000)) * 100, 100);
   const { fee, total } = calculateFees();
 
   if (showSuccess) {
@@ -514,7 +514,7 @@ export default function DonationPage() {
                   </div>
                   <div className="flex justify-between text-lg font-semibold text-slate-800 mt-2">
                     <span>${(goal.current_amount || 0).toLocaleString()}</span>
-                    <span>${(goal.target_amount || 24000).toLocaleString()}</span>
+                    <span>${(goal.target_amount || 2000).toLocaleString()}</span>
                   </div>
                 </div>
                 
