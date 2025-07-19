@@ -84,7 +84,7 @@ const initialFormData: DonationFormData = {
 
 export default function DonationPage() {
   const [goal, setGoal] = useState<DonationGoal>({
-    target_amount: 2000 monthly,
+    target_amount: 2000,
     current_amount: 0,
     description: 'Jeff & Julie 2026 Ministry Launch Fund'
   });
