@@ -519,8 +519,7 @@ export default function DonationPage() {
                 </div>
                 
                 <p className="text-slate-600">
-                  Join strategic partners investing in sustainable ministry infrastructure across Central Asia, 
-                  Indonesia, and Central Africa. Our goal is 2,000 dollars a monthly increase in partners by Christmas 2025.
+                  Join strategic partners investing in sustainable ministry infrastructure across Central Asia, Indonesia, and Central Africa - where Kingdom entrepreneurs are launching Gospel-centered businesses that make disciples who multiply disciples. Our goal: $2,000 monthly increase in partners by Christmas 2025. Your investment doesn't just fund programs; it unleashes unstoppable Kingdom multiplication in the unreached world.
                 </p>
               </div>
 
