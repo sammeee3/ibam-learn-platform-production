@@ -158,48 +158,55 @@ const CourseInformationPage: React.FC = () => {
     }
   ];
 
+  // Updated trainers array with photo paths
   const trainers = [
     { 
       name: "John", 
       experience: "30+ years", 
       expertise: ["Entrepreneurship", "Cross-Cultural Ministry"], 
       background: "Business mentorship across cultures",
-      achievements: "Launched 15+ businesses in 8 countries"
+      achievements: "Launched 15+ businesses in 8 countries",
+      photoPath: "/john.png"
     },
     { 
       name: "Jeff", 
       experience: "30+ years", 
       expertise: ["Business", "Closed Countries Ministry"], 
       background: "Marketplace ministry in challenging environments",
-      achievements: "Founded IBAM and trained 500+ entrepreneurs"
+      achievements: "Founded IBAM and trained 500+ entrepreneurs",
+      photoPath: "/jeff.png"
     },
     { 
       name: "Steve", 
       experience: "30+ years", 
       expertise: ["Retail", "Marketplace Ministry"], 
       background: "Retail industry and faith integration",
-      achievements: "$50M+ in retail business success"
+      achievements: "$50M+ in retail business success",
+      photoPath: "/steve.png"
     },
     { 
       name: "Daniel", 
       experience: "30+ years", 
       expertise: ["Consultancy", "Cross-Cultural Living"], 
       background: "International business consultancy",
-      achievements: "Consulted for Fortune 500 companies"
+      achievements: "Consulted for Fortune 500 companies",
+      photoPath: "/daniel.png"
     },
     { 
       name: "Roy", 
       experience: "30+ years", 
       expertise: ["Business Ownership", "Family Leadership"], 
       background: "Business ownership and leadership development",
-      achievements: "Built and sold 3 successful companies"
+      achievements: "Built and sold 3 successful companies",
+      photoPath: "/roy.png"
     },
     { 
       name: "Dan", 
       experience: "30+ years", 
       expertise: ["Diverse Industries", "Discipleship"], 
       background: "Multi-industry experience and discipleship",
-      achievements: "Mentored 200+ faith-driven leaders"
+      achievements: "Mentored 200+ faith-driven leaders",
+      photoPath: "/dan.png"
     }
   ];
 
@@ -460,8 +467,26 @@ const CourseInformationPage: React.FC = () => {
         {trainers.map((trainer, index) => (
           <div key={index} className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                {trainer.name[0]}
+              {/* Real Photo with Fallback */}
+              <div className="w-16 h-16 relative overflow-hidden rounded-full border-3 border-purple-200 flex-shrink-0">
+                <img 
+                  src={trainer.photoPath}
+                  alt={`${trainer.name} - IBAM Trainer`}
+                  className="w-full h-full object-cover"
+                  onLoad={() => console.log(`✅ Course info trainer photo loaded: ${trainer.photoPath}`)}
+                  onError={(e) => {
+                    console.log(`❌ Course info trainer photo failed: ${trainer.photoPath}`);
+                    // Fallback to gradient circle with initials
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                {/* Fallback circle - hidden by default */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl" style={{display: 'none'}}>
+                  {trainer.name[0]}
+                </div>
               </div>
               <div className="flex-1">
                 <h4 className="text-xl font-semibold text-gray-800 mb-1">{trainer.name}</h4>

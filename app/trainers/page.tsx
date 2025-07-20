@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
@@ -139,6 +141,8 @@ export default function TrainersPage() {
                       src={trainer.photoPath}
                       alt={`${trainer.name} - IBAM Trainer`}
                       className="w-full h-full object-cover"
+                      onLoad={() => console.log(`✅ Image loaded: ${trainer.photoPath}`)}
+                      onError={() => console.log(`❌ Image failed: ${trainer.photoPath}`)}
                     />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800">{trainer.name}</h3>

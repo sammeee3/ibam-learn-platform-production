@@ -1,6 +1,5 @@
 'use client';
 
-
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Calendar, User, BookOpen, Award, TrendingUp, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
@@ -11,14 +10,12 @@ const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM4MTQ4MDEsImV4cCI6MjAyOTM5MDgwMX0.VhWbNcOjwqoOTI32qByfOV46lJKUKiPG0qV3rvYJvlY';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-
 // IBAM Logo Component
 interface IBAMLogoProps {
  size?: 'small' | 'medium' | 'large' | 'xlarge';
  className?: string;
  style?: React.CSSProperties;
 }
-
 
 const IBAMLogo: React.FC<IBAMLogoProps> = ({
  size = 'medium',
@@ -32,11 +29,9 @@ const IBAMLogo: React.FC<IBAMLogoProps> = ({
    xlarge: { width: '120px', height: 'auto' }
  };
 
-
  const logoFile = size === 'small'
    ? '/images/branding/mini-logo.png'
    : '/images/branding/ibam-logo.png';
-
 
  return (
    <img
@@ -51,14 +46,12 @@ const IBAMLogo: React.FC<IBAMLogoProps> = ({
  );
 };
 
-
 // Type Definitions - Fixed to match Supabase return types
 interface UserProgressRaw {
  session_id: number;
  completion_percentage: number;
  last_accessed_at: string;
 }
-
 
 interface UserProgress {
  id: number;
@@ -69,7 +62,6 @@ interface UserProgress {
  quiz_score: number | null;
 }
 
-
 interface SessionData {
  id: number;
  module_id: number;
@@ -78,14 +70,12 @@ interface SessionData {
  subtitle: string;
 }
 
-
 interface ModuleProgress {
  module_id: number;
  total_sessions: number;
  completed_sessions: number;
  completion_percentage: number;
 }
-
 
 interface RecentActivityRaw {
  session_id: number;
@@ -98,7 +88,6 @@ interface RecentActivityRaw {
  };
 }
 
-
 interface RecentActivity {
  session_id: number;
  completion_percentage: number;
@@ -110,7 +99,6 @@ interface RecentActivity {
  };
 }
 
-
 // Known module structure from database
 const MODULE_CONFIG = [
  { id: 1, title: "Foundational Principles", sessions: 4, color: "from-blue-400 to-blue-600", description: "Biblical foundations for business" },
@@ -119,7 +107,6 @@ const MODULE_CONFIG = [
  { id: 4, title: "Financial Management", sessions: 4, color: "from-orange-400 to-orange-600", description: "Biblical approach to business finances" },
  { id: 5, title: "Business Planning", sessions: 3, color: "from-indigo-400 to-indigo-600", description: "Strategic planning with divine guidance" }
 ];
-
 
 const IBAMDashboard: React.FC = () => {
  const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
@@ -152,8 +139,6 @@ const IBAMDashboard: React.FC = () => {
     return data;
   };
 
-
-
  // Mock data for fallback
  const mockModuleProgress: ModuleProgress[] = [
    { module_id: 1, total_sessions: 4, completed_sessions: 4, completion_percentage: 100 },
@@ -162,7 +147,6 @@ const IBAMDashboard: React.FC = () => {
    { module_id: 4, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
    { module_id: 5, total_sessions: 3, completed_sessions: 0, completion_percentage: 0 }
  ];
-
 
  const mockRecentActivity: RecentActivity[] = [
    {
@@ -185,16 +169,51 @@ const IBAMDashboard: React.FC = () => {
    }
  ];
 
-
+ // Updated trainers array with photo paths
  const trainers = [
-   { name: "John", experience: "30+ years", expertise: ["Entrepreneurship", "Cross-Cultural Ministry"], background: "Business mentorship across cultures" },
-   { name: "Jeff", experience: "30+ years", expertise: ["Business", "Closed Countries Ministry"], background: "Marketplace ministry in challenging environments" },
-   { name: "Steve", experience: "30+ years", expertise: ["Retail", "Marketplace Ministry"], background: "Retail industry and faith integration" },
-   { name: "Daniel", experience: "30+ years", expertise: ["Consultancy", "Cross-Cultural Living"], background: "International business consultancy" },
-   { name: "Roy", experience: "30+ years", expertise: ["Business Ownership", "Family Leadership"], background: "Business ownership and leadership development" },
-   { name: "Dan", experience: "30+ years", expertise: ["Diverse Industries", "Discipleship"], background: "Multi-industry experience and discipleship" }
+   { 
+     name: "John", 
+     experience: "30+ years", 
+     expertise: ["Entrepreneurship", "Cross-Cultural Ministry"], 
+     background: "Business mentorship across cultures",
+     photoPath: "/john.png"
+   },
+   { 
+     name: "Jeff", 
+     experience: "30+ years", 
+     expertise: ["Business", "Closed Countries Ministry"], 
+     background: "Marketplace ministry in challenging environments",
+     photoPath: "/jeff.png"
+   },
+   { 
+     name: "Steve", 
+     experience: "30+ years", 
+     expertise: ["Retail", "Marketplace Ministry"], 
+     background: "Retail industry and faith integration",
+     photoPath: "/steve.png"
+   },
+   { 
+     name: "Daniel", 
+     experience: "30+ years", 
+     expertise: ["Consultancy", "Cross-Cultural Living"], 
+     background: "International business consultancy",
+     photoPath: "/daniel.png"
+   },
+   { 
+     name: "Roy", 
+     experience: "30+ years", 
+     expertise: ["Business Ownership", "Family Leadership"], 
+     background: "Business ownership and leadership development",
+     photoPath: "/roy.png"
+   },
+   { 
+     name: "Dan", 
+     experience: "30+ years", 
+     expertise: ["Diverse Industries", "Discipleship"], 
+     background: "Multi-industry experience and discipleship",
+     photoPath: "/dan.png"
+   }
  ];
-
 
 // Get the actual logged-in user ID
 const getCurrentUserId = async (): Promise<string | null> => {
@@ -218,7 +237,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
   }
 };
 
-
  // Calculate module progress from raw data
  const calculateModuleProgress = (sessions: SessionData[], progress: UserProgressRaw[]): ModuleProgress[] => {
    const progressMap = new Map<number, { total: number; completed: number }>();
@@ -227,7 +245,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
    MODULE_CONFIG.forEach(module => {
      progressMap.set(module.id, { total: module.sessions, completed: 0 });
    });
-
 
    // Count actual sessions from database
    sessions.forEach(session => {
@@ -239,7 +256,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
      const current = progressMap.get(moduleId)!;
      progressMap.set(moduleId, { ...current, total: current.total });
    });
-
 
    // Count completed sessions
    progress.forEach(p => {
@@ -253,7 +269,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
      }
    });
 
-
    // Convert to final format
    return Array.from(progressMap.entries())
      .map(([moduleId, stats]) => ({
@@ -264,7 +279,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
      }))
      .sort((a, b) => a.module_id - b.module_id);
  };
-
 
  // Load dashboard data with comprehensive error handling
  const loadDashboardData = async (): Promise<void> => {
@@ -289,7 +303,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
        throw new Error(`Sessions query failed: ${sessionsError.message}`);
      }
 
-
      if (!sessions || sessions.length === 0) {
        console.log('⚠️ No sessions found in database, using mock data');
        setDataSource('mock');
@@ -298,23 +311,19 @@ const getCurrentUserId = async (): Promise<string | null> => {
        return;
      }
 
-
      // Try to get user progress
      const { data: progress, error: progressError } = await supabase
        .from('user_progress')
        .select('session_id, completion_percentage, last_accessed_at')
        .eq('user_id', currentUserId);
 
-
      if (progressError) {
        console.log('⚠️ User progress query failed, using sessions data only');
      }
 
-
      // Calculate module progress
      const moduleData = calculateModuleProgress(sessions, progress || []);
      setModuleProgress(moduleData);
-
 
      // Get recent activity
      const { data: activityData, error: activityError } = await supabase
@@ -328,7 +337,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
        .eq('user_id', currentUserId)
        .order('last_accessed_at', { ascending: false })
        .limit(5);
-
 
      if (!activityError && activityData && activityData.length > 0) {
        console.log('✅ Using real activity data');
@@ -350,7 +358,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
        setRecentActivity(mockRecentActivity);
      }
 
-
      console.log('✅ Dashboard data loaded successfully');
     
    } catch (error) {
@@ -362,7 +369,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
      setLoading(false);
    }
  };
-
 
  useEffect(() => {
    loadDashboardData();
@@ -381,13 +387,11 @@ const loadContinueData = async () => {
     loadContinueData();
 }, []);
 
-
  // Helper functions
  const getModuleProgress = (moduleId: number): number => {
    const progress = moduleProgress.find(m => m.module_id === moduleId);
    return progress?.completion_percentage ?? 0;
  };
-
 
  const getModuleStatus = (moduleId: number): 'completed' | 'in-progress' | 'available' | 'locked' => {
    const progress = getModuleProgress(moduleId);
@@ -399,11 +403,9 @@ const loadContinueData = async () => {
    return prevProgress === 100 ? 'available' : 'locked';
  };
 
-
  const getModuleInfo = (moduleId: number) => {
    return MODULE_CONFIG.find(m => m.id === moduleId) ?? MODULE_CONFIG[0];
  };
-
 
  if (loading) {
    return (
@@ -415,7 +417,6 @@ const loadContinueData = async () => {
      </div>
    );
  }
-
 
  return (
    <div className="min-h-screen bg-gray-50">
@@ -475,36 +476,7 @@ const loadContinueData = async () => {
        </div>
      </div>
 
-
      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
- {/* Data Source Status */}
-{/* COMMENTED OUT - Don't show demo banner
-<div className={`border rounded-lg p-4 mb-6 ${
-  dataSource === 'real'
-    ? 'bg-green-50 border-green-200'
-    : 'bg-blue-50 border-blue-200'
-}`}>
-  <div className="flex items-center space-x-2">
-    <div className={`w-2 h-2 rounded-full animate-pulse ${
-      dataSource === 'real' ? 'bg-green-500' : 'bg-blue-500'
-    }`}></div>
-    <p className={`text-sm ${
-      dataSource === 'real' ? 'text-green-700' : 'text-blue-700'
-    }`}>
-      <strong>{dataSource === 'real' ? 'Live Data:' : 'Demo Mode:'}</strong>
-      {dataSource === 'real'
-        ? ' Connected to your Supabase database'
-        : ' Using sample data for demonstration'
-      }
-      {userId && (
-        <span className="ml-2 text-xs font-mono bg-gray-100 px-2 py-1 rounded">
-          User: {userId.slice(0, 8)}...
-        </span>
-      )}
-    </p>
-  </div>
-</div>
-*/}
 
        {/* Vision Statement */}
        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-l-4 border-teal-500">
@@ -521,7 +493,6 @@ const loadContinueData = async () => {
          </div>
        </div>
 
-
        {/* Quick Actions */}
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
          <button
@@ -537,7 +508,6 @@ const loadContinueData = async () => {
            </div>
          </button>
 
-
          <button
            onClick={() => setShowTrainersModal(true)}
            className="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
@@ -551,7 +521,6 @@ const loadContinueData = async () => {
            </div>
          </button>
        </div>
-
 
        {/* Learning Modules */}
        <div className="mb-8">
@@ -610,7 +579,6 @@ const loadContinueData = async () => {
          </div>
        </div>
 
-
        {/* Course Information Link */}
        <div className="mb-8">
          <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 border border-teal-200">
@@ -628,7 +596,6 @@ const loadContinueData = async () => {
            </div>
          </div>
        </div>
-
 
        {/* Recent Activity */}
        {recentActivity.length > 0 && (
@@ -652,39 +619,56 @@ const loadContinueData = async () => {
        )}
      </div>
 
-
-     {/* Trainers Modal */}
+     {/* Trainers Modal - UPDATED WITH PHOTOS */}
      {showTrainersModal && (
        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-         <div className="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+         <div className="bg-white rounded-xl max-w-5xl w-full max-h-[80vh] overflow-y-auto">
            <div className="p-6 border-b">
              <div className="flex items-center justify-between">
                <h2 className="text-2xl font-bold text-gray-900">Meet Your Trainers</h2>
                <button
                  onClick={() => setShowTrainersModal(false)}
-                 className="text-gray-400 hover:text-gray-600"
+                 className="text-gray-400 hover:text-gray-600 text-2xl"
                >
                  ✕
                </button>
              </div>
              <p className="text-gray-600 mt-2">180+ years of combined marketplace ministry experience</p>
            </div>
-           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
              {trainers.map((trainer, index) => (
-               <div key={index} className="border rounded-lg p-4">
-                 <div className="flex items-center space-x-3 mb-3">
-                   <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold">
-                     {trainer.name[0]}
+               <div key={index} className="border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                 <div className="flex flex-col items-center text-center">
+                   {/* Real Photo */}
+                   <div className="w-20 h-20 mb-4 relative overflow-hidden rounded-full border-3 border-teal-200">
+                     <img 
+                       src={trainer.photoPath}
+                       alt={`${trainer.name} - IBAM Trainer`}
+                       className="w-full h-full object-cover"
+                       onLoad={() => console.log(`✅ Trainer photo loaded: ${trainer.photoPath}`)}
+                       onError={(e) => {
+                         console.log(`❌ Trainer photo failed: ${trainer.photoPath}`);
+                         // Fallback to gradient circle with initials
+                         const target = e.target as HTMLImageElement;
+                         target.style.display = 'none';
+                         const fallback = target.nextElementSibling as HTMLElement;
+                         if (fallback) fallback.style.display = 'flex';
+                       }}
+                     />
+                     {/* Fallback circle - hidden by default */}
+                     <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{display: 'none'}}>
+                       {trainer.name[0]}
+                     </div>
                    </div>
                    <div>
-                     <h3 className="font-semibold text-gray-900">{trainer.name}</h3>
-                     <p className="text-sm text-gray-600">{trainer.experience}</p>
+                     <h3 className="font-semibold text-gray-900 text-lg">{trainer.name}</h3>
+                     <p className="text-sm text-teal-600 font-medium mb-3">{trainer.experience}</p>
                    </div>
                  </div>
-                 <p className="text-sm text-gray-700 mb-3">{trainer.background}</p>
-                 <div className="flex flex-wrap gap-2">
+                 <p className="text-sm text-gray-700 mb-4 text-center">{trainer.background}</p>
+                 <div className="flex flex-wrap justify-center gap-2">
                    {trainer.expertise.map((skill, i) => (
-                     <span key={i} className="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs">
+                     <span key={i} className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
                        {skill}
                      </span>
                    ))}
@@ -692,10 +676,21 @@ const loadContinueData = async () => {
                </div>
              ))}
            </div>
+           <div className="p-6 border-t bg-gray-50 text-center">
+             <p className="text-gray-600 mb-4">Ready to learn from these experienced mentors?</p>
+             <button
+               onClick={() => {
+                 setShowTrainersModal(false);
+                 window.location.href = '/trainers';
+               }}
+               className="bg-gradient-to-r from-teal-400 to-teal-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-all"
+             >
+               Learn More About Our Team
+             </button>
+           </div>
          </div>
        </div>
      )}
-
 
      {/* IBAM Footer */}
      <footer className="bg-white border-t border-gray-200 py-8 mt-12">
@@ -726,7 +721,4 @@ const loadContinueData = async () => {
  );
 };
 
-
 export default IBAMDashboard;
-
-
