@@ -80,6 +80,12 @@ interface SessionData {
       application_questions?: string[];
       multiplication_challenges?: string[];
     };
+    case_study?: {
+  title: string;
+  challenge: string;
+  strategy: string;
+  results: string;
+};
     growing_wealth?: {
       main_content?: string;
       video_url?: string | null;
@@ -94,7 +100,12 @@ interface SessionData {
   };
   scripture_reference?: string;
   video_url?: string | null;
-  case_study?: string;
+  case_study?: {
+  title: string;
+  challenge: string;
+  strategy: string;
+  results: string;
+};
   business_plan_questions?: string[];
   faq_questions?: string[];  // ✅ FIXED: Added FAQ questions from database
   transformation_promise?: string;
@@ -715,10 +726,22 @@ const BeautifulCaseStudyComponent = ({ sessionData, sessionTitle }: {
     transformation: ''
   });
   const [answersSaved, setAnswersSaved] = useState(false);
-const caseStudyContent = sessionData.case_study ||
-`<h3>Business Transformation Case Study</h3>...
-  <p>This case study demonstrates how biblical business principles create both financial success and Faith-Driven Impact.</p>`;
+  // Add this line for debugging
+console.log('DEBUG case_study data:', sessionData.case_study);
 
+console.log('DEBUG case_study data:', sessionData.content?.case_study);
+
+const caseStudyContent = sessionData.content?.case_study ? 
+  `<h3>${sessionData.content.case_study.title}</h3>
+   <h4>The Challenge</h4>
+   <p>${sessionData.content.case_study.challenge}</p>
+   <h4>The Strategy</h4>
+   <p>${sessionData.content.case_study.strategy}</p>
+   <h4>The Results</h4>
+   <p>${sessionData.content.case_study.results}</p>` :
+
+  `<h3>Business Transformation Case Study</h3>
+   <p>This case study demonstrates how biblical business principles create both financial success and Faith-Driven Impact.</p>`;
   // Format case study content properly
   const formatCaseStudyContent = (content: string) => {
     if (!content) return "Case study content is being prepared.";
@@ -3610,6 +3633,8 @@ const handleSaveAction = (action: ActionCommitment) => {
           .eq('module_id', parseInt(moduleId))
           .eq('session_number', parseInt(sessionId))
           .single();
+console.log('🔍 Raw database data - case_study field:', data?.content?.case_study);
+console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
 
         if (fetchError) {
           console.error('Database error:', fetchError);
