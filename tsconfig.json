@@ -38,7 +38,7 @@
     ".next/types/**/*.ts",
     "app/auth/login/page.tsx.backup2",
     "app/dashboard/page.tsx.backup"
-, "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.one error only", "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.absolute working best backup", "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.awsome chance", "app/modules/[moduleId]/sessions/[sessionId]/6/23/25page.tsx.bak", "app/business-planner/page.jsx", "app/modules/[moduleId]/page.old", "app/modules/page.old", "app/modules/1/page.tsx.bak"  ],
+, "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.one error only", "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.absolute working best backup", "app/modules/[moduleId]/sessions/[sessionId]/page.tsx.awsome chance", "app/modules/[moduleId]/sessions/[sessionId]/6/23/25page.tsx.bak", "app/business-planner/page.jsx.bak", "app/modules/[moduleId]/page.old", "app/modules/page.old", "app/modules/1/page.tsx.bak"  ],
   "exclude": [
     "node_modules"
   ]
