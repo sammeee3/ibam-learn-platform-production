@@ -4,51 +4,12 @@
 import { useState, useRef } from 'react';
 import { BookOpen, Zap, FileText } from 'lucide-react';
 import type { SessionData } from '../../lib/types';
+import { formatContentWithBeautifulTypography } from '../../lib/utils';
 
 interface UniversalReadingWithToggleProps {
   sessionData: SessionData;
   title: string;
 }
-
-// Utility function for reading time calculation
-const calculateReadingTime = (content: string): string => {
-  if (!content) return '3 min';
-  const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
-  const minutes = Math.max(2, Math.ceil(wordCount / 200)); // 200 words per minute
-  return `${minutes} min`;
-};
-
-// Content formatting function
-const formatContentWithBeautifulTypography = (content: string) => {
-  if (!content) return "Content is being prepared for this section.";
-
-  return content
-    // Convert Markdown to HTML first - IMPROVED PATTERNS
-    .replace(/###\s*(.+?)(\n|$)/g, "<h3>$1</h3>")
-    .replace(/##\s*(.+?)(\n|$)/g, "<h2>$1</h2>") 
-    .replace(/#\s*(.+?)(\n|$)/g, "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*\n]+?)\*/g, "<em>$1</em>")
-    .replace(/\n\s*\n/g, "</p><p>")
-    .replace(/^(?!<[h|p|u|o|l|s])/gm, "<p>")
-    .replace(/(?<![>])\n(?!<)/g, " ")
-    // Format headings with gorgeous blue styling - FULL RESTORATION
-    .replace(/<h1[^>]*>/g, '<h1 class="text-4xl font-bold text-blue-800 mb-6 mt-8 leading-tight">')
-    .replace(/<h2[^>]*>/g, '<h2 class="text-3xl font-bold text-blue-800 mb-4 mt-6 leading-tight">')
-    .replace(/<h3[^>]*>/g, '<h3 class="text-2xl font-semibold text-blue-700 mb-3 mt-5 leading-tight">')
-    .replace(/<h4[^>]*>/g, '<h4 class="text-xl font-semibold text-blue-600 mb-2 mt-4">')
-    .replace(/<h5[^>]*>/g, '<h5 class="text-lg font-semibold text-blue-600 mb-2 mt-3">')
-    .replace(/<h6[^>]*>/g, '<h6 class="text-base font-semibold text-blue-600 mb-2 mt-3">')
-    // Format paragraphs with excellent reading font - RESTORED
-    .replace(/<p[^>]*>/g, '<p class="text-gray-800 leading-relaxed mb-6 text-lg">')
-    // Format lists beautifully - RESTORED  
-    .replace(/<ul[^>]*>/g, '<ul class="space-y-3 mb-6 ml-6">')
-    .replace(/<ol[^>]*>/g, '<ol class="space-y-3 mb-6 ml-6 list-decimal">')
-    .replace(/<li[^>]*>/g, '<li class="text-gray-800 leading-relaxed text-lg mb-2">')
-    // Format emphasis beautifully - RESTORED
-    .replace(/<strong[^>]*>/g, '<strong class="font-bold text-gray-900">')
-    .replace(/<em[^>]*>/g, '<em class="italic text-gray-700">');
-};
 
 const UniversalReadingWithToggle: React.FC<UniversalReadingWithToggleProps> = ({ 
   sessionData, 
