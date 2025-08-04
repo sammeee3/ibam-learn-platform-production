@@ -49,14 +49,14 @@ const IBAMLogo: React.FC<IBAMLogoProps> = ({
 // Type Definitions - Fixed to match Supabase return types
 interface UserProgressRaw {
  session_id: number;
-    session_number: number; completion_percentage: number;
+ completion_percentage: number;
  last_accessed_at: string;
 }
 
 interface UserProgress {
  id: number;
  session_id: number;
-    session_number: number; completion_percentage: number;
+ completion_percentage: number;
  completed_at: string | null;
  last_accessed_at: string;
  quiz_score: number | null;
@@ -79,7 +79,7 @@ interface ModuleProgress {
 
 interface RecentActivityRaw {
  session_id: number;
-    session_number: number; completion_percentage: number;
+ completion_percentage: number;
  last_accessed_at: string;
  sessions: {
    title: string;
@@ -90,7 +90,7 @@ interface RecentActivityRaw {
 
 interface RecentActivity {
  session_id: number;
-    session_number: number; completion_percentage: number;
+ completion_percentage: number;
  last_accessed_at: string;
  sessions: {
    title: string;
@@ -121,7 +121,7 @@ const IBAMDashboard: React.FC = () => {
   const [continueSession, setContinueSession] = useState<{
     module_id: number;
     session_id: number;
-    session_number: number;    last_section: string;
+    last_section: string;
     completion_percentage: number;
   } | null>(null);
 
@@ -441,7 +441,7 @@ const loadContinueData = async () => {
                 Continue Your Journey
               </h2>
               <p className="text-blue-100 text-lg">
-                Module {continueSession.module_id}, Session {continueSession.session_number}
+                Module {continueSession.module_id}, Session 1
               </p>
               <div className="flex items-center mt-2">
                 <div className="bg-white/20 rounded-full h-2 w-48 mr-3">
@@ -457,7 +457,7 @@ const loadContinueData = async () => {
             </div>
             
             <button
-              onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_number}`)}
+              onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/1`)}
               className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
             >
               Continue Session
