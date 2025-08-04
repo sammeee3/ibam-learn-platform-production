@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Instead of direct-access, use auto-login route
-const autoLoginUrl = `https://ibam-learn-platform-v3.vercel.app/auth/auto-session?email=${encodeURIComponent(email)}&token=${secret}`;    
+    const autoLoginUrl = `https://ibam-learn-platform-v3.vercel.app/auth/auto-login?email=${encodeURIComponent(email)}&token=${secret}`;
+    
     return NextResponse.json({
       success: true,
       loginUrl: autoLoginUrl

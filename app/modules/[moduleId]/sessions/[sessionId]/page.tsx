@@ -468,9 +468,9 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
     }
   };
 
-  const navigateTo = (path: string) => {
-    router.push(path);
-  };
+const navigateTo = (path: string) => {
+  window.location.href = path;
+};
 
   // Handle section completion
   const markSectionComplete = (section: string) => {

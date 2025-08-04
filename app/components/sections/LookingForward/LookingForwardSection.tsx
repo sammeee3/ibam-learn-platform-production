@@ -34,6 +34,11 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
   isExpanded,
   onToggleExpanded
 }) => {
+  // Delete action handler
+  const handleDeleteAction = (actionId: string) => {
+    setSavedActions(prev => prev.filter(a => a.id !== actionId));
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div 
@@ -70,36 +75,14 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
             </div>
           </div>
 
-          {/* Action Builder Component */}
+          {/* Action Builder Component - Now handles display of saved actions too */}
           <ActionBuilderComponent 
             savedActions={savedActions} 
             onSaveAction={onSaveAction}
+            onDeleteAction={handleDeleteAction}
             pathwayMode={pathwayMode}
+            maxActions={4}
           />
-
-          {/* Saved Actions Display */}
-          {actionsLoaded && savedActions.length > 0 && (
-            <div className="bg-green-50 rounded-lg p-6">
-              <h4 className="font-semibold text-green-800 mb-4">Your Saved Actions ({savedActions.length}/4)</h4>
-              <div className="space-y-3">
-                {savedActions.map((action, index) => (
-                  <div key={action.id} className="bg-white p-4 rounded-lg border border-green-200">
-                    <div className="flex justify-between items-start">
-                      <p className="text-gray-700">
-                        {action.type === 'business' ? '💼' : '❤️'} {action.generatedStatement}
-                      </p>
-                      <button 
-                        onClick={() => setSavedActions(prev => prev.filter(a => a.id !== action.id))}
-                        className="text-red-500 hover:text-red-700 ml-2"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Sharing Commitment */}
           <div className="bg-indigo-50 rounded-lg p-6 border-l-4 border-indigo-400">
@@ -128,12 +111,30 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
           {/* Anonymous Session Feedback Survey */}
           <AnonymousSessionSurvey />
 
-          <button 
-            onClick={() => onMarkComplete('lookforward')}
-            className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition-colors"
-          >
-            ✅ Complete Looking Forward
-          </button>
+          {/* Complete Button - Only show when there's at least one action */}
+          {savedActions.length > 0 && (
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <p className="text-green-700 mb-3">
+                ✅ Great job! You've created {savedActions.length} action{savedActions.length > 1 ? 's' : ''}. 
+                Ready to complete this section?
+              </p>
+              <button 
+                onClick={() => onMarkComplete('lookforward')}
+                className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+              >
+                ✅ Complete Looking Forward
+              </button>
+            </div>
+          )}
+          
+          {/* Show reminder if no actions yet */}
+          {savedActions.length === 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+              <p className="text-yellow-800">
+                ⚠️ Please create at least one action commitment before completing this section.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
