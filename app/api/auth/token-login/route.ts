@@ -18,11 +18,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid secret' }, { status: 401, headers: corsHeaders });
     }
     
-    // Instead of direct-access, use auto-login route
-const autoLoginUrl = `https://ibam-learn-platform-v3.vercel.app/auth/auto-session?email=${encodeURIComponent(email)}&token=${secret}`;    
+    // Go back to direct-access page
     return NextResponse.json({
       success: true,
-      loginUrl: autoLoginUrl
+      loginUrl: 'https://ibam-learn-platform-v3.vercel.app/direct-access'
     }, { headers: corsHeaders });
     
   } catch (error) {
