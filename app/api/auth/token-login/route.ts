@@ -36,13 +36,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Failed to create session' }, { status: 500 });
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       loginUrl: sessionData.properties.action_link
     });
+
+    // Add CORS headers
+    response.headers.set('Access-Control-Allow-Origin', 'https://www.ibam.org');
+    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    return response;
 
   } catch (error) {
     console.error('Token login error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
+}
+
+// Handle preflight OPTIONS request
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 200 });
+  response.headers.set('Access-Control-Allow-Origin', 'https://www.ibam.org');
+  response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return response;
 }
