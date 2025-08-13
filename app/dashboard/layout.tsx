@@ -1,18 +1,18 @@
-'use client';
 import { Suspense } from 'react';
 
-function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
+export default function DashboardLayout({ 
+  children 
+}: { 
+  children: React.ReactNode 
 }) {
+  // Authentication check moved to middleware or page level
+  // This just provides the layout wrapper
+  
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
-    </Suspense>
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        {children}
+      </Suspense>
+    </>
   );
 }
