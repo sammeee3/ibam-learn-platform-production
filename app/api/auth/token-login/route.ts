@@ -10,10 +10,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, secret } = body;
 
+    console.log('Token login attempt for:', email);
+
     if (secret !== 'ibam-systeme-secret-2025') {
       return NextResponse.json({ success: false, error: 'Invalid secret' }, { status: 401 });
     }
 
+    // Verify user exists
     const { data: userProfile, error: userError } = await supabase
       .from('user_profiles')
       .select('*')
@@ -21,24 +24,28 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !userProfile) {
+      console.error('User not found:', email);
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+    // Generate ONE-TIME PASSWORD (OTP) magic link
+    const { data, error } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: '/dashboard'
+        redirectTo: 'https://ibam-learn-platform-v3.vercel.app/dashboard'
       }
     });
 
-    if (sessionError || !sessionData.properties?.action_link) {
+    if (error || !data?.properties?.action_link) {
+      console.error('Failed to create magic link:', error);
       return NextResponse.json({ success: false, error: 'Failed to create session' }, { status: 500 });
     }
 
+    // Return the magic link URL
     const response = NextResponse.json({
       success: true,
-      loginUrl: sessionData.properties.action_link
+      loginUrl: data.properties.action_link
     });
 
     response.headers.set('Access-Control-Allow-Origin', 'https://www.ibam.org');
