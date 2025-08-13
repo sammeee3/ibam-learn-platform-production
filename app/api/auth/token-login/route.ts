@@ -10,8 +10,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, secret } = body;
 
-    console.log('Token login attempt for:', email);
-
     if (secret !== 'ibam-systeme-secret-2025') {
       return NextResponse.json({ success: false, error: 'Invalid secret' }, { status: 401 });
     }
@@ -24,25 +22,24 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !userProfile) {
-      console.error('User not found:', email);
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    // Generate ONE-TIME PASSWORD (OTP) magic link
+    // Generate magic link that goes through YOUR callback
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: 'https://ibam-learn-platform-v3.vercel.app/dashboard'
+        redirectTo: 'https://ibam-learn-platform-v3.vercel.app/auth/callback?next=/dashboard'
       }
     });
 
     if (error || !data?.properties?.action_link) {
-      console.error('Failed to create magic link:', error);
-      return NextResponse.json({ success: false, error: 'Failed to create session' }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Failed to create magic link' }, { status: 500 });
     }
 
-    // Return the magic link URL
+    console.log('Generated magic link for:', email);
+
     const response = NextResponse.json({
       success: true,
       loginUrl: data.properties.action_link
