@@ -41,15 +41,15 @@ export async function middleware(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    let user = null;
-    let error = null;
+    // Initialize as undefined to handle both types
+    let userFound = false;
     
     // Check if the cookie value is an email (SSO users) or a user ID (regular users)
     if (authCookie.value.includes('@')) {
       // It's an email from SSO - check user_profiles table
       console.log('🔍 Checking SSO user by email:', authCookie.value);
       
-      const { data: userProfile, error: profileError } = await supabase
+      const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('email', authCookie.value)
@@ -57,10 +57,9 @@ export async function middleware(req: NextRequest) {
       
       if (userProfile) {
         // User exists in profiles table - they're authenticated
-        user = userProfile;
+        userFound = true;
         console.log('✅ SSO user validated in profiles table');
       } else {
-        error = profileError;
         console.log('❌ SSO user not found in profiles table');
       }
       
@@ -69,11 +68,10 @@ export async function middleware(req: NextRequest) {
       console.log('🔍 Checking regular user by ID:', authCookie.value);
       
       try {
-        const { data: authData, error: authError } = await supabase.auth.admin.getUserById(authCookie.value);
-        user = authData?.user;
-        error = authError;
+        const { data: authData } = await supabase.auth.admin.getUserById(authCookie.value);
         
-        if (user) {
+        if (authData?.user) {
+          userFound = true;
           console.log('✅ Regular user validated in auth system');
         } else {
           console.log('❌ Regular user not found in auth system');
@@ -81,12 +79,11 @@ export async function middleware(req: NextRequest) {
       } catch (e) {
         // getUserById might fail if it's not a valid UUID
         console.log('❌ Invalid user ID format');
-        error = e;
       }
     }
     
     // If no user found, redirect to login
-    if (!user || error) {
+    if (!userFound) {
       console.log('❌ User validation failed, redirecting to login');
       const redirectUrl = req.nextUrl.clone();
       redirectUrl.pathname = '/auth/login';
