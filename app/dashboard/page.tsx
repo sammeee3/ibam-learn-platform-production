@@ -116,14 +116,20 @@ const IBAMDashboard: React.FC = () => {
     const authToken = searchParams?.get('auth') || null;
     const email = searchParams?.get('email') || null;
     
-    if (authToken && email) {
-      // Set a flag in localStorage to mark user as authenticated
-      localStorage.setItem('ibam-auth-email', email);
-      localStorage.setItem('ibam-auth-token', authToken);
-      
-      // Redirect to clean dashboard URL (without token in URL)
-      router.push('/dashboard');
-    }
+if (authToken && email) {
+  // Set in localStorage for client-side use
+  localStorage.setItem('ibam-auth-email', email);
+  localStorage.setItem('ibam-auth-token', authToken);
+  
+  // CRITICAL: Set cookie that middleware expects
+  document.cookie = `ibam_auth=${email}; path=/; max-age=${60*60*24*7}; secure; samesite=lax`;
+  
+  // Redirect to clean dashboard URL (without token in URL)
+  setTimeout(() => {
+    router.push('/dashboard');
+  }, 100); // Small delay to ensure cookie is set
+}
+
   }, [searchParams, router]);
 
   // Check if user is authenticated
