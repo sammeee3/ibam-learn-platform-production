@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -30,24 +31,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // Generate a one-time token
-  const authToken = Buffer.from(`${email}:${Date.now()}`).toString('base64');
-  
-  // Store token in database temporarily
-  await supabase
-    .from('user_profiles')
-    .update({ 
-      magic_token: authToken,
-      magic_token_expires_at: new Date(Date.now() + 60000).toISOString() // 1 minute
-    })
-    .eq('email', email);
+  console.log('User found, setting cookie and redirecting');
 
-  // CRITICAL: Redirect to dashboard WITH TOKEN IN URL
-  const dashboardUrl = `${request.nextUrl.origin}/dashboard?auth=${authToken}&email=${encodeURIComponent(email)}`;
+  // CRITICAL: Set cookie using Next.js cookies() function
+  const cookieStore = cookies();
   
-  console.log('Redirecting to:', dashboardUrl);
+  // Set the ibam_auth cookie that middleware expects
+  cookieStore.set('ibam_auth', email, {
+    httpOnly: false,  // Allow client access
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/'
+  });
   
-  return NextResponse.redirect(dashboardUrl);
+  // Also set backup cookies for redundancy
+  cookieStore.set('ibam_user_email', email, {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/'
+  });
+  
+  console.log('Cookies set, redirecting to dashboard');
+  
+  // Redirect to clean dashboard (no token in URL needed now)
+  return NextResponse.redirect(new URL('/dashboard', request.url));
 }
 
 export async function OPTIONS() {
