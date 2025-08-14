@@ -9,13 +9,16 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get('email');
   const token = searchParams.get('token');
   
+  console.log('Direct auth attempt for:', email);
+  
   if (!email || token !== 'ibam-systeme-secret-2025') {
+    console.log('Invalid token or missing email');
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
-  // Simpler approach - just verify user exists in database
+  // Verify user exists
   const { data: userProfile, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -23,23 +26,28 @@ export async function GET(request: NextRequest) {
     .single();
   
   if (!userProfile) {
-    // User doesn't exist - redirect to login
+    console.log('User not found:', email);
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // User exists - create session and redirect to dashboard
-  const response = NextResponse.redirect(new URL('/dashboard', request.url));
+  // Generate a one-time token
+  const authToken = Buffer.from(`${email}:${Date.now()}`).toString('base64');
   
-  // Set auth cookie to bypass Supabase auth
-  response.cookies.set('ibam-auth-bypass', email, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/'
-  });
+  // Store token in database temporarily
+  await supabase
+    .from('user_profiles')
+    .update({ 
+      magic_token: authToken,
+      magic_token_expires_at: new Date(Date.now() + 60000).toISOString() // 1 minute
+    })
+    .eq('email', email);
+
+  // CRITICAL: Redirect to dashboard WITH TOKEN IN URL
+  const dashboardUrl = `${request.nextUrl.origin}/dashboard?auth=${authToken}&email=${encodeURIComponent(email)}`;
   
-  return response;
+  console.log('Redirecting to:', dashboardUrl);
+  
+  return NextResponse.redirect(dashboardUrl);
 }
 
 export async function OPTIONS() {
