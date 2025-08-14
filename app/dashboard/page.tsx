@@ -1,9 +1,8 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Calendar, User, BookOpen, Award, TrendingUp, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Supabase configuration
 const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
@@ -12,40 +11,39 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // IBAM Logo Component
 interface IBAMLogoProps {
- size?: 'small' | 'medium' | 'large' | 'xlarge';
- className?: string;
- style?: React.CSSProperties;
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 const IBAMLogo: React.FC<IBAMLogoProps> = ({
- size = 'medium',
- className = '',
- style = {}
+  size = 'medium',
+  className = '',
+  style = {}
 }: IBAMLogoProps) => {
- const sizeMap = {
-   small: { width: '24px', height: 'auto' },
-   medium: { width: '40px', height: 'auto' },
-   large: { width: '60px', height: 'auto' },
-   xlarge: { width: '120px', height: 'auto' }
- };
+  const sizeMap = {
+    small: { width: '24px', height: 'auto' },
+    medium: { width: '40px', height: 'auto' },
+    large: { width: '60px', height: 'auto' },
+    xlarge: { width: '120px', height: 'auto' }
+  };
 
- const logoFile = size === 'small'
-   ? '/images/branding/mini-logo.png'
-   : '/images/branding/ibam-logo.png';
+  const logoFile = size === 'small'
+    ? '/images/branding/mini-logo.png'
+    : '/images/branding/ibam-logo.png';
 
- return (
-   <img
-     src={logoFile}
-     alt="IBAM Logo"
-     className={className}
-     style={{ ...sizeMap[size], ...style }}
-     onError={(e) => {
-       e.currentTarget.src = '/images/branding/ibam-logo.png';
-     }}
-   />
- );
+  return (
+    <img
+      src={logoFile}
+      alt="IBAM Logo"
+      className={className}
+      style={{ ...sizeMap[size], ...style }}
+      onError={(e) => {
+        e.currentTarget.src = '/images/branding/ibam-logo.png';
+      }}
+    />
+  );
 };
-
 // Type Definitions - Fixed to match Supabase return types
 interface UserProgressRaw {
  session_id: number;
@@ -109,13 +107,36 @@ const MODULE_CONFIG = [
 ];
 
 const IBAMDashboard: React.FC = () => {
- const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
- const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
- const [loading, setLoading] = useState<boolean>(true);
- const [showTrainersModal, setShowTrainersModal] = useState<boolean>(false);
- const [userId, setUserId] = useState<string>('');
- const [dataSource, setDataSource] = useState<'real' | 'mock'>('mock');
- const router = useRouter();
+  // NEW AUTHENTICATION CODE STARTS HERE
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check for auth token in URL
+    const authToken = searchParams?.get('auth') || null;
+    const email = searchParams?.get('email') || null;
+    
+    if (authToken && email) {
+      // Set a flag in localStorage to mark user as authenticated
+      localStorage.setItem('ibam-auth-email', email);
+      localStorage.setItem('ibam-auth-token', authToken);
+      
+      // Redirect to clean dashboard URL (without token in URL)
+      router.push('/dashboard');
+    }
+  }, [searchParams, router]);
+
+  // Check if user is authenticated
+  const isAuthenticated = localStorage.getItem('ibam-auth-email');
+  // NEW AUTHENTICATION CODE ENDS HERE
+
+  // YOUR EXISTING CODE CONTINUES BELOW
+  const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showTrainersModal, setShowTrainersModal] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string>('');
+  const [dataSource, setDataSource] = useState<'real' | 'mock'>('mock');
 
   // Continue Where You Left Off State
   const [continueSession, setContinueSession] = useState<{
