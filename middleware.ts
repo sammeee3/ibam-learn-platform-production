@@ -27,35 +27,82 @@ export async function middleware(req: NextRequest) {
   const authCookie = req.cookies.get('ibam_auth');
   
   if (!authCookie) {
+    console.log('❌ No auth cookie found, redirecting to login');
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/auth/login';
     redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
   }
   
-  // Validate user exists in SUPABASE AUTH (not profiles table)
+  // Validate user exists
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    // Check auth.users table instead of profiles table
-    const { data: { user }, error } = await supabase.auth.admin.getUserById(authCookie.value);
+    let user = null;
+    let error = null;
     
-    if (error || !user) {
-      console.log('❌ User not found in auth system, blocking access');
+    // Check if the cookie value is an email (SSO users) or a user ID (regular users)
+    if (authCookie.value.includes('@')) {
+      // It's an email from SSO - check user_profiles table
+      console.log('🔍 Checking SSO user by email:', authCookie.value);
+      
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('email', authCookie.value)
+        .single();
+      
+      if (userProfile) {
+        // User exists in profiles table - they're authenticated
+        user = userProfile;
+        console.log('✅ SSO user validated in profiles table');
+      } else {
+        error = profileError;
+        console.log('❌ SSO user not found in profiles table');
+      }
+      
+    } else {
+      // It's a regular user ID - check auth.users table
+      console.log('🔍 Checking regular user by ID:', authCookie.value);
+      
+      try {
+        const { data: authData, error: authError } = await supabase.auth.admin.getUserById(authCookie.value);
+        user = authData?.user;
+        error = authError;
+        
+        if (user) {
+          console.log('✅ Regular user validated in auth system');
+        } else {
+          console.log('❌ Regular user not found in auth system');
+        }
+      } catch (e) {
+        // getUserById might fail if it's not a valid UUID
+        console.log('❌ Invalid user ID format');
+        error = e;
+      }
+    }
+    
+    // If no user found, redirect to login
+    if (!user || error) {
+      console.log('❌ User validation failed, redirecting to login');
       const redirectUrl = req.nextUrl.clone();
       redirectUrl.pathname = '/auth/login';
       redirectUrl.searchParams.set('error', 'unauthorized');
-      return NextResponse.redirect(redirectUrl);
+      
+      // Clear the invalid cookie
+      const response = NextResponse.redirect(redirectUrl);
+      response.cookies.delete('ibam_auth');
+      return response;
     }
     
-    console.log('✅ User validated in auth system, allowing access');
+    console.log('✅ User validated, allowing access to protected route');
     return NextResponse.next();
     
   } catch (error) {
-    console.error('Auth validation error:', error);
+    console.error('Middleware error:', error);
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/auth/login';
     redirectUrl.searchParams.set('error', 'validation_failed');
