@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBAM Learning Platform Access</title>
+    <style>
+        .ibam-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .ibam-container {
+                margin: 10px;
+                padding: 30px 15px;
+                border-radius: 12px;
+            }
+            
+            .ibam-title {
+                font-size: 24px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .ibam-subtitle {
+                font-size: 16px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .ibam-button {
+                font-size: 18px !important;
+                padding: 14px 28px !important;
+                min-width: 180px !important;
+            }
+        }
+        
+        .ibam-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .ibam-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .ibam-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-decoration: none;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .ibam-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+        }
+        
+        .ibam-button:disabled {
+            background: linear-gradient(45deg, #ccc, #999);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .ibam-icon {
+            margin-right: 12px;
+            font-size: 24px;
+        }
+        
+        .ibam-note {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .email-display {
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #4ecdc4;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            color: #333;
+            font-weight: 500;
+            min-height: 20px;
+        }
+        
+        .status-message {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            line-height: 1.4;
+        }
+        
+        .loading {
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+        }
+        
+        .error {
+            background: rgba(255,0,0,0.2);
+            border: 1px solid rgba(255,0,0,0.5);
+            color: #ffcccc;
+        }
+        
+        .success {
+            background: rgba(0,255,0,0.2);
+            border: 1px solid rgba(0,255,0,0.5);
+            color: #ccffcc;
+        }
+    </style>
+</head>
+<body>
+    <div class="ibam-container">
+        <h1 class="ibam-title">🎯 IBAM Learning Platform</h1>
+        <p class="ibam-subtitle">Secure access for System.io members only</p>
+        
+        <div class="email-display" id="emailDisplay">
+            <span class="loading">🔄 Detecting your System.io account...</span>
+        </div>
+        
+        <button class="ibam-button" id="accessButton" onclick="handleAccess()" disabled>
+            <span class="ibam-icon">🔒</span>
+            <span id="buttonText">Validating System.io Login...</span>
+        </button>
+        
+        <div class="status-message" id="statusMessage">
+            🔍 Verifying you're logged into System.io with an authorized IBAM account...
+        </div>
+    </div>
+
+    <script>
+        let authorizedEmail = null;
+        let detectionAttempts = 0;
+        const maxAttempts = 3;
+        
+        // HARDCODED: Only these emails can access the platform
+        const authorizedEmails = [
+            'jsamuelson@ibam.org',
+            'sammeee@yahoo.com',  // Testing account
+            // Add other authorized emails here
+        ];
+        
+        function detectSystemioEmail() {
+            detectionAttempts++;
+            console.log(`🔍 Detection attempt ${detectionAttempts}/${maxAttempts}`);
+            
+            // Method 1: Check URL parameters (if System.io passes email)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('email')) {
+                console.log('✅ Found email in URL parameters');
+                return urlParams.get('email');
+            }
+            
+            // Method 2: Check if we're in System.io iframe and try to get email
+            try {
+                // Look for System.io specific elements
+                const systemioElements = document.querySelectorAll('[data-email], [data-user-email], .user-email');
+                for (const element of systemioElements) {
+                    const email = element.textContent || element.getAttribute('data-email') || element.value;
+                    if (email && email.includes('@')) {
+                        console.log('✅ Found email in System.io element');
+                        return email.trim();
+                    }
+                }
+                
+                // Check meta tags
+                const metaEmail = document.querySelector('meta[name="user-email"]');
+                if (metaEmail) {
+                    console.log('✅ Found email in meta tag');
+                    return metaEmail.getAttribute('content');
+                }
+                
+                // Check JavaScript variables that System.io might set
+                if (window.currentUser && window.currentUser.email) {
+                    console.log('✅ Found email in window.currentUser');
+                    return window.currentUser.email;
+                }
+                
+                if (window.user && window.user.email) {
+                    console.log('✅ Found email in window.user');
+                    return window.user.email;
+                }
+                
+                // Check localStorage for System.io user data
+                const userData = localStorage.getItem('systeme_user') || localStorage.getItem('user');
+                if (userData) {
+                    try {
+                        const parsed = JSON.parse(userData);
+                        if (parsed.email) {
+                            console.log('✅ Found email in localStorage');
+                            return parsed.email;
+                        }
+                    } catch (e) {
+                        console.log('❌ Error parsing stored user data');
+                    }
+                }
+                
+            } catch (error) {
+                console.log('❌ Error during email detection:', error.message);
+            }
+            
+            console.log('❌ No System.io email detected');
+            return null;
+        }
+        
+        function updateStatus(message, type = 'loading') {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+        }
+        
+        function startDetection() {
+            const emailDisplay = document.getElementById('emailDisplay');
+            const accessButton = document.getElementById('accessButton');
+            const buttonText = document.getElementById('buttonText');
+            
+            // Try to detect email
+            const detectedEmail = detectSystemioEmail();
+            
+            if (detectedEmail && authorizedEmails.includes(detectedEmail.toLowerCase())) {
+                // SUCCESS: Authorized email detected
+                authorizedEmail = detectedEmail;
+                emailDisplay.innerHTML = `✅ ${detectedEmail}`;
+                emailDisplay.className = 'email-display success';
+                
+                accessButton.disabled = false;
+                accessButton.querySelector('.ibam-icon').textContent = '🚀';
+                buttonText.textContent = 'Enter Learning Platform';
+                
+                updateStatus('✅ Authorized System.io account verified! Click to access your learning platform.', 'success');
+                
+            } else if (detectedEmail) {
+                // DETECTED but NOT AUTHORIZED
+                emailDisplay.innerHTML = `❌ ${detectedEmail}`;
+                emailDisplay.className = 'email-display error';
+                
+                updateStatus(`🚫 Access Denied: ${detectedEmail} is not authorized for IBAM Learning Platform. Please contact support.`, 'error');
+                
+            } else {
+                // NO DETECTION
+                if (detectionAttempts < maxAttempts) {
+                    // Retry detection
+                    updateStatus(`🔄 Detection attempt ${detectionAttempts}/${maxAttempts}... Retrying in 2 seconds.`, 'loading');
+                    setTimeout(startDetection, 2000);
+                    return;
+                } else {
+                    // Give up after max attempts
+                    emailDisplay.innerHTML = '❌ System.io account not detected';
+                    emailDisplay.className = 'email-display error';
+                    
+                    updateStatus('🚫 Unable to verify System.io login. Please make sure you are logged into System.io and refresh this page.', 'error');
+                }
+            }
+        }
+        
+        function handleAccess() {
+            if (!authorizedEmail) {
+                alert('🚫 Access denied: No authorized System.io account detected.');
+                return;
+            }
+            
+            console.log('🚀 Authorized access for:', authorizedEmail);
+            
+            const url = `https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=${encodeURIComponent(authorizedEmail)}&token=ibam-systeme-secret-2025`;
+            
+            // Security log
+            console.log('🔐 SECURITY: Authorized System.io user accessing platform');
+            console.log('📧 Email:', authorizedEmail);
+            console.log('🔗 URL:', url);
+            
+            // Force open in new window/tab
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+        
+        // Start detection after page load
+        window.addEventListener('load', function() {
+            setTimeout(startDetection, 1000);
+        });
+    </script>
+</body>
+</html>

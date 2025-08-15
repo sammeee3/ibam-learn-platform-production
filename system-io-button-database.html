@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBAM Learning Platform Access</title>
+    <style>
+        .ibam-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .ibam-container {
+                margin: 10px;
+                padding: 30px 15px;
+                border-radius: 12px;
+            }
+            
+            .ibam-title {
+                font-size: 24px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .ibam-subtitle {
+                font-size: 16px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .ibam-button {
+                font-size: 18px !important;
+                padding: 14px 28px !important;
+                min-width: 180px !important;
+            }
+        }
+        
+        .ibam-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .ibam-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .ibam-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-decoration: none;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .ibam-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+        }
+        
+        .ibam-button:disabled {
+            background: linear-gradient(45deg, #ccc, #999);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .ibam-icon {
+            margin-right: 12px;
+            font-size: 24px;
+        }
+        
+        .ibam-note {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .email-display {
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #4ecdc4;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            color: #333;
+            font-weight: 500;
+            min-height: 20px;
+        }
+        
+        .status-message {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            line-height: 1.4;
+        }
+        
+        .loading {
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+        }
+        
+        .error {
+            background: rgba(255,0,0,0.2);
+            border: 1px solid rgba(255,0,0,0.5);
+            color: #ffcccc;
+        }
+        
+        .success {
+            background: rgba(0,255,0,0.2);
+            border: 1px solid rgba(0,255,0,0.5);
+            color: #ccffcc;
+        }
+        
+        .email-input {
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #4ecdc4;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="ibam-container">
+        <h1 class="ibam-title">🎯 IBAM Learning Platform</h1>
+        <p class="ibam-subtitle">Access your faith-driven business mastery course</p>
+        
+        <input type="email" 
+               class="email-input" 
+               id="userEmail" 
+               placeholder="Enter your IBAM membership email"
+               required>
+        
+        <button class="ibam-button" id="accessButton" onclick="handleAccess()">
+            <span class="ibam-icon">🚀</span>
+            <span id="buttonText">Enter Learning Platform</span>
+        </button>
+        
+        <div class="status-message">
+            🔒 Secure access for approved IBAM members only. Your email will be verified against our membership database.
+        </div>
+    </div>
+
+    <script>
+        function handleAccess() {
+            const emailInput = document.getElementById('userEmail');
+            const userEmail = emailInput.value.trim();
+            
+            if (!userEmail) {
+                alert('Please enter your email address');
+                emailInput.focus();
+                return;
+            }
+            
+            if (!userEmail.includes('@')) {
+                alert('Please enter a valid email address');
+                emailInput.focus();
+                return;
+            }
+            
+            console.log('🚀 Attempting access with email:', userEmail);
+            
+            // The SSO route will check if this email exists in user_profiles table
+            const url = `https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=${encodeURIComponent(userEmail)}&token=ibam-systeme-secret-2025`;
+            
+            console.log('🔗 URL:', url);
+            
+            // Force open in new window/tab
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('userEmail').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleAccess();
+            }
+        });
+        
+        // Auto-focus email input
+        window.addEventListener('load', function() {
+            document.getElementById('userEmail').focus();
+        });
+    </script>
+</body>
+</html>

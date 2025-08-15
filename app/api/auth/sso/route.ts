@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get('email');
   const token = searchParams.get('token');
   
-  console.log('SSO attempt for:', email);
+  console.log('🔍 Enhanced SSO attempt for:', email);
   
   // Use environment variable with fallback to current secret for backward compatibility
   const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';

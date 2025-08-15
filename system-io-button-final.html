@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBAM Learning Platform Access</title>
+    <style>
+        .ibam-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .ibam-container {
+                margin: 10px;
+                padding: 30px 15px;
+                border-radius: 12px;
+            }
+            
+            .ibam-title {
+                font-size: 24px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .ibam-subtitle {
+                font-size: 16px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .ibam-button {
+                font-size: 18px !important;
+                padding: 14px 28px !important;
+                min-width: 180px !important;
+            }
+        }
+        
+        .ibam-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .ibam-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .ibam-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-decoration: none;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .ibam-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .ibam-icon {
+            margin-right: 12px;
+            font-size: 24px;
+        }
+        
+        .ibam-note {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .email-input {
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #4ecdc4;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="ibam-container">
+        <h1 class="ibam-title">🎯 IBAM Learning Platform</h1>
+        <p class="ibam-subtitle">Access your faith-driven business mastery course</p>
+        
+        <input type="email" 
+               class="email-input" 
+               id="userEmail" 
+               placeholder="Enter your email address"
+               required>
+        
+        <button class="ibam-button" onclick="handleAccess()">
+            <span class="ibam-icon">🚀</span>
+            Enter Learning Platform
+        </button>
+        
+        <p class="ibam-note">Opens in a new window for the best experience</p>
+    </div>
+
+    <script>
+        // Auto-fill email if available from System.io
+        window.addEventListener('load', function() {
+            // Try to get email from various sources
+            const possibleEmails = [
+                '%%EMAIL%%',     // System.io alternative format
+                '[email]',       // Another common format
+                '{{email}}',     // Handlebars style
+                '{email}',       // Simple format
+            ];
+            
+            let foundEmail = null;
+            for (const email of possibleEmails) {
+                if (email.includes('@') && !email.includes('%') && !email.includes('[') && !email.includes('{')) {
+                    foundEmail = email;
+                    break;
+                }
+            }
+            
+            const emailInput = document.getElementById('userEmail');
+            if (foundEmail) {
+                emailInput.value = foundEmail;
+                emailInput.style.background = 'rgba(76, 205, 196, 0.2)';
+                emailInput.style.borderColor = '#4ecdc4';
+            }
+        });
+        
+        function handleAccess() {
+            const emailInput = document.getElementById('userEmail');
+            const userEmail = emailInput.value.trim();
+            
+            if (!userEmail) {
+                alert('Please enter your email address');
+                emailInput.focus();
+                return;
+            }
+            
+            if (!userEmail.includes('@')) {
+                alert('Please enter a valid email address');
+                emailInput.focus();
+                return;
+            }
+            
+            const url = `https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=${encodeURIComponent(userEmail)}&token=ibam-systeme-secret-2025`;
+            
+            console.log('Opening with email:', userEmail);
+            console.log('Final URL:', url);
+            
+            // Force open in new window/tab
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('userEmail').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleAccess();
+            }
+        });
+    </script>
+</body>
+</html>
