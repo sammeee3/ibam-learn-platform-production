@@ -20,19 +20,84 @@ export async function GET(request: NextRequest) {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
-  // Verify user exists
-  const { data: userProfile } = await supabase
+  // ENHANCED USER VERIFICATION: Check profiles first, then auth with auto-creation
+  let userProfile: any = null;
+  let userAuth: any = null;
+  
+  // Step 1: Check user_profiles table first (preferred)
+  const { data: existingProfile, error: profileError } = await supabase
     .from('user_profiles')
     .select('*')
     .eq('email', email)
     .single();
   
-  if (!userProfile) {
-    console.log('User not found:', email);
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+  if (existingProfile) {
+    console.log('✅ User found in user_profiles:', email);
+    userProfile = existingProfile;
+  } else {
+    console.log('❌ User not found in user_profiles, checking auth.users...', profileError?.message);
+    
+    // Step 2: Check auth.users table as fallback
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+    
+    if (authError) {
+      console.log('❌ Error checking auth.users:', authError.message);
+      return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
+    
+    userAuth = authUsers.users.find(user => user.email === email) || null;
+    
+    if (userAuth) {
+      console.log('✅ User found in auth.users, creating profile...', email);
+      
+      // Step 3: Auto-create missing profile
+      const { data: newProfile, error: createError } = await supabase
+        .from('user_profiles')
+        .insert({
+          auth_user_id: userAuth.id,
+          email: email,
+          first_name: userAuth.user_metadata?.full_name?.split(' ')[0] || 'User',
+          last_name: userAuth.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          has_platform_access: true,
+          is_active: true,
+          member_type_key: 'course_student',
+          subscription_status: 'active',
+          primary_role_key: 'course_student',
+          location_country: 'USA',
+          created_via_webhook: false,
+          tier_level: 1,
+          current_level: 1,
+          login_count: 0,
+          ai_interaction_count: 0,
+          total_points: 0,
+          current_streak: 0,
+          badges_earned: [],
+          coaching_preferences: {},
+          tier_config_cache: {},
+          additional_roles: [],
+          systeme_tags: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          last_activity: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.log('❌ Error creating profile:', createError.message);
+        return NextResponse.redirect(new URL('/auth/login', request.url));
+      }
+      
+      console.log('✅ Profile created successfully for:', email);
+      userProfile = newProfile;
+    } else {
+      console.log('❌ User not found in auth.users either:', email);
+      return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
   }
 
   console.log('User verified, setting cookie and redirecting');
+  console.log('Final user profile:', userProfile?.email);
 
   // Create the dashboard URL
   const dashboardUrl = new URL('/dashboard', request.url);
