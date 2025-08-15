@@ -222,7 +222,8 @@ export async function POST(request: NextRequest) {
     
     // IMPLEMENTED: Secure user account creation and magic token system
     if (courseAssignment) {
-      await createSecureUserAccount(courseAssignment)
+      const accountCreated = await createSecureUserAccount(courseAssignment)
+      console.log(`🎯 Account creation result: ${accountCreated ? 'SUCCESS' : 'FAILED'}`)
     }
     
     return NextResponse.json({ 
