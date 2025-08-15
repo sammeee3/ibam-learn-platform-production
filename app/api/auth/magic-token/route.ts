@@ -17,41 +17,25 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
   try {
-    // Find user profile with matching magic token in notes field
-    const { data: profiles, error: profileError } = await supabase
+    // Find user profile with matching magic token
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
-      .not('notes', 'is', null);
+      .eq('magic_token', token)
+      .single();
     
-    if (profileError || !profiles) {
-      console.log('❌ Error fetching profiles:', profileError?.message);
+    if (profileError || !profile) {
+      console.log('❌ Invalid token or user not found:', profileError?.message);
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     
-    // Find profile with matching token
-    let validProfile: any = null;
-    for (const profile of profiles) {
-      try {
-        const notes = JSON.parse(profile.notes || '{}');
-        if (notes.magic_token === token) {
-          // Check if token is still valid (not expired)
-          if (notes.token_expires && new Date(notes.token_expires) > new Date()) {
-            validProfile = profile;
-            break;
-          }
-        }
-      } catch (e) {
-        // Skip profiles with invalid JSON in notes
-        continue;
-      }
-    }
-    
-    if (!validProfile) {
-      console.log('❌ Invalid or expired token');
+    // Check if token is still valid (not expired)
+    if (profile.magic_token_expires_at && new Date(profile.magic_token_expires_at) <= new Date()) {
+      console.log('❌ Token expired');
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     
-    const email = validProfile.email;
+    const email = profile.email;
     console.log('✅ Valid token for:', email);
     
     // Create the dashboard URL

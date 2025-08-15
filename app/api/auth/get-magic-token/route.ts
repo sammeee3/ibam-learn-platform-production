@@ -44,19 +44,8 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
     
-    // Parse notes to get magic token
-    let magicTokenData: any = null;
-    try {
-      magicTokenData = JSON.parse(profile.notes || '{}');
-    } catch (e) {
-      console.log('❌ Invalid notes data for:', email);
-      return NextResponse.json({
-        success: false,
-        message: 'No valid access token found'
-      }, { status: 404 });
-    }
-    
-    if (!magicTokenData || !magicTokenData.magic_token) {
+    // Check magic token
+    if (!profile.magic_token) {
       console.log('❌ No magic token found for:', email);
       return NextResponse.json({
         success: false,
@@ -65,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Check if token is still valid
-    if (magicTokenData.token_expires && new Date(magicTokenData.token_expires) <= new Date()) {
+    if (profile.magic_token_expires_at && new Date(profile.magic_token_expires_at) <= new Date()) {
       console.log('❌ Expired token for:', email);
       return NextResponse.json({
         success: false,
@@ -77,9 +66,9 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      token: magicTokenData.magic_token,
-      course_name: magicTokenData.course_name || 'IBAM Course',
-      expires_at: magicTokenData.token_expires
+      token: profile.magic_token,
+      course_name: 'IBAM Course',
+      expires_at: profile.magic_token_expires_at
     });
     
   } catch (error: any) {

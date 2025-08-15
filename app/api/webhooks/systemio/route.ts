@@ -110,12 +110,8 @@ async function createSecureUserAccount(courseAssignment: any) {
           tier_level: 1,
           current_level: 1,
           login_count: 0,
-          notes: JSON.stringify({
-            magic_token: magicToken,
-            token_expires: tokenExpiry.toISOString(),
-            assigned_course: assignedCourse.courseId,
-            course_name: assignedCourse.courseName
-          })
+          magic_token: magicToken,
+          magic_token_expires_at: tokenExpiry.toISOString()
         })
         .select()
         .single()
@@ -135,12 +131,8 @@ async function createSecureUserAccount(courseAssignment: any) {
         .update({
           has_platform_access: true,
           is_active: true,
-          notes: JSON.stringify({
-            magic_token: magicToken,
-            token_expires: tokenExpiry.toISOString(),
-            assigned_course: assignedCourse.courseId,
-            course_name: assignedCourse.courseName
-          })
+          magic_token: magicToken,
+          magic_token_expires_at: tokenExpiry.toISOString()
         })
         .eq('email', email)
       
