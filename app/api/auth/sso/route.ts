@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       if (userAuth) {
         console.log('✅ Found in auth.users, creating profile for:', email);
         
-        // Create the missing profile
+        // Create the missing profile with valid member type
         const { data: newProfile, error: createError } = await supabase
           .from('user_profiles')
           .insert({
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
             last_name: '',
             has_platform_access: true,
             is_active: true,
-            member_type_key: 'course_student',
+            member_type_key: 'impact_member',  // Use valid key from database
             subscription_status: 'active',
             primary_role_key: 'course_student',
             location_country: 'USA',
