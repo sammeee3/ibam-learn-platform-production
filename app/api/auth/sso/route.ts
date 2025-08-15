@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
   
   console.log('SSO attempt for:', email);
   
-  if (!email || token !== 'ibam-systeme-secret-2025') {
+  // Use environment variable with fallback to current secret for backward compatibility
+  const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';
+  
+  if (!email || token !== SYSTEME_SECRET) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
@@ -41,7 +44,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set({
     name: 'ibam_auth',
     value: email,
-    httpOnly: false,
+    httpOnly: true, // SECURITY FIX: Prevent XSS cookie theft
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,

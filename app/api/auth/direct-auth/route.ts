@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get('email');
   const token = searchParams.get('token');
   
-  if (!email || token !== 'ibam-systeme-secret-2025') {
+  // Use environment variable with fallback for backward compatibility
+  const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';
+  
+  if (!email || token !== SYSTEME_SECRET) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
@@ -56,7 +59,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': 'text/html',
-      'Set-Cookie': `ibam_auth=${email}; Path=/; Max-Age=${60*60*24*7}; Secure; SameSite=Lax`
+      'Set-Cookie': `ibam_auth=${email}; Path=/; Max-Age=${60*60*24*7}; HttpOnly; Secure; SameSite=Lax`
     }
   });
 }

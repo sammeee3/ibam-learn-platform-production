@@ -10,7 +10,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, secret } = body;
 
-    if (secret !== 'ibam-systeme-secret-2025') {
+    // Use environment variable with fallback for backward compatibility
+    const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';
+    
+    if (secret !== SYSTEME_SECRET) {
       return NextResponse.json({ success: false, error: 'Invalid secret' }, { status: 401 });
     }
 
