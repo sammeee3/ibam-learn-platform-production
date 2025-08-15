@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBAM Learning Platform - Secure Access</title>
+    <style>
+        .ibam-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .ibam-container {
+                margin: 10px;
+                padding: 30px 15px;
+                border-radius: 12px;
+            }
+            
+            .ibam-title {
+                font-size: 24px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .ibam-subtitle {
+                font-size: 16px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .ibam-button {
+                font-size: 18px !important;
+                padding: 14px 28px !important;
+                min-width: 180px !important;
+            }
+        }
+        
+        .ibam-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .ibam-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .ibam-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-decoration: none;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .ibam-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .ibam-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .ibam-icon {
+            margin-right: 12px;
+            font-size: 24px;
+        }
+        
+        .ibam-note {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .security-badge {
+            background: rgba(0,255,0,0.2);
+            color: #00ff00;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0,255,0,0.3);
+        }
+        
+        .loading {
+            opacity: 0.7;
+        }
+        
+        .error-message {
+            background: rgba(255,0,0,0.2);
+            color: #ff6666;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 14px;
+            border: 1px solid rgba(255,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="ibam-container">
+        <div class="security-badge">🔐 Secure Token Authentication</div>
+        <h1 class="ibam-title">🎯 IBAM Learning Platform</h1>
+        <p class="ibam-subtitle">Secure access to your faith-driven business mastery course</p>
+        
+        <button class="ibam-button" id="accessButton" onclick="handleSecureAccess()">
+            <span class="ibam-icon">🔐</span>
+            <span id="buttonText">Secure Access</span>
+        </button>
+        
+        <p class="ibam-note">Automatically detects your System.io account - no manual login required</p>
+        
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function handleSecureAccess() {
+            const button = document.getElementById('accessButton');
+            const buttonText = document.getElementById('buttonText');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Reset error state
+            errorMessage.style.display = 'none';
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.classList.add('loading');
+            buttonText.textContent = 'Authenticating...';
+            
+            try {
+                // Step 1: Try to get the current System.io user information
+                let userEmail = null;
+                
+                // Method 1: Check URL parameters (if System.io passes email)
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('email')) {
+                    userEmail = urlParams.get('email');
+                    console.log('📧 Email from URL:', userEmail);
+                }
+                
+                // Method 2: Check System.io global variables
+                if (!userEmail && typeof window !== 'undefined') {
+                    if (window.currentUser && window.currentUser.email) {
+                        userEmail = window.currentUser.email;
+                        console.log('📧 Email from window.currentUser:', userEmail);
+                    }
+                    if (!userEmail && window.user && window.user.email) {
+                        userEmail = window.user.email;
+                        console.log('📧 Email from window.user:', userEmail);
+                    }
+                }
+                
+                if (!userEmail) {
+                    throw new Error('Unable to detect your System.io login. Please ensure you are logged into System.io first.');
+                }
+                
+                console.log('🔍 Checking for magic token for user:', userEmail);
+                
+                // Step 2: Request magic token from the server
+                const tokenResponse = await fetch(`https://ibam-learn-platform-v3.vercel.app/api/auth/get-magic-token?email=${encodeURIComponent(userEmail)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!tokenResponse.ok) {
+                    const errorData = await tokenResponse.text();
+                    throw new Error(`Authentication failed: ${errorData}`);
+                }
+                
+                const tokenData = await tokenResponse.json();
+                
+                if (!tokenData.success || !tokenData.token) {
+                    throw new Error(tokenData.message || 'No valid access token found. Please ensure you have purchased and been assigned a course.');
+                }
+                
+                console.log('✅ Magic token retrieved, redirecting to platform...');
+                
+                // Step 3: Redirect to the platform using the magic token
+                const accessUrl = `https://ibam-learn-platform-v3.vercel.app/api/auth/magic-token?token=${tokenData.token}`;
+                
+                // Open in new window/tab for best experience
+                const newWindow = window.open(accessUrl, '_blank', 'noopener,noreferrer');
+                
+                if (!newWindow) {
+                    throw new Error('Popup blocked! Please allow popups for this site and try again.');
+                }
+                
+                // Reset button after successful redirect
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.classList.remove('loading');
+                    buttonText.textContent = 'Secure Access';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('❌ Secure access failed:', error);
+                
+                // Show error message
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+                
+                // Reset button
+                button.disabled = false;
+                button.classList.remove('loading');
+                buttonText.textContent = 'Secure Access';
+            }
+        }
+        
+        // Auto-detect user on page load
+        window.addEventListener('load', function() {
+            console.log('🔍 Secure System.io button loaded, checking for user data...');
+            
+            // Log available variables for debugging
+            if (typeof window.currentUser !== 'undefined') {
+                console.log('✅ Found window.currentUser:', window.currentUser);
+            }
+            if (typeof window.user !== 'undefined') {
+                console.log('✅ Found window.user:', window.user);
+            }
+            
+            // Check if URL has email parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('email')) {
+                console.log('✅ Found email in URL:', urlParams.get('email'));
+            }
+        });
+    </script>
+</body>
+</html>

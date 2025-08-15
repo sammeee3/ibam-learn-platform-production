@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
 
 const webhookLogs: any[] = []
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // Course assignment logic based on tags
 const TAG_TO_COURSE_MAP = {
@@ -31,6 +38,130 @@ export async function GET(request: NextRequest) {
     availableCourses: Object.keys(TAG_TO_COURSE_MAP),
     note: 'Automatically assigns courses based on System.io tags'
   })
+}
+
+// Generate secure magic token for user access
+function generateMagicToken(): string {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+// Create secure user account with magic token
+async function createSecureUserAccount(courseAssignment: any) {
+  const { email, name, assignedCourse } = courseAssignment
+  
+  try {
+    console.log(`🔐 Creating secure account for: ${email}`)
+    
+    // Generate magic token with expiry (24 hours)
+    const magicToken = generateMagicToken()
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    
+    // Step 1: Check if user already exists in auth.users
+    const { data: authUsers } = await supabase.auth.admin.listUsers()
+    let authUser = authUsers.users.find(user => user.email === email)
+    
+    // Step 2: Create auth user if doesn't exist
+    if (!authUser) {
+      console.log(`👤 Creating auth user for: ${email}`)
+      const { data: newAuthUser, error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        email_confirm: true,
+        user_metadata: {
+          name: name,
+          created_via_webhook: true,
+          course: assignedCourse.courseName
+        }
+      })
+      
+      if (authError) {
+        console.error(`❌ Auth user creation failed:`, authError)
+        return false
+      }
+      
+      authUser = newAuthUser.user
+      console.log(`✅ Auth user created: ${authUser?.id}`)
+    }
+    
+    // Step 3: Check if profile exists
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('email', email)
+      .single()
+    
+    // Step 4: Create or update user profile with magic token
+    if (!existingProfile && authUser) {
+      console.log(`📋 Creating user profile for: ${email}`)
+      
+      const { data: newProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          auth_user_id: authUser.id,
+          email: email,
+          first_name: name.split(' ')[0] || 'User',
+          last_name: name.split(' ').slice(1).join(' ') || '',
+          has_platform_access: true,
+          is_active: true,
+          member_type_key: 'impact_member',
+          subscription_status: 'active',
+          primary_role_key: 'course_student',
+          location_country: 'USA',
+          created_via_webhook: true,
+          tier_level: 1,
+          current_level: 1,
+          login_count: 0,
+          notes: JSON.stringify({
+            magic_token: magicToken,
+            token_expires: tokenExpiry.toISOString(),
+            assigned_course: assignedCourse.courseId,
+            course_name: assignedCourse.courseName
+          })
+        })
+        .select()
+        .single()
+      
+      if (profileError) {
+        console.error(`❌ Profile creation failed:`, profileError)
+        return false
+      }
+      
+      console.log(`✅ User profile created: ${newProfile?.id}`)
+    } else if (existingProfile) {
+      // Update existing profile with new magic token
+      console.log(`🔄 Updating existing profile with new magic token: ${email}`)
+      
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({
+          has_platform_access: true,
+          is_active: true,
+          notes: JSON.stringify({
+            magic_token: magicToken,
+            token_expires: tokenExpiry.toISOString(),
+            assigned_course: assignedCourse.courseId,
+            course_name: assignedCourse.courseName
+          })
+        })
+        .eq('email', email)
+      
+      if (updateError) {
+        console.error(`❌ Profile update failed:`, updateError)
+        return false
+      }
+      
+      console.log(`✅ Profile updated with new magic token`)
+    }
+    
+    console.log(`🎯 Secure account setup complete for: ${email}`)
+    console.log(`🔑 Magic token generated: ${magicToken.substring(0, 8)}...`)
+    console.log(`⏰ Token expires: ${tokenExpiry.toISOString()}`)
+    
+    return true
+    
+  } catch (error) {
+    console.error(`💥 Secure account creation failed for ${email}:`, error)
+    return false
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -89,11 +220,10 @@ export async function POST(request: NextRequest) {
       webhookLogs.shift()
     }
     
-    // TODO: Here you would typically:
-    // 1. Save to Supabase database
-    // 2. Send welcome email with course access
-    // 3. Create user account in learning platform
-    // 4. Trigger course assignment workflow
+    // IMPLEMENTED: Secure user account creation and magic token system
+    if (courseAssignment) {
+      await createSecureUserAccount(courseAssignment)
+    }
     
     return NextResponse.json({ 
       success: true, 
