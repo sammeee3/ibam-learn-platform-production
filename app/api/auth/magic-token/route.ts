@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Find profile with matching token
-    let validProfile = null;
+    let validProfile: any = null;
     for (const profile of profiles) {
       try {
         const notes = JSON.parse(profile.notes || '{}');

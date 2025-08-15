@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Parse notes to get magic token
-    let magicTokenData = null;
+    let magicTokenData: any = null;
     try {
       magicTokenData = JSON.parse(profile.notes || '{}');
     } catch (e) {
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       }, { status: 404 });
     }
     
-    if (!magicTokenData.magic_token) {
+    if (!magicTokenData || !magicTokenData.magic_token) {
       console.log('❌ No magic token found for:', email);
       return NextResponse.json({
         success: false,
