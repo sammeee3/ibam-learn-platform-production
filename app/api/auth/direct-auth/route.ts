@@ -44,8 +44,9 @@ export async function GET(request: NextRequest) {
           </div>
         </div>
         <script>
-          // Set cookie client-side
-          document.cookie = "ibam_auth=${email}; path=/; max-age=${60*60*24*7}; secure; samesite=lax";
+          // HYBRID COOKIES: Set both server and client cookies
+          // Client cookie for UI state (no sensitive data)
+          document.cookie = "ibam_auth=authenticated; path=/; max-age=${60*60*24*7}; secure; samesite=lax";
           // Short delay then redirect
           setTimeout(() => {
             window.location.href = '/dashboard';
@@ -59,7 +60,8 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': 'text/html',
-      'Set-Cookie': `ibam_auth=${email}; Path=/; Max-Age=${60*60*24*7}; HttpOnly; Secure; SameSite=Lax`
+      // Server cookie with sensitive data (httpOnly for security)
+      'Set-Cookie': `ibam_auth_server=${email}; Path=/; Max-Age=${60*60*24*7}; HttpOnly; Secure; SameSite=Lax`
     }
   });
 }

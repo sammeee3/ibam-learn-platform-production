@@ -40,11 +40,23 @@ export async function GET(request: NextRequest) {
   // Create the response with redirect
   const response = NextResponse.redirect(dashboardUrl);
   
-  // Set the cookie
+  // HYBRID COOKIE STRATEGY: Set both server-side and client-side cookies
+  // Server cookie (secure, httpOnly) for authentication validation
+  response.cookies.set({
+    name: 'ibam_auth_server',
+    value: email,
+    httpOnly: true, // Secure server-side validation
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/'
+  });
+  
+  // Client cookie (readable by JS) for UI state - minimal data only
   response.cookies.set({
     name: 'ibam_auth',
-    value: email,
-    httpOnly: true, // SECURITY FIX: Prevent XSS cookie theft
+    value: 'authenticated', // Only status, no sensitive data
+    httpOnly: false, // Client-side readable for UI
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,

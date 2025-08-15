@@ -23,8 +23,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
   
-  // Check for auth cookie (normal flow)
-  const authCookie = req.cookies.get('ibam_auth');
+  // Check for auth cookie (normal flow) - Use server cookie for security
+  const authCookie = req.cookies.get('ibam_auth_server') || req.cookies.get('ibam_auth'); // Fallback for compatibility
   
   if (!authCookie) {
     console.log('❌ No auth cookie found, redirecting to login');
@@ -44,15 +44,24 @@ export async function middleware(req: NextRequest) {
     // Initialize as undefined to handle both types
     let userFound = false;
     
+    // Determine cookie type and extract user identifier
+    let userIdentifier = authCookie.value;
+    
+    // If using server cookie, it contains email; if client cookie, need to get from server cookie
+    const serverCookie = req.cookies.get('ibam_auth_server');
+    if (serverCookie) {
+      userIdentifier = serverCookie.value; // Server cookie has the email
+    }
+    
     // Check if the cookie value is an email (SSO users) or a user ID (regular users)
-    if (authCookie.value.includes('@')) {
+    if (userIdentifier.includes('@')) {
       // It's an email from SSO - check user_profiles table
-      console.log('🔍 Checking SSO user by email:', authCookie.value);
+      console.log('🔍 Checking SSO user by email:', userIdentifier);
       
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('email', authCookie.value)
+        .eq('email', userIdentifier)
         .single();
       
       if (userProfile) {
@@ -63,12 +72,12 @@ export async function middleware(req: NextRequest) {
         console.log('❌ SSO user not found in profiles table');
       }
       
-    } else {
+    } else if (userIdentifier !== 'authenticated') {
       // It's a regular user ID - check auth.users table
-      console.log('🔍 Checking regular user by ID:', authCookie.value);
+      console.log('🔍 Checking regular user by ID:', userIdentifier);
       
       try {
-        const { data: authData } = await supabase.auth.admin.getUserById(authCookie.value);
+        const { data: authData } = await supabase.auth.admin.getUserById(userIdentifier);
         
         if (authData?.user) {
           userFound = true;
@@ -79,6 +88,14 @@ export async function middleware(req: NextRequest) {
       } catch (e) {
         // getUserById might fail if it's not a valid UUID
         console.log('❌ Invalid user ID format');
+      }
+    } else {
+      // Client cookie with 'authenticated' status - validate server cookie exists
+      if (serverCookie && serverCookie.value.includes('@')) {
+        userFound = true;
+        console.log('✅ Client cookie validated with server cookie');
+      } else {
+        console.log('❌ Client cookie present but no valid server cookie');
       }
     }
     
