@@ -110,5 +110,16 @@ export async function GET(request: NextRequest) {
     path: '/'
   });
   
+  // ALSO set the server cookie that user identification expects
+  response.cookies.set({
+    name: 'ibam_auth_server',
+    value: email,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/'
+  });
+  
   return response;
 }
