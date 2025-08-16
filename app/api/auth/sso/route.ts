@@ -91,31 +91,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  console.log('✅ User verification complete, setting cookie and redirecting to dashboard');
+  console.log('✅ User verified, setting cookie and redirecting to dashboard');
 
-  // Create the auth success URL (which will set localStorage and redirect to dashboard)
-  const dashboardUrl = new URL('/auth/success', request.url);
+  // Create the dashboard URL - DIRECT redirect like the working version
+  const dashboardUrl = new URL('/dashboard', request.url);
   
-  // Simple redirect - works perfectly for new window/tab opens
+  // Create the response with redirect
   const response = NextResponse.redirect(dashboardUrl);
   
-  // HYBRID COOKIE STRATEGY: Set both server-side and client-side cookies
-  // Server cookie (secure, httpOnly) for authentication validation
-  response.cookies.set({
-    name: 'ibam_auth_server',
-    value: email,
-    httpOnly: true, // Secure server-side validation
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/'
-  });
-  
-  // Client cookie (readable by JS) for UI state - minimal data only
+  // Set the simple cookie like the working version
   response.cookies.set({
     name: 'ibam_auth',
-    value: 'authenticated', // Only status, no sensitive data
-    httpOnly: false, // Client-side readable for UI
+    value: email,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
