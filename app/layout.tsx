@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import MobileAdminMenu from './components/common/MobileAdminMenu';
 import DownloadModal from './components/common/DownloadModal';
 
@@ -41,44 +40,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           console.log('❌ Layout: Profile fetch failed:', response.status);
         }
 
-        // Fetch user's action steps from the correct table
-        const { data: actionSteps, error: actionsError } = await supabase
-          .from('user_action_steps')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (actionsError) {
-          console.error('Error fetching actions:', actionsError);
-        } else {
-          console.log('Fetched action steps:', actionSteps?.length || 0, 'items');
-          
-          // Transform the data to match what downloadService expects
-          const transformedActions = actionSteps?.map(step => ({
-            type: step.action_type || 'business',
-            generatedStatement: step.generated_statement,
-            smartData: {
-              timed: step.timed,
-              measurable: step.measurable,
-              achievable: step.achievable,
-              relevant: step.relevant
-            },
-            completed: step.completed || false,
-            // Include other fields that might be useful
-            specificAction: step.specific_action,
-            ministryMinded: step.ministry_minded,
-            relational: step.relational,
-            accountabilityPartner: step.accountability_partner,
-            createdAt: step.created_at
-          })) || [];
-
-          // Update available downloads
-          setAvailableDownloads({
-            actions: transformedActions,
-            sessionData: null, // TODO: Fetch session data if needed
-            businessPlan: null // TODO: Fetch business plan if needed
-          });
-        }
+        // Skip action steps for now - will be loaded when needed
+        console.log('Skipping action steps fetch - no user auth yet');
+        
+        // Update available downloads with empty data
+        setAvailableDownloads({
+          actions: [],
+          sessionData: null,
+          businessPlan: null
+        });
 
       } catch (error) {
         console.error('Error in fetchUserData:', error);
@@ -90,45 +60,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   // Function to refresh data when download modal opens
   const handleOpenDownloadModal = async () => {
-    // Refresh data before opening modal
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data: actionSteps } = await supabase
-          .from('user_action_steps')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        // Transform the data
-        const transformedActions = actionSteps?.map(step => ({
-          type: step.action_type || 'business',
-          generatedStatement: step.generated_statement,
-          smartData: {
-            timed: step.timed,
-            measurable: step.measurable,
-            achievable: step.achievable,
-            relevant: step.relevant
-          },
-          completed: step.completed || false,
-          specificAction: step.specific_action,
-          ministryMinded: step.ministry_minded,
-          relational: step.relational,
-          accountabilityPartner: step.accountability_partner,
-          createdAt: step.created_at
-        })) || [];
-
-        setAvailableDownloads({
-          actions: transformedActions,
-          sessionData: null,
-          businessPlan: null
-        });
-      }
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-    
+    // Skip data refresh for now - just open modal
+    console.log('Opening download modal with current data');
     setDownloadModalOpen(true);
   };
 
