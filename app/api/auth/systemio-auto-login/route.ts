@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   
   // Try to get email from multiple sources
-  let email = null;
+  let email: string | null = null;
   
   // Method 1: URL parameter (if System.io passes it)
   email = searchParams.get('email') || searchParams.get('user_email');
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
   try {
-    let profile = null;
+    let profile: any = null;
     
     // Try to find user by email first
     if (email) {
