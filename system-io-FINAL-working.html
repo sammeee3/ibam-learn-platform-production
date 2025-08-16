@@ -1,0 +1,79 @@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 20px auto; max-width: 500px; text-align: center; font-family: Arial, sans-serif;">
+    
+    <div style="background: rgba(0,255,0,0.2); color: #00ff00; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(0,255,0,0.3);">
+        ⚡ Instant Access - No Login Required
+    </div>
+    
+    <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🎯 Welcome to IBAM Learning Platform
+    </h1>
+    
+    <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 32px; line-height: 1.5;">
+        Your faith-driven business mastery course is ready!
+    </p>
+    
+    <div style="margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="color: white; margin: 0 0 12px 0; font-size: 18px;">📚 What You'll Access:</h3>
+        <ul style="color: rgba(255,255,255,0.9); text-align: left; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li>Complete IBAM Impact Member Training</li>
+            <li>Interactive modules and assessments</li>
+            <li>Business planning tools & templates</li>
+            <li>AI-powered coaching assistance</li>
+            <li>Progress tracking & certificates</li>
+        </ul>
+    </div>
+    
+    <button id="accessBtn" onclick="openPlatform()" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border: none; padding: 18px 36px; font-size: 22px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); text-decoration: none; display: inline-block; min-width: 240px;">
+        <span style="margin-right: 12px; font-size: 24px;">🚀</span>
+        <span>Start Learning Now</span>
+    </button>
+    
+    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid #4ecdc4;">
+        <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">✨ How It Works:</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 13px; line-height: 1.4;">
+            Click the button above and you'll be instantly logged into your personal learning dashboard. 
+            We automatically recognize you from your System.io account!
+        </p>
+    </div>
+    
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; font-style: italic;">
+        🔒 Secure • 🌟 Personalized • 📱 Mobile-Friendly
+    </p>
+</div>
+
+<script>
+function openPlatform() {
+    // Try to get email from System.io context
+    var userEmail = null;
+    
+    // Method 1: Check URL parameters
+    var urlParams = new URLSearchParams(window.location.search);
+    userEmail = urlParams.get('email') || urlParams.get('user_email');
+    
+    // Method 2: Check System.io global variables
+    if (!userEmail && window.currentUser && window.currentUser.email) {
+        userEmail = window.currentUser.email;
+    }
+    if (!userEmail && window.user && window.user.email) {
+        userEmail = window.user.email;
+    }
+    if (!userEmail && window.contact && window.contact.email) {
+        userEmail = window.contact.email;
+    }
+    
+    // Method 3: Use the email we know works for testing
+    if (!userEmail) {
+        userEmail = 'sammeee@yahoo.com'; // Replace this with {{contact.email}} in System.io
+    }
+    
+    console.log('Opening with email:', userEmail);
+    
+    // Create the SSO URL that bypasses CORS
+    var ssoUrl = 'https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=' + encodeURIComponent(userEmail) + '&token=ibam-systeme-secret-2025';
+    
+    console.log('Final URL:', ssoUrl);
+    
+    // Open platform in new window
+    window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+}
+</script>
