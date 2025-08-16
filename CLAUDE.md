@@ -33,24 +33,40 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - AI coaching integration
 - Progress tracking
 - SSO authentication
+- **System.io Integration** - Automated user creation and seamless access
+- **Webhook System** - Automatic user enrollment from external platforms
+- **Magic Token Authentication** - Passwordless access for external users
 - Donation system
 - Admin dashboard
 
 ## Authentication Flow
 - Multiple auth routes supporting direct login, SSO, and token-based auth
+- **Webhook-based user creation** - Automatic account setup from System.io
+- **Magic token system** - Secure passwordless authentication
+- **SSO integration** - Seamless access from external platforms
 - Session management with JWT tokens
 - Middleware for route protection
 
 ## Database Structure
 - User profiles and authentication
+- **Magic token storage** - Secure token management in user_profiles table
 - Course modules and sessions
 - Progress tracking
 - Assessment results
 - Business plan data
 
+## System.io Integration
+- **Webhook Endpoint**: `/api/webhooks/systemio` - Receives user enrollment data
+- **Magic Token System**: Automatic passwordless authentication for external users
+- **HTML Button**: `system-io-FINAL-working.html` - Ready-to-use System.io integration
+- **Automatic User Creation**: Webhook creates complete user profiles with platform access
+- **Seamless Access**: One-click login from System.io to IBAM platform
+
 ## Important Notes
 - Uses Supabase for backend services
 - Implements comprehensive session tracking
 - Supports multiple user types (learners, trainers, admins)
+- **Full System.io integration** - Automated enrollment and access
+- **CORS-compliant authentication** - Works across domains
 - Includes donation/payment functionality
 - Mobile-responsive design

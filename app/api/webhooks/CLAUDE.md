@@ -17,6 +17,10 @@ Webhook endpoints for external service integrations with the IBAM learning platf
 ## Key Functions
 
 ### SystemIO Webhooks
+- **Automatic User Creation** - Creates complete user profiles from webhook data
+- **Magic Token Generation** - Generates secure tokens for passwordless access
+- **Course Assignment** - Maps System.io tags to IBAM courses automatically
+- **Auth User Creation** - Creates Supabase auth users with email confirmation
 - Handle course enrollment notifications
 - Process membership tier changes
 - Update user access permissions
@@ -43,8 +47,16 @@ Webhook endpoints for external service integrations with the IBAM learning platf
 ## Data Processing
 - JSON payload parsing
 - Data validation and sanitization
+- **Complete user profile creation** - Auth users + user profiles + magic tokens
+- **Tag-based course mapping** - Automatic course assignment from System.io tags
 - Database updates via Supabase
 - Error handling and retry logic
+
+## Magic Token System
+- **24-hour token expiry** - Secure time-limited access
+- **Unique token generation** - Cryptographically secure random tokens
+- **Database storage** - Tokens stored in user_profiles.magic_token column
+- **Automatic refresh** - New tokens generated as needed
 
 ## Monitoring
 - Request logging for audit trails
