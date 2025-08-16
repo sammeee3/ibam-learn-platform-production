@@ -39,7 +39,7 @@ const MobileAdminMenu: React.FC<MobileAdminMenuProps> = ({
       {
         icon: <User className="w-5 h-5" />,
         label: 'Account',
-        sublabel: displayName,
+        sublabel: userProfile?.email || 'User',
         onClick: () => router.push('/account'),
         color: 'text-green-600'
       },
