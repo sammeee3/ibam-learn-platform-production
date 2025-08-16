@@ -93,8 +93,11 @@ export async function GET(request: NextRequest) {
 
   console.log('✅ User verified, setting cookie and redirecting to dashboard');
 
-  // Create the dashboard URL - DIRECT redirect like the working version
+  // Create the dashboard URL with localStorage setup
   const dashboardUrl = new URL('/dashboard', request.url);
+  
+  // Add email as URL parameter so dashboard can set localStorage
+  dashboardUrl.searchParams.set('email', email);
   
   // Create the response with redirect
   const response = NextResponse.redirect(dashboardUrl);
