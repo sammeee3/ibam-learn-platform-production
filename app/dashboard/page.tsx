@@ -112,23 +112,22 @@ const IBAMDashboard: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check for auth token in URL
-    const authToken = searchParams?.get('auth') || null;
+    // Check for email in URL from SSO redirect
     const email = searchParams?.get('email') || null;
     
-if (authToken && email) {
-  // Set in localStorage for client-side use
-  localStorage.setItem('ibam-auth-email', email);
-  localStorage.setItem('ibam-auth-token', authToken);
-  
-  // CRITICAL: Set cookie that middleware expects
-  document.cookie = `ibam_auth=${email}; path=/; max-age=${60*60*24*7}; secure; samesite=lax`;
-  
-  // Redirect to clean dashboard URL (without token in URL)
-  setTimeout(() => {
-    router.push('/dashboard');
-  }, 100); // Small delay to ensure cookie is set
-}
+    if (email) {
+      console.log('📧 Setting up localStorage for email:', email);
+      // Set in localStorage for client-side use
+      localStorage.setItem('ibam-auth-email', email);
+      
+      // CRITICAL: Set cookie that middleware expects
+      document.cookie = `ibam_auth=${email}; path=/; max-age=${60*60*24*7}; secure; samesite=lax`;
+      
+      // Redirect to clean dashboard URL (without email in URL)
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 100); // Small delay to ensure localStorage is set
+    }
 
   }, [searchParams, router]);
 
