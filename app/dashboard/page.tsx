@@ -133,7 +133,7 @@ if (authToken && email) {
   }, [searchParams, router]);
 
   // Check if user is authenticated
-  const isAuthenticated = localStorage.getItem('ibam-auth-email');
+  const isAuthenticated = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
   // NEW AUTHENTICATION CODE ENDS HERE
 
   // YOUR EXISTING CODE CONTINUES BELOW
@@ -325,20 +325,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
 }
      if (currentUserId) {
   setUserId(currentUserId);
-  
-  // Fetch user profile
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user?.email) {
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('first_name, last_name, email, login_source')
-      .eq('email', user.email)
-      .single();
-    
-    if (profile && !profileError) {
-      setUserProfile(profile);
-    }
-  }
 }
     
      // Try to get sessions data
@@ -432,6 +418,52 @@ const loadContinueData = async () => {
   }
 };
     loadContinueData();
+}, []);
+
+// Separate useEffect for user profile fetching
+useEffect(() => {
+  const fetchUserProfile = async () => {
+    // Try localStorage first, then cookies
+    let userEmail = localStorage.getItem('ibam-auth-email');
+    
+    if (!userEmail) {
+      // Try to get from cookie
+      const cookies = document.cookie.split(';');
+      console.log('🍪 All cookies:', cookies);
+      const authCookie = cookies.find(c => c.trim().startsWith('ibam_auth_server='));
+      console.log('🔍 Found auth cookie:', authCookie);
+      if (authCookie) {
+        userEmail = decodeURIComponent(authCookie.split('=')[1]);
+        console.log('📧 Extracted email from cookie:', userEmail);
+        // Set in localStorage for future use
+        localStorage.setItem('ibam-auth-email', userEmail);
+      }
+    }
+    
+    console.log('🔍 Checking for user email (localStorage + cookies):', userEmail);
+    
+    if (userEmail) {
+      try {
+        console.log('🔄 Fetching user profile for:', userEmail);
+        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        if (response.ok) {
+          const profile = await response.json();
+          setUserProfile(profile);
+          console.log('✅ User profile loaded:', profile.first_name, profile.login_source);
+        } else {
+          console.log('❌ Profile fetch failed:', response.status);
+        }
+      } catch (error) {
+        console.log('❌ Profile fetch error:', error);
+      }
+    } else {
+      console.log('❌ No user email found in localStorage');
+    }
+  };
+
+  // Delay slightly to ensure localStorage is set after SSO redirect
+  const timer = setTimeout(fetchUserProfile, 100);
+  return () => clearTimeout(timer);
 }, []);
 
  // Helper functions

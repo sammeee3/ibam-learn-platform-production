@@ -21,25 +21,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get email from localStorage (set by our SSO process)
+        const userEmail = localStorage.getItem('ibam-auth-email');
         
-        if (!user) {
-          console.log('No user logged in');
+        if (!userEmail) {
+          console.log('No user email in localStorage');
           return;
         }
 
-        console.log('Fetching data for user:', user.id);
+        console.log('Fetching profile for user:', userEmail);
 
-        // Fetch user profile
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('email, first_name, login_source')
-          .eq('email', user.email)
-          .single();
-
-        if (profile && !profileError) {
+        // Fetch user profile using API endpoint
+        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        if (response.ok) {
+          const profile = await response.json();
           setUserProfile(profile);
+          console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
+        } else {
+          console.log('❌ Layout: Profile fetch failed:', response.status);
         }
 
         // Fetch user's action steps from the correct table

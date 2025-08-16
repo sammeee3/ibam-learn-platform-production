@@ -93,8 +93,8 @@ export async function GET(request: NextRequest) {
 
   console.log('✅ User verification complete, setting cookie and redirecting to dashboard');
 
-  // Create the dashboard URL
-  const dashboardUrl = new URL('/dashboard', request.url);
+  // Create the auth success URL (which will set localStorage and redirect to dashboard)
+  const dashboardUrl = new URL('/auth/success', request.url);
   
   // Simple redirect - works perfectly for new window/tab opens
   const response = NextResponse.redirect(dashboardUrl);
