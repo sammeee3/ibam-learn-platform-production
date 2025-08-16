@@ -4,7 +4,7 @@
 This is a Next.js-based learning platform for IBAM (International Business and Ministry) focused on discipleship training and business development education.
 
 ## Tech Stack
-- **Framework**: Next.js 14 with TypeScript
+- **Framework**: Next.js 14 with TypeScript (App Router ONLY)
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSO support
 - **Styling**: Tailwind CSS
@@ -20,11 +20,17 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - `npm run lint` - Run ESLint
 
 ## Architecture
-- **app/** - Next.js App Router structure
+- **app/** - Next.js App Router structure (MUST NOT have conflicting pages/ directory)
 - **components/** - Reusable React components
 - **lib/** - Utility functions and shared logic
 - **hooks/** - Custom React hooks
 - **public/** - Static assets
+
+## CRITICAL DEPLOYMENT NOTES
+- **App Router Only**: This project uses Next.js App Router exclusively
+- **NO pages/ directory**: Any pages/ directory will break deployments (causes 404s on all routes)
+- **Environment Variables Required**: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in Vercel
+- **Build Process**: Must show "Route (app)" not "Route (pages)" in build output
 
 ## Key Features
 - Module-based learning system with sessions
@@ -46,6 +52,12 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **SSO integration** - Seamless access from external platforms
 - Session management with JWT tokens
 - Middleware for route protection
+
+## User Identification System
+- **Dashboard Title**: Shows "Welcome Back, Entrepreneur, [FirstName]!" 
+- **Dropdown Menu**: Displays user email in Account section
+- **localStorage Setup**: Email stored via URL parameter from SSO redirect
+- **Cookie Strategy**: Both ibam_auth (client) and ibam_auth_server (server) cookies
 
 ## Database Structure
 - User profiles and authentication
