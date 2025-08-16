@@ -1,0 +1,436 @@
+import React, { useState, useEffect } from 'react';
+
+const MarketValidation = ({ formData, updateFormData, sectionId }) => {
+  const [localData, setLocalData] = useState({
+    // Customer Validation
+    customerInterviews: '',
+    customerFeedback: '',
+    preOrders: '',
+    testCustomers: '',
+    
+    // Market Research
+    surveyResults: '',
+    onlineResearch: '',
+    
+    // Proof of Concept
+    pilotTestResults: '',
+    successStories: '',
+    
+    // Competitive Analysis
+    competitorSuccess: '',
+    uniqueValue: '',
+    
+    // Financial Validation
+    pricingTests: '',
+    revenueProof: '',
+    
+    // Social Proof
+    testimonials: '',
+    referrals: '',
+    
+    // Risk Mitigation
+    marketRisks: '',
+    contingencyPlans: '',
+    
+    ...formData[sectionId]
+  });
+
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+
+  // Auto-save functionality
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateFormData(sectionId, localData);
+      calculateCompletion();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [localData]);
+
+  const updateField = (field, value) => {
+    setLocalData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const calculateCompletion = () => {
+    const requiredFields = [
+      'customerInterviews', 'surveyResults', 'pilotTestResults', 
+      'competitorSuccess', 'pricingTests', 'testimonials',
+      'marketRisks', 'contingencyPlans'
+    ];
+    
+    const completed = requiredFields.filter(field => localData[field]?.trim()).length;
+    const percentage = Math.round((completed / requiredFields.length) * 100);
+    setCompletionPercentage(percentage);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Prove It Works</h1>
+              <p className="text-gray-600">Customer validation - Show the bank people actually want this</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-600">Progress: {completionPercentage}%</div>
+            <div className="text-xs text-green-600">Auto-saving...</div>
+          </div>
+        </div>
+        
+        {/* Three Fish Header */}
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+          <div className="flex items-center">
+            <div className="text-blue-600 mr-3">🐠</div>
+            <div>
+              <h3 className="text-lg font-semibold text-blue-800">TEACH TO FISH</h3>
+              <p className="text-blue-700">Learn to validate your business idea with real customer proof</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Validation Section */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Real Customer Feedback</h2>
+        <p className="text-gray-600 mb-4">Banks want proof that actual customers want and will pay for your service</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              How many potential customers have you talked to? *
+              <span className="ml-1 text-blue-500 cursor-help" title="Talk to real people who might hire you. Ask about their problems, what they currently do, and if they'd pay for your solution. Aim for at least 10-20 conversations.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.customerInterviews}
+              onChange={(e) => updateField('customerInterviews', e.target.value)}
+              placeholder="Describe who you talked to and what they said about your service idea..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What did customers say about your idea?
+              <span className="ml-1 text-blue-500 cursor-help" title="Summarize the feedback. Be honest - include both positive and negative responses. Banks can tell when you're hiding problems, and they want to see you've thought through challenges.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.customerFeedback}
+              onChange={(e) => updateField('customerFeedback', e.target.value)}
+              placeholder="Summarize customer feedback - both positive and concerns..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Have any customers committed to hiring you?
+              <span className="ml-1 text-blue-500 cursor-help" title="Pre-orders, deposits, signed letters of intent, or verbal commitments count. Even 'I'll definitely hire you when you start' is valuable proof for banks.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.preOrders}
+              onChange={(e) => updateField('preOrders', e.target.value)}
+              placeholder="List any customer commitments, pre-orders, or strong interest..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Have you done any test services?
+              <span className="ml-1 text-blue-500 cursor-help" title="Free or discounted services for friends, family, or neighbors to test your process and get feedback. This shows banks you're testing before investing fully.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.testCustomers}
+              onChange={(e) => updateField('testCustomers', e.target.value)}
+              placeholder="Describe any test services you've provided and the results..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Market Research Section */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Market Research Evidence</h2>
+        <p className="text-gray-600 mb-4">Show you've researched beyond just talking to friends and family</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What surveys or polls have you done? *
+              <span className="ml-1 text-blue-500 cursor-help" title="Online surveys through Facebook, Nextdoor, SurveyMonkey, or paper surveys. Even small surveys (20-50 responses) show banks you're gathering real data.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.surveyResults}
+              onChange={(e) => updateField('surveyResults', e.target.value)}
+              placeholder="Describe your survey method and key findings..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What online research have you done?
+              <span className="ml-1 text-blue-500 cursor-help" title="Google Trends, Facebook groups, Reddit discussions, Yelp reviews of competitors, Craigslist ads for similar services. Show you understand online demand.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.onlineResearch}
+              onChange={(e) => updateField('onlineResearch', e.target.value)}
+              placeholder="Describe your online research and findings..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Proof of Concept */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Proof of Concept</h2>
+        <p className="text-gray-600 mb-4">Evidence that your business model actually works in practice</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Results from your pilot test or trial run *
+              <span className="ml-1 text-blue-500 cursor-help" title="Describe a small test of your business - even helping 3-5 customers counts. Include what worked, what didn't, and what you learned.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.pilotTestResults}
+              onChange={(e) => updateField('pilotTestResults', e.target.value)}
+              placeholder="Describe your pilot test results and lessons learned..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Success stories and case studies
+              <span className="ml-1 text-blue-500 cursor-help" title="Specific examples of how your service helped customers. Include before/after results, customer satisfaction, and any measurable improvements.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.successStories}
+              onChange={(e) => updateField('successStories', e.target.value)}
+              placeholder="Share specific success stories from your service..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Competitive Validation */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Competitive Validation</h2>
+        <p className="text-gray-600 mb-4">Proof that similar businesses succeed in your market</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Evidence that competitors are successful *
+              <span className="ml-1 text-blue-500 cursor-help" title="Are competitors busy, expanding, hiring, getting good reviews? This proves there's money to be made in your market.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.competitorSuccess}
+              onChange={(e) => updateField('competitorSuccess', e.target.value)}
+              placeholder="Describe evidence that competitors are successful..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your unique value proposition
+              <span className="ml-1 text-blue-500 cursor-help" title="What makes you different and better than competitors? This is what will make customers choose you and justify your pricing to the bank.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.uniqueValue}
+              onChange={(e) => updateField('uniqueValue', e.target.value)}
+              placeholder="Explain what makes your service unique and valuable..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Financial Validation */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Financial Validation</h2>
+        <p className="text-gray-600 mb-4">Proof that your pricing and business model make financial sense</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              How have you tested your pricing? *
+              <span className="ml-1 text-blue-500 cursor-help" title="Have you asked customers what they'd pay? Tested different prices? Compared to competitors? Banks need to see your prices are realistic.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.pricingTests}
+              onChange={(e) => updateField('pricingTests', e.target.value)}
+              placeholder="Describe how you've validated your pricing strategy..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Any early revenue or income proof?
+              <span className="ml-1 text-blue-500 cursor-help" title="Money you've already made from test customers, pre-orders, deposits, or side work. Even $100 proves people will pay.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.revenueProof}
+              onChange={(e) => updateField('revenueProof', e.target.value)}
+              placeholder="Describe any money you've already made from your service..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Social Proof */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Social Proof</h2>
+        <p className="text-gray-600 mb-4">Evidence that others believe in your business</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Customer testimonials and reviews *
+              <span className="ml-1 text-blue-500 cursor-help" title="Written testimonials, 5-star reviews, thank you notes from test customers. Copy the exact words customers used - banks love seeing real customer voices.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.testimonials}
+              onChange={(e) => updateField('testimonials', e.target.value)}
+              placeholder="Paste actual customer testimonials and feedback..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Referrals and word-of-mouth
+              <span className="ml-1 text-blue-500 cursor-help" title="Customers who referred others to you, or people asking for your service based on recommendations. This proves customers love your work.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.referrals}
+              onChange={(e) => updateField('referrals', e.target.value)}
+              placeholder="Describe any referrals or word-of-mouth interest..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Risk Management */}
+      <div className="mb-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-2">Risk Assessment</h2>
+        <p className="text-gray-600 mb-4">Show banks you've thought about what could go wrong and how you'll handle it</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What are the biggest risks to your business? *
+              <span className="ml-1 text-blue-500 cursor-help" title="Be honest about potential problems: economic downturn, seasonal slowdowns, injury preventing you from working, new competition. Banks respect honesty and preparation.">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.marketRisks}
+              onChange={(e) => updateField('marketRisks', e.target.value)}
+              placeholder="List the main risks that could hurt your business..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              How will you handle these risks? *
+              <span className="ml-1 text-blue-500 cursor-help" title="Your backup plans for each major risk. Example: 'If demand drops, I'll add holiday decoration services' or 'If I get injured, I'll hire a part-time helper.'">ℹ️</span>
+            </label>
+            <textarea
+              value={localData.contingencyPlans}
+              onChange={(e) => updateField('contingencyPlans', e.target.value)}
+              placeholder="Describe your backup plans for each major risk..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Biblical Wisdom */}
+      <div className="mt-8 bg-green-50 border-l-4 border-green-400 p-4">
+        <div className="flex items-start">
+          <div className="text-green-600 mr-3 text-lg">💡</div>
+          <div>
+            <h4 className="font-semibold text-green-800 mb-2">Biblical Business Wisdom</h4>
+            <p className="text-green-700 text-sm">
+              "Suppose one of you wants to build a tower. Won't you first sit down and estimate the cost to see if you have enough money to complete it?" - Luke 14:28
+            </p>
+            <p className="text-green-600 text-sm mt-2">
+              Jesus taught about counting the cost before starting. Validating your business idea is biblical wisdom!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Completion Status */}
+      <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-semibold text-gray-800">Section Progress: {completionPercentage}%</h4>
+            <p className="text-sm text-gray-600">
+              {completionPercentage === 100 
+                ? "Excellent! You have strong validation evidence for loan officers."
+                : "Complete more validation activities to strengthen your business case."
+              }
+            </p>
+          </div>
+          <div className="text-2xl">
+            {completionPercentage === 100 ? "✅" : "⏳"}
+          </div>
+        </div>
+        
+        {completionPercentage < 100 && (
+          <div className="mt-3 text-sm text-gray-600">
+            <p><strong>Quick validation ideas:</strong></p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Post in local Facebook groups asking about your service</li>
+              <li>Survey 10 neighbors or friends about their needs</li>
+              <li>Offer free trial service to 3 people for testimonials</li>
+              <li>Research competitor prices and reviews online</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MarketValidation;
