@@ -22,8 +22,9 @@ export async function GET(request: NextRequest) {
   
   // Special handling for System.io merge tag failures
   if (email === '[Email]' || !email) {
-    console.log('⚠️ System.io merge tag not replaced, using your current email');
-    email = 'sj614+sam@proton.me'; // Your actual System.io email
+    console.log('⚠️ System.io merge tag not replaced - redirecting to login');
+    // In production, don't use fallback emails - redirect to proper login
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
   
   if (!email || token !== SYSTEME_SECRET) {
