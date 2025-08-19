@@ -15,3 +15,10 @@ This file tests that staging uses staging database after environment variable fi
 - This commit should NOT trigger any automatic deployments
 - Manual deployment control achieved
 - Test time: August 19, 2025 8:45 PM
+
+## Test 4: Event Toggle Fix
+- Production project events disabled (deployment_status, repository_dispatch)
+- Environment variables preserved
+- Git connection maintained
+- This commit should ONLY deploy staging project
+- Test time: August 19, 2025 9:00 PM
