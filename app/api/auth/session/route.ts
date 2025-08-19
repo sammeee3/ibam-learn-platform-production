@@ -26,8 +26,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // STRICT VALIDATION: Reject test/debug emails that should not be in production
-    const debugEmails = ['sammeee@yahoo.com', 'sj614+sam@proton.me', 'test@example.com', 'debug@test.com'];
+    // STRICT VALIDATION: Reject obvious test/debug emails only
+    const debugEmails = ['sammeee@yahoo.com', 'test@example.com', 'debug@test.com'];
+    // Note: sj614+sam@proton.me removed as it may be a legitimate user email
     if (debugEmails.includes(email.toLowerCase())) {
       console.log('🚫 Rejecting debug/test email session:', email);
       return NextResponse.json(
