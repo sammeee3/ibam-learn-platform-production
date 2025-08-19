@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IBAM Email Debug & Fix</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+        }
+        .success { background: #d1edff; color: #0056b3; border: 1px solid #007bff; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #dc3545; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #17a2b8; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        .danger { background: #dc3545; }
+        .danger:hover { background: #c82333; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        input { 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            width: 300px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 IBAM Email Debug & Fix Tool</h1>
+        <p>This tool helps diagnose and fix email authentication issues in the IBAM Learning Platform.</p>
+
+        <div class="debug-section">
+            <h3>📊 Current Status</h3>
+            <div id="currentStatus">Checking...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🍪 Storage Information</h3>
+            <div id="storageInfo">Loading...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔧 Quick Fixes</h3>
+            <button onclick="setCorrectEmail()">✅ Set Correct Email (sj614+prodtest@proton.me)</button>
+            <button onclick="clearAll()" class="danger">🗑️ Clear All Authentication Data</button>
+            <button onclick="testProfileAPI()">🔍 Test Profile API</button>
+            <br><br>
+            <label>Manual Email Set:</label>
+            <input type="email" id="manualEmail" placeholder="Enter email address">
+            <button onclick="setManualEmail()">Set Email</button>
+        </div>
+
+        <div class="debug-section">
+            <h3>🧪 Test Results</h3>
+            <div id="testResults">Ready to test...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📝 Instructions</h3>
+            <ol>
+                <li>Check the current status above to see what email is stored</li>
+                <li>If the email is wrong, click "Set Correct Email" to fix it</li>
+                <li>Test the Profile API to verify it works</li>
+                <li>Refresh the dashboard to see the changes</li>
+                <li>If still having issues, clear all data and try again</li>
+            </ol>
+        </div>
+
+        <div class="debug-section">
+            <h3>🎯 Quick Dashboard Access</h3>
+            <button onclick="openDashboard()">🚀 Open IBAM Dashboard</button>
+            <button onclick="openDashboardWithEmail()">📧 Open Dashboard with Correct Email</button>
+        </div>
+    </div>
+
+    <script>
+        const CORRECT_EMAIL = 'sj614+prodtest@proton.me';
+        const DASHBOARD_URL = 'https://ibam-learn-platform-v3.vercel.app/dashboard';
+
+        function updateStatus() {
+            const localStorage_email = localStorage.getItem('ibam-auth-email');
+            const cookies = document.cookie;
+            
+            let statusHtml = '';
+            
+            // LocalStorage check
+            if (localStorage_email) {
+                const isCorrect = localStorage_email === CORRECT_EMAIL;
+                statusHtml += `<div class="status ${isCorrect ? 'success' : 'error'}">
+                    <strong>LocalStorage Email:</strong> ${localStorage_email} 
+                    ${isCorrect ? '✅ CORRECT' : '❌ INCORRECT'}
+                </div>`;
+            } else {
+                statusHtml += `<div class="status error">
+                    <strong>LocalStorage:</strong> No email found ❌
+                </div>`;
+            }
+            
+            // Cookie check
+            const authCookie = cookies.split(';').find(c => c.trim().startsWith('ibam_auth='));
+            if (authCookie) {
+                const cookieEmail = decodeURIComponent(authCookie.split('=')[1]);
+                const isCorrect = cookieEmail === CORRECT_EMAIL;
+                statusHtml += `<div class="status ${isCorrect ? 'success' : 'info'}">
+                    <strong>Cookie Email:</strong> ${cookieEmail} 
+                    ${isCorrect ? '✅ CORRECT' : 'ℹ️ DIFFERENT'}
+                </div>`;
+            } else {
+                statusHtml += `<div class="status info">
+                    <strong>Cookie:</strong> No auth cookie found
+                </div>`;
+            }
+
+            document.getElementById('currentStatus').innerHTML = statusHtml;
+
+            // Storage info
+            document.getElementById('storageInfo').innerHTML = `
+                <pre>localStorage Items:
+${Object.keys(localStorage).map(key => `  ${key}: ${localStorage.getItem(key)}`).join('\n') || '  (empty)'}
+
+Cookies:
+${document.cookie || '  (empty)'}</pre>
+            `;
+        }
+
+        function setCorrectEmail() {
+            console.log('🔧 Setting correct email:', CORRECT_EMAIL);
+            
+            localStorage.setItem('ibam-auth-email', CORRECT_EMAIL);
+            document.cookie = `ibam_auth=${CORRECT_EMAIL}; path=/; max-age=${60*60*24*7}; secure; samesite=lax`;
+            
+            document.getElementById('testResults').innerHTML = `
+                <div class="status success">
+                    ✅ Email set to: ${CORRECT_EMAIL}<br>
+                    Both localStorage and cookie updated.
+                </div>
+            `;
+            
+            updateStatus();
+        }
+
+        function setManualEmail() {
+            const email = document.getElementById('manualEmail').value;
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            console.log('🔧 Setting manual email:', email);
+            
+            localStorage.setItem('ibam-auth-email', email);
+            document.cookie = `ibam_auth=${email}; path=/; max-age=${60*60*24*7}; secure; samesite=lax`;
+            
+            document.getElementById('testResults').innerHTML = `
+                <div class="status success">
+                    ✅ Email set to: ${email}<br>
+                    Both localStorage and cookie updated.
+                </div>
+            `;
+            
+            updateStatus();
+        }
+
+        function clearAll() {
+            if (!confirm('Are you sure you want to clear all authentication data?')) {
+                return;
+            }
+            
+            console.log('🗑️ Clearing all authentication data');
+            
+            localStorage.removeItem('ibam-auth-email');
+            document.cookie = 'ibam_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            document.cookie = 'ibam_auth_server=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            
+            document.getElementById('testResults').innerHTML = `
+                <div class="status info">
+                    🗑️ All authentication data cleared.<br>
+                    You'll need to log in again.
+                </div>
+            `;
+            
+            updateStatus();
+        }
+
+        async function testProfileAPI() {
+            const email = localStorage.getItem('ibam-auth-email');
+            
+            if (!email) {
+                document.getElementById('testResults').innerHTML = `
+                    <div class="status error">
+                        ❌ No email in localStorage to test with
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('testResults').innerHTML = `
+                <div class="status info">
+                    🔍 Testing profile API with: ${email}
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/api/user/profile?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('testResults').innerHTML = `
+                        <div class="status success">
+                            ✅ Profile API Test Successful!<br>
+                            <strong>Name:</strong> ${data.first_name} ${data.last_name}<br>
+                            <strong>Email:</strong> ${data.email}<br>
+                            <strong>Login Source:</strong> ${data.login_source}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('testResults').innerHTML = `
+                        <div class="status error">
+                            ❌ Profile API Test Failed<br>
+                            Status: ${response.status}<br>
+                            Error: ${data.error || 'Unknown error'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('testResults').innerHTML = `
+                    <div class="status error">
+                        ❌ Profile API Test Error<br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function openDashboard() {
+            window.open(DASHBOARD_URL, '_blank');
+        }
+
+        function openDashboardWithEmail() {
+            const url = `${DASHBOARD_URL}?email=${encodeURIComponent(CORRECT_EMAIL)}`;
+            window.open(url, '_blank');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 IBAM Email Debug Tool Loaded');
+            updateStatus();
+        });
+    </script>
+</body>
+</html>

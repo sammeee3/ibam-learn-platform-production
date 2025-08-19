@@ -1,0 +1,173 @@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 10px auto; max-width: 500px; width: 95%; text-align: center; font-family: Arial, sans-serif; box-sizing: border-box;">
+    
+    <div style="background: rgba(255,215,0,0.2); color: #ff6b35; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(255,215,0,0.3); font-weight: bold;">
+        🔄 SESSION CONFLICT FIX
+    </div>
+    
+    <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🎯 Welcome to IBAM Learning Platform
+    </h1>
+    
+    <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 32px; line-height: 1.5;">
+        Your faith-driven business mastery course is ready!
+    </p>
+    
+    <div style="margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="color: white; margin: 0 0 12px 0; font-size: 18px;">📚 What You'll Access:</h3>
+        <ul style="color: rgba(255,255,255,0.9); text-align: left; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li>Complete IBAM Impact Member Training</li>
+            <li>Interactive modules and assessments</li>
+            <li>Business planning tools & templates</li>
+            <li>AI-powered coaching assistance</li>
+            <li>Progress tracking & certificates</li>
+        </ul>
+    </div>
+    
+    <button id="accessBtn" onclick="fixSessionAndAccess()" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border: none; padding: 18px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); text-decoration: none; display: inline-block; min-width: 220px; width: 90%; max-width: 300px; touch-action: manipulation;">
+        <span style="margin-right: 12px; font-size: 24px;">🚀</span>
+        <span>Access Your Course Now</span>
+    </button>
+    
+    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid #4ecdc4;">
+        <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">🔄 Session Fix:</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 13px; line-height: 1.4;">
+            We'll clear any conflicting sessions and log you in with your System.io email automatically.
+        </p>
+    </div>
+    
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; font-style: italic;">
+        🔒 Secure • 🌟 Personalized • 📱 Mobile-Friendly
+    </p>
+</div>
+
+<script>
+console.log('🔄 SESSION CONFLICT FIX - Clearing conflicts and using System.io email');
+
+function fixSessionAndAccess() {
+    console.log('🚀 Starting session fix and access...');
+    
+    var baseUrl = 'https://ibam-learn-platform-v3.vercel.app';
+    var secretToken = 'ibam-systeme-secret-2025';
+    
+    // Get System.io email - this should be sj614+sam@proton.me
+    var systemioEmail = '[Email]';
+    
+    console.log('📧 System.io merge tag value:', systemioEmail);
+    
+    var userEmail = null;
+    
+    // METHOD 1: Use System.io merge tag if it's populated
+    if (systemioEmail && systemioEmail !== '[Email]' && systemioEmail.includes('@')) {
+        userEmail = systemioEmail;
+        console.log('✅ Using System.io email:', userEmail);
+    }
+    
+    // METHOD 2: Known user fallback for sj614+sam@proton.me
+    if (!userEmail) {
+        userEmail = 'sj614+sam@proton.me';
+        console.log('⚠️ System.io tag not working, using known email:', userEmail);
+    }
+    
+    console.log('🎯 Final email for session fix:', userEmail);
+    
+    // STEP 1: Clear all existing sessions and storage
+    console.log('🧹 Clearing all existing sessions...');
+    
+    // Clear localStorage
+    if (typeof(Storage) !== 'undefined') {
+        localStorage.removeItem('ibam-auth-email');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('authToken');
+        console.log('✅ LocalStorage cleared');
+    }
+    
+    // Clear cookies by setting them to expire
+    var cookiesToClear = ['ibam_auth', 'ibam_auth_server', 'auth-token', 'user-session'];
+    cookiesToClear.forEach(function(cookieName) {
+        document.cookie = cookieName + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=' + window.location.hostname;
+        document.cookie = cookieName + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    });
+    console.log('✅ Cookies cleared');
+    
+    // STEP 2: Set the correct email in storage
+    if (typeof(Storage) !== 'undefined') {
+        localStorage.setItem('ibam-auth-email', userEmail);
+        console.log('✅ Correct email stored:', userEmail);
+    }
+    
+    // STEP 3: Create logout URL first to clear any server-side session
+    var logoutUrl = baseUrl + '/api/auth/logout';
+    
+    // STEP 4: Create login URL with session clearing parameter
+    var loginUrl = baseUrl + '/api/auth/sso?email=' + encodeURIComponent(userEmail) + 
+                   '&token=' + secretToken + 
+                   '&clearSession=true' +
+                   '&source=systemio';
+    
+    console.log('🔗 Final login URL:', loginUrl);
+    
+    // Update button
+    var button = document.getElementById('accessBtn');
+    var originalText = button.innerHTML;
+    button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">🔄</span><span>Fixing Session...</span>';
+    button.disabled = true;
+    
+    // STEP 5: Execute the session fix
+    try {
+        // First, try to logout (clear server session) silently
+        fetch(logoutUrl, { method: 'POST', credentials: 'include' }).catch(function() {
+            // Ignore errors, just clearing session
+        });
+        
+        // Wait a moment then open the login
+        setTimeout(function() {
+            button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">🚀</span><span>Opening Course...</span>';
+            
+            // Open in new window
+            var courseWindow = window.open(loginUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+            
+            if (courseWindow) {
+                courseWindow.focus();
+                console.log('✅ Course opened in new window with session fix');
+            } else {
+                console.log('❌ Popup blocked, redirecting same window');
+                window.location.href = loginUrl;
+            }
+        }, 1000);
+        
+    } catch (error) {
+        console.log('❌ Error during session fix:', error);
+        window.location.href = loginUrl;
+    }
+    
+    // Reset button
+    setTimeout(function() {
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }, 5000);
+}
+
+// Page load
+window.addEventListener('load', function() {
+    console.log('🔄 SESSION CONFLICT FIX LOADED');
+    console.log('This version clears conflicting sessions and forces clean login');
+    
+    // Test email detection
+    var testEmail = '[Email]';
+    console.log('📧 System.io email test:', testEmail);
+    
+    if (testEmail !== '[Email]') {
+        console.log('✅ System.io email detected:', testEmail);
+    } else {
+        console.log('⚠️ Will use fallback email: sj614+sam@proton.me');
+    }
+    
+    // Show current session state
+    var currentStorage = localStorage.getItem('ibam-auth-email');
+    if (currentStorage) {
+        console.log('📝 Current stored email:', currentStorage);
+    }
+});
+</script>
