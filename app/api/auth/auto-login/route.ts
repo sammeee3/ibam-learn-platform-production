@@ -1,17 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Initialize Supabase Admin Client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+// Force dynamic rendering to avoid build-time environment variable issues
+export const dynamic = 'force-dynamic';
 
 // CORS headers
 const corsHeaders = {
@@ -46,6 +37,24 @@ export async function GET() {
 // Handle POST requests
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Supabase Admin Client at runtime
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json(
+        { error: 'Supabase configuration missing' },
+        { status: 500, headers: corsHeaders }
+      );
+    }
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
     const body = await request.json();
     const { email } = body;
 
