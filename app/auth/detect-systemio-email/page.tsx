@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function DetectSystemIOEmailPage() {
+function DetectSystemIOEmailContent() {
   const [status, setStatus] = useState('detecting')
   const [detectedEmail, setDetectedEmail] = useState('')
   const [logs, setLogs] = useState<string[]>([])
@@ -254,5 +254,13 @@ export default function DetectSystemIOEmailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DetectSystemIOEmailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetectSystemIOEmailContent />
+    </Suspense>
   )
 }
