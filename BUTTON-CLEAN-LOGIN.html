@@ -1,0 +1,192 @@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 10px auto; max-width: 500px; width: 95%; text-align: center; font-family: Arial, sans-serif; box-sizing: border-box;">
+    
+    <div style="background: rgba(0,255,255,0.2); color: #00aaaa; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(0,255,255,0.3); font-weight: bold;">
+        🧹 CLEAN LOGIN - NO CACHE
+    </div>
+    
+    <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🎯 Welcome to IBAM Learning Platform
+    </h1>
+    
+    <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 32px; line-height: 1.5;">
+        Your faith-driven business mastery course is ready!
+    </p>
+    
+    <div style="margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="color: white; margin: 0 0 12px 0; font-size: 18px;">📚 What You'll Access:</h3>
+        <ul style="color: rgba(255,255,255,0.9); text-align: left; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li>Complete IBAM Impact Member Training</li>
+            <li>Interactive modules and assessments</li>
+            <li>Business planning tools & templates</li>
+            <li>AI-powered coaching assistance</li>
+            <li>Progress tracking & certificates</li>
+        </ul>
+    </div>
+    
+    <button id="accessBtn" onclick="cleanLogin()" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border: none; padding: 18px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); text-decoration: none; display: inline-block; min-width: 220px; width: 90%; max-width: 300px; touch-action: manipulation;">
+        <span style="margin-right: 12px; font-size: 24px;">🧹</span>
+        <span>Clean Login Now</span>
+    </button>
+    
+    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid #4ecdc4;">
+        <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">🧹 Cache-Free Login:</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 13px; line-height: 1.4;">
+            Completely clears all cached data and logs you in fresh with your System.io email.
+        </p>
+    </div>
+    
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; font-style: italic;">
+        🔒 Secure • 🌟 Personalized • 📱 Mobile-Friendly
+    </p>
+</div>
+
+<script>
+console.log('🧹 CLEAN LOGIN - Aggressive cache clearing + System.io email');
+
+function cleanLogin() {
+    console.log('🚀 Starting CLEAN login process...');
+    
+    var baseUrl = 'https://ibam-learn-platform-v3.vercel.app';
+    var secretToken = 'ibam-systeme-secret-2025';
+    
+    // Get System.io email
+    var systemIoEmail = '[Email]';
+    console.log('📧 System.io provided email:', systemIoEmail);
+    
+    if (!systemIoEmail || systemIoEmail === '[Email]' || !systemIoEmail.includes('@')) {
+        alert('System.io email not detected. Please try again or contact support.');
+        return;
+    }
+    
+    var userEmail = systemIoEmail;
+    console.log('✅ Using email for clean login:', userEmail);
+    
+    // STEP 1: NUCLEAR CLEAR - Remove ALL authentication data
+    console.log('🧹 STEP 1: Nuclear clearing all auth data...');
+    
+    // Clear ALL localStorage
+    if (typeof(Storage) !== 'undefined') {
+        var oldKeys = Object.keys(localStorage);
+        localStorage.clear();
+        console.log('✅ Cleared localStorage keys:', oldKeys);
+    }
+    
+    // Clear ALL sessionStorage
+    if (typeof(Storage) !== 'undefined' && sessionStorage) {
+        var oldSessionKeys = Object.keys(sessionStorage);
+        sessionStorage.clear();
+        console.log('✅ Cleared sessionStorage keys:', oldSessionKeys);
+    }
+    
+    // Clear ALL possible auth cookies
+    var allCookies = document.cookie.split(';');
+    console.log('🍪 Found cookies:', allCookies.length);
+    
+    allCookies.forEach(function(cookie) {
+        var eqPos = cookie.indexOf('=');
+        var name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        
+        // Clear with multiple domain/path combinations
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=' + window.location.hostname + ';';
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=.' + window.location.hostname + ';';
+        
+        // Special handling for known auth cookies
+        if (name.includes('auth') || name.includes('ibam') || name.includes('session') || name.includes('user')) {
+            console.log('🧹 Clearing auth cookie:', name);
+        }
+    });
+    
+    console.log('✅ All cookies cleared');
+    
+    // STEP 2: Wait for clearing to complete
+    setTimeout(function() {
+        console.log('🧹 STEP 2: Setting ONLY the System.io email...');
+        
+        // Set ONLY the System.io email
+        localStorage.setItem('ibam-auth-email', userEmail);
+        console.log('✅ Set localStorage ibam-auth-email:', userEmail);
+        
+        // STEP 3: Create clean login URL with logout first
+        var logoutUrl = baseUrl + '/api/auth/logout';
+        var loginUrl = baseUrl + '/api/auth/sso?email=' + encodeURIComponent(userEmail) + 
+                       '&token=' + secretToken + 
+                       '&clean=true&timestamp=' + Date.now();
+        
+        console.log('🔗 Clean login URL:', loginUrl);
+        
+        // Update button
+        var button = document.getElementById('accessBtn');
+        var originalText = button.innerHTML;
+        button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">🧹</span><span>Opening Clean Session...</span>';
+        button.disabled = true;
+        
+        // STEP 4: Execute clean login
+        try {
+            // First logout silently
+            fetch(logoutUrl, { method: 'POST', credentials: 'include' }).then(function() {
+                console.log('✅ Logout completed');
+                
+                // Then open clean login
+                var courseWindow = window.open(loginUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+                
+                if (courseWindow) {
+                    courseWindow.focus();
+                    console.log('✅ Clean login opened in new window');
+                } else {
+                    console.log('❌ Popup blocked, redirecting same window');
+                    window.location.href = loginUrl;
+                }
+            }).catch(function() {
+                // If logout fails, continue with login anyway
+                console.log('⚠️ Logout failed, continuing with login');
+                
+                var courseWindow = window.open(loginUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+                
+                if (courseWindow) {
+                    courseWindow.focus();
+                    console.log('✅ Clean login opened in new window');
+                } else {
+                    console.log('❌ Popup blocked, redirecting same window');
+                    window.location.href = loginUrl;
+                }
+            });
+            
+        } catch (error) {
+            console.log('❌ Error during clean login:', error);
+            window.location.href = loginUrl;
+        }
+        
+        // Reset button
+        setTimeout(function() {
+            if (button) {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }, 5000);
+        
+    }, 500); // Wait 500ms for clearing to complete
+}
+
+// Page load diagnostics
+window.addEventListener('load', function() {
+    console.log('🧹 CLEAN LOGIN LOADED - Cache-free authentication');
+    console.log('===========================================');
+    
+    // Show current state before cleaning
+    console.log('📊 PRE-CLEAN DIAGNOSTIC:');
+    console.log('   Current localStorage:', Object.keys(localStorage));
+    console.log('   Current cookies:', document.cookie.split(';').length);
+    console.log('   System.io email:', '[Email]');
+    
+    // Test System.io email
+    var testEmail = '[Email]';
+    if (testEmail !== '[Email]' && testEmail.includes('@')) {
+        console.log('✅ System.io email ready:', testEmail);
+    } else {
+        console.log('⚠️ System.io email not yet replaced (normal in editor)');
+    }
+    
+    console.log('🎯 This button will use ONLY your System.io email');
+});
+</script>
