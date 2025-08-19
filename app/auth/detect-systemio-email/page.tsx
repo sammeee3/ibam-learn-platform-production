@@ -57,7 +57,7 @@ export default function DetectSystemIOEmailPage() {
             if (name.toLowerCase().includes('systeme') || name.toLowerCase().includes('user')) {
               addLog(`🔍 Checking cookie: ${name}`)
               try {
-                const decodedValue = decodeURIComponent(value)
+                const decodedValue = decodeURIComponent(value || '')
                 if (decodedValue.includes('@')) {
                   userEmail = decodedValue
                   detectionMethod = `cookie: ${name}`
