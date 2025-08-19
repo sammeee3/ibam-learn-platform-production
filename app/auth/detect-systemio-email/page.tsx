@@ -22,7 +22,7 @@ export default function DetectSystemIOEmailPage() {
     addLog('🔍 Starting System.io email detection...')
 
     const detectEmail = async () => {
-      let userEmail = null
+      let userEmail: string | null = null
       let detectionMethod = 'unknown'
 
       // METHOD 1: Check for System.io global objects
