@@ -46,3 +46,9 @@ When you say "deploy to production", Claude will:
 - Production repo connected to production Vercel project  
 - This change should ONLY deploy to staging
 - Test time: August 19, 2025 9:45 PM
+
+## 🚀 PRODUCTION PROMOTION TEST
+- Promoting this change from staging to production
+- Should trigger production deployment only
+- Testing complete dual-repository workflow
+- Promotion time: August 19, 2025 9:50 PM
