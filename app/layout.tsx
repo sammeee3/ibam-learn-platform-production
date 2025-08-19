@@ -20,15 +20,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get email from localStorage (set by our SSO process)
-        const userEmail = localStorage.getItem('ibam-auth-email');
+        // SECURITY FIX: Validate server-side authentication first
+        const sessionResponse = await fetch('/api/auth/session', {
+          credentials: 'include'
+        });
         
-        if (!userEmail) {
-          console.log('No user email in localStorage');
+        if (!sessionResponse.ok) {
+          console.log('No valid server session - user not authenticated');
+          setUserProfile(null);
           return;
         }
 
-        console.log('Fetching profile for user:', userEmail);
+        const sessionData = await sessionResponse.json();
+        const userEmail = sessionData.email;
+        
+        if (!userEmail) {
+          console.log('No user email in session');
+          setUserProfile(null);
+          return;
+        }
+
+        console.log('Fetching profile for authenticated user:', userEmail);
 
         // Fetch user profile using API endpoint
         const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
@@ -38,11 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
         } else {
           console.log('❌ Layout: Profile fetch failed:', response.status);
+          setUserProfile(null);
         }
 
-        // Skip action steps for now - will be loaded when needed
-        console.log('Skipping action steps fetch - no user auth yet');
-        
         // Update available downloads with empty data
         setAvailableDownloads({
           actions: [],
@@ -52,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       } catch (error) {
         console.error('Error in fetchUserData:', error);
+        setUserProfile(null);
       }
     };
 
@@ -73,17 +84,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         
-        {/* Admin Menu and Download Modal */}
-        <MobileAdminMenu
-          userProfile={userProfile}
-          onDownloadClick={handleOpenDownloadModal}
-        />
-        
-        <DownloadModal
-          isOpen={downloadModalOpen}
-          onClose={() => setDownloadModalOpen(false)}
-          availableDownloads={availableDownloads}
-        />
+        {/* Admin Menu and Download Modal - Only show for authenticated users */}
+        {userProfile && (
+          <>
+            <MobileAdminMenu
+              userProfile={userProfile}
+              onDownloadClick={handleOpenDownloadModal}
+            />
+            
+            <DownloadModal
+              isOpen={downloadModalOpen}
+              onClose={() => setDownloadModalOpen(false)}
+              availableDownloads={availableDownloads}
+            />
+          </>
+        )}
       </body>
     </html>
   );

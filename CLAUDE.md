@@ -33,13 +33,15 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Build Process**: Must show "Route (app)" not "Route (pages)" in build output
 
 ## CURRENT STATUS: ✅ OPERATIONAL
-**Last Verified**: Aug 19, 2025 10:15 AM
+**Last Verified**: Aug 19, 2025 11:42 AM
 - ✅ **Production URL**: https://ibam-learn-platform-v3.vercel.app
+- ✅ **Production Deployment**: Auto-deploys from main branch via GitHub integration
 - ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app
 - ✅ **System.io Integration**: Manual email entry system implemented (merge tags limitations discovered)
 - ✅ **Staging System.io Integration**: Working correctly with staging database and deployment
 - ✅ **User Identification**: Dashboard shows user names and dropdown works
 - ✅ **All API Routes**: Working correctly with App Router
+- ✅ **Build Errors Fixed**: systemio-bridge route now deploys successfully
 - ✅ **Email Entry Form**: IBAM-themed form with animated fish, validation, and security warnings
 - ✅ **Staging Email Form**: SYSTEMIO-EMAIL-FORM-STAGING.html pointing to correct deployment URL
 - ✅ **Production Database Backup**: Available via CLI and Supabase dashboard
@@ -90,6 +92,29 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Automatic User Creation**: Webhook creates auth users + user profiles + magic tokens
 - **Database Integration**: Works with both production and staging environments
 - **Environment Isolation**: Staging uses staging database (yhfxxouswctucxvfetcq), production uses production database (tutrnikhomrgcpkzszvq)
+
+## DEPLOYMENT PROCESS 🚀
+**Production Deployment Method**: Automatic GitHub Integration
+- **Repository**: https://github.com/sammeee3/ibam-learn-platform-v2
+- **Production Project**: `ibam-learn-platform-production-v3` 
+- **Auto-Deploy Branch**: `main`
+- **Process**: Push to main → Automatic deployment to https://ibam-learn-platform-v3.vercel.app
+
+**Staging Deployment Method**: Manual Vercel CLI
+- **Staging Project**: `ibam-learn-platform-staging-v2`
+- **Process**: `vercel deploy` from staging branch
+- **Working URL**: https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app
+
+**Deployment Verification Commands**:
+```bash
+# Test production deployment success
+curl -I "https://ibam-learn-platform-v3.vercel.app/api/auth/sso-debug"
+# Should return: HTTP/2 200
+
+# Test SSO flow
+curl -I "https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=test@example.com&token=ibam-systeme-secret-2025"
+# Should return: HTTP/2 307 with dashboard redirect
+```
 
 ## Important Notes
 - Uses Supabase for backend services
