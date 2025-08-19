@@ -30,3 +30,10 @@ This file tests that staging uses staging database after environment variable fi
 - This commit should ONLY deploy staging project
 - SUCCESS EXPECTED!
 - Test time: August 19, 2025 9:05 PM
+
+## Test 7: STAGING-ONLY DEPLOYMENT TEST
+- Testing isolated staging deployment from staging branch
+- Production should NOT deploy from this staging branch push
+- Only staging project should update
+- ISOLATED STAGING TEST!
+- Test time: August 19, 2025 9:20 PM
