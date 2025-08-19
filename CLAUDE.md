@@ -33,12 +33,15 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Build Process**: Must show "Route (app)" not "Route (pages)" in build output
 
 ## CURRENT STATUS: ✅ OPERATIONAL
-**Last Verified**: Aug 19, 2025 7:27 AM
+**Last Verified**: Aug 19, 2025 10:15 AM
 - ✅ **Production URL**: https://ibam-learn-platform-v3.vercel.app
+- ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app
 - ✅ **System.io Integration**: Manual email entry system implemented (merge tags limitations discovered)
+- ✅ **Staging System.io Integration**: Working correctly with staging database and deployment
 - ✅ **User Identification**: Dashboard shows user names and dropdown works
 - ✅ **All API Routes**: Working correctly with App Router
 - ✅ **Email Entry Form**: IBAM-themed form with animated fish, validation, and security warnings
+- ✅ **Staging Email Form**: SYSTEMIO-EMAIL-FORM-STAGING.html pointing to correct deployment URL
 - ✅ **Production Database Backup**: Available via CLI and Supabase dashboard
 - ✅ **Database Projects**: Production (tutrnikhomrgcpkzszvq) and Staging (yhfxxouswctucxvfetcq) environments
 
@@ -81,10 +84,12 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Webhook Endpoint**: `/api/webhooks/systemio` - Receives user enrollment data and creates complete user accounts
 - **Magic Token System**: Automatic passwordless authentication for external users (24-hour expiry)
 - **Email Entry Form**: `SYSTEMIO-EMAIL-FORM.html` - Beautiful manual email entry with IBAM theming
+- **Staging Email Form**: `SYSTEMIO-EMAIL-FORM-STAGING.html` - Staging version with proper deployment URL
 - **Technical Limitation**: System.io merge tags (`[Email]`) only work in emails/redirects, not HTML buttons
 - **Current Solution**: Manual email entry with validation, localStorage memory, and security warnings
 - **Automatic User Creation**: Webhook creates auth users + user profiles + magic tokens
 - **Database Integration**: Works with both production and staging environments
+- **Environment Isolation**: Staging uses staging database (yhfxxouswctucxvfetcq), production uses production database (tutrnikhomrgcpkzszvq)
 
 ## Important Notes
 - Uses Supabase for backend services

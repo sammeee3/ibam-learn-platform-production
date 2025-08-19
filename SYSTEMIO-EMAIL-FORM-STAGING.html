@@ -90,8 +90,8 @@ document.getElementById('ibamAccessForm').addEventListener('submit', function(e)
         localStorage.setItem('ibam-staging-email', email);
     } catch (e) {}
     
-    // Create staging access URL - now working with authentication disabled
-    const accessUrl = 'https://ibam-learn-platform-staging-v2-1k0mdne9l.vercel.app/api/auth/sso?email=' + 
+    // Create staging access URL - working deployment with current SSO code
+    const accessUrl = 'https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app/api/auth/sso?email=' + 
                       encodeURIComponent(email) + 
                       '&token=ibam-systeme-secret-2025&source=systemio-staging';
     
