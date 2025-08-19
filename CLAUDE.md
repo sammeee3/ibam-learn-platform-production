@@ -94,14 +94,45 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Environment Isolation**: Staging uses staging database (yhfxxouswctucxvfetcq), production uses production database (tutrnikhomrgcpkzszvq)
 
 ## DEPLOYMENT PROCESS 🚀
-**Production Deployment Method**: Automatic GitHub Integration
-- **Repository**: https://github.com/sammeee3/ibam-learn-platform-v2
-- **Production Project**: `ibam-learn-platform-production-v3` 
-- **Auto-Deploy Branch**: `main`
-- **Process**: Push to main → Automatic deployment to https://ibam-learn-platform-v3.vercel.app
 
-**Staging Deployment Method**: Manual Vercel CLI
+**Staging Deployment Method**: Automatic GitHub Integration ✅
+- **Repository**: https://github.com/sammeee3/ibam-learn-platform-v2
 - **Staging Project**: `ibam-learn-platform-staging-v2`
+- **Auto-Deploy Branch**: `staging`
+- **Process**: Push to staging → Automatic deployment to staging environment
+
+**Production Deployment Method**: Manual Vercel CLI ✅
+- **Production Project**: `ibam-learn-platform-production-v3` (DISCONNECTED from Git)
+- **Target URL**: https://ibam-learn-platform-v3.vercel.app
+- **Process**: Manual deployment using Vercel CLI commands
+
+### Manual Production Deployment Options
+
+**Option 1: Vercel Dashboard Manual Deploy**
+1. Go to Vercel Dashboard → `ibam-learn-platform-production-v3`
+2. Click "Deployments" → "Create Deployment"
+3. Select branch `main` → Deploy
+
+**Option 2: Re-connect Git Temporarily** 
+1. Connect production project to Git when ready to deploy
+2. Push to main branch → Auto-deploy
+3. Disconnect Git again for safety
+
+**Option 3: CLI Deploy (if permissions allow)**
+```bash
+# Deploy current branch to production project
+vercel --prod --scope jeff-samuelsons-projects
+
+# Or specify project ID directly
+vercel --prod --token [YOUR_TOKEN]
+```
+
+### Deployment Workflow
+1. **Test in Staging**: Push changes to `staging` branch → Auto-deploys to staging
+2. **Verify Staging**: Test all functionality in staging environment
+3. **Merge to Main**: Create PR from staging → main (when ready for production)
+4. **Deploy Production**: Run `vercel --prod` command manually
+5. **Verify Production**: Confirm deployment success
 - **Process**: `vercel deploy` from staging branch
 - **Working URL**: https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app
 
