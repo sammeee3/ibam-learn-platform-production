@@ -40,3 +40,9 @@ When you say "deploy to production", Claude will:
 4. Confirm success
 
 🎯 **Enterprise-grade deployment control achieved!**
+
+## ✅ ISOLATION TEST
+- Staging repo connected to staging Vercel project
+- Production repo connected to production Vercel project  
+- This change should ONLY deploy to staging
+- Test time: August 19, 2025 9:45 PM
