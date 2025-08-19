@@ -1,0 +1,102 @@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 10px auto; max-width: 500px; width: 95%; text-align: center; font-family: Arial, sans-serif; box-sizing: border-box;">
+    
+    <div style="background: rgba(0,255,0,0.2); color: #00aa00; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(0,255,0,0.3); font-weight: bold;">
+        ✅ SIMPLE WORKING VERSION
+    </div>
+    
+    <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🎯 Welcome to IBAM Learning Platform
+    </h1>
+    
+    <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 32px; line-height: 1.5;">
+        Your faith-driven business mastery course is ready!
+    </p>
+    
+    <div style="margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="color: white; margin: 0 0 12px 0; font-size: 18px;">📚 What You'll Access:</h3>
+        <ul style="color: rgba(255,255,255,0.9); text-align: left; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li>Complete IBAM Impact Member Training</li>
+            <li>Interactive modules and assessments</li>
+            <li>Business planning tools & templates</li>
+            <li>AI-powered coaching assistance</li>
+            <li>Progress tracking & certificates</li>
+        </ul>
+    </div>
+    
+    <button id="accessBtn" onclick="accessIBAMPlatform()" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border: none; padding: 18px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); text-decoration: none; display: inline-block; min-width: 220px; width: 90%; max-width: 300px; touch-action: manipulation;">
+        <span style="margin-right: 12px; font-size: 24px;">🚀</span>
+        <span>Access Your Course Now</span>
+    </button>
+    
+    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid #4ecdc4;">
+        <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">✅ Direct Access:</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 13px; line-height: 1.4;">
+            Uses your current System.io email automatically. No login required.
+        </p>
+    </div>
+    
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; font-style: italic;">
+        🔒 Secure • 🌟 Personalized • 📱 Mobile-Friendly
+    </p>
+</div>
+
+<script>
+console.log('✅ SIMPLE WORKING VERSION - Direct System.io Integration');
+
+function accessIBAMPlatform() {
+    console.log('🚀 Starting direct IBAM platform access...');
+    
+    var baseUrl = 'https://ibam-learn-platform-v3.vercel.app';
+    var secretToken = 'ibam-systeme-secret-2025';
+    
+    // For your specific case, use your known System.io email directly
+    var userEmail = 'sj614+sam@proton.me';
+    
+    console.log('🎯 Using email:', userEmail);
+    
+    // Update button
+    var button = document.getElementById('accessBtn');
+    var originalText = button.innerHTML;
+    button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">⏳</span><span>Opening Platform...</span>';
+    button.disabled = true;
+    
+    // Create direct SSO URL
+    var ssoUrl = baseUrl + '/api/auth/sso?email=' + encodeURIComponent(userEmail) + 
+                 '&token=' + secretToken + 
+                 '&source=systemio-direct&clearSession=true';
+    
+    console.log('🔗 Opening IBAM platform:', ssoUrl);
+    
+    // Open platform
+    try {
+        var platformWindow = window.open(ssoUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+        
+        if (platformWindow) {
+            platformWindow.focus();
+            console.log('✅ IBAM platform opened successfully');
+        } else {
+            console.log('❌ Popup blocked, redirecting same window');
+            window.location.href = ssoUrl;
+        }
+        
+    } catch (error) {
+        console.log('❌ Error opening platform:', error);
+        window.location.href = ssoUrl;
+    }
+    
+    // Reset button
+    setTimeout(function() {
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }, 3000);
+}
+
+// Simple diagnostics
+window.addEventListener('load', function() {
+    console.log('✅ SIMPLE WORKING VERSION LOADED');
+    console.log('🎯 Will use email: sj614+sam@proton.me');
+    console.log('🚀 Ready for direct IBAM platform access');
+});
+</script>

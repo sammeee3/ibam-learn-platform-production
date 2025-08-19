@@ -171,35 +171,17 @@ const IBAMDashboard: React.FC = () => {
     return data;
   };
 
- // Mock data for fallback
+ // Mock data for fallback - CLEAN SLATE FOR NEW USERS
  const mockModuleProgress: ModuleProgress[] = [
-   { module_id: 1, total_sessions: 4, completed_sessions: 4, completion_percentage: 100 },
-   { module_id: 2, total_sessions: 4, completed_sessions: 2, completion_percentage: 50 },
+   { module_id: 1, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
+   { module_id: 2, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
    { module_id: 3, total_sessions: 5, completed_sessions: 0, completion_percentage: 0 },
    { module_id: 4, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
    { module_id: 5, total_sessions: 3, completed_sessions: 0, completion_percentage: 0 }
  ];
 
- const mockRecentActivity: RecentActivity[] = [
-   {
-     session_id: 26,
-     completion_percentage: 75,
-     last_accessed_at: '2025-06-27T18:30:00Z',
-     sessions: { title: 'Reasons for Success - Faith-Driven Principles', module_id: 2, session_number: 2 }
-   },
-   {
-     session_id: 25,
-     completion_percentage: 100,
-     last_accessed_at: '2025-06-26T14:20:00Z',
-     sessions: { title: 'Reasons for Failure - Learning from Mistakes', module_id: 2, session_number: 1 }
-   },
-   {
-     session_id: 4,
-     completion_percentage: 100,
-     last_accessed_at: '2025-06-25T16:45:00Z',
-     sessions: { title: 'Faith-Driven Business - The AVODAH Model', module_id: 1, session_number: 4 }
-   }
- ];
+ // CLEAN RECENT ACTIVITY FOR NEW USERS
+ const mockRecentActivity: RecentActivity[] = [];
 
  // Updated trainers array with photo paths
  const trainers = [

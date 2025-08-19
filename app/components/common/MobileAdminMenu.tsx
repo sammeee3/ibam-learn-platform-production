@@ -34,15 +34,16 @@ const MobileAdminMenu: React.FC<MobileAdminMenuProps> = ({
       onClick: onDownloadClick,
       color: 'text-blue-600'
     },
-    // Only show Account and Settings for direct login users
+    // Show Account for all users, Settings only for direct login users
+    {
+      icon: <User className="w-5 h-5" />,
+      label: 'Account',
+      sublabel: userProfile?.email || 'User',
+      onClick: () => isSystemIOUser ? {} : router.push('/account'), // SystemIO users see email but can't click
+      color: 'text-green-600'
+    },
+    // Only show Settings for direct login users
     ...(isSystemIOUser ? [] : [
-      {
-        icon: <User className="w-5 h-5" />,
-        label: 'Account',
-        sublabel: userProfile?.email || 'User',
-        onClick: () => router.push('/account'),
-        color: 'text-green-600'
-      },
       {
         icon: <Settings className="w-5 h-5" />,
         label: 'Settings',

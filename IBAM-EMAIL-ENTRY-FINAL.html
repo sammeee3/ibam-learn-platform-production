@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Your IBAM Course</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+        }
+        
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        
+        .acknowledgment {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .acknowledgment h3 {
+            color: #d35400;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .acknowledgment p {
+            color: #e67e22;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        input[type="email"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .help-text {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .access-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            width: 100%;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .access-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        .access-button:active {
+            transform: translateY(0);
+        }
+        
+        .access-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .features {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        .features h3 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-list {
+            display: grid;
+            gap: 12px;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .feature-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .feature-text {
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .security-note {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .security-note p {
+            color: #155724;
+            font-size: 13px;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+            
+            .icon {
+                font-size: 48px;
+            }
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading.active {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🎯</div>
+        
+        <h1>Welcome to Your IBAM Course!</h1>
+        <p class="subtitle">Your faith-driven business mastery training is ready to begin</p>
+        
+        <div class="acknowledgment">
+            <h3>🙏 We Know This Extra Step Is Frustrating</h3>
+            <p>You've had to enter your email multiple times, and we sincerely apologize. This one-time entry will save your login for future visits and give you instant access.</p>
+        </div>
+        
+        <form id="accessForm">
+            <div class="form-group">
+                <label for="email">Enter Your IBAM Membership Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="your-email@example.com"
+                    required
+                    autocomplete="email"
+                >
+                <p class="help-text">Use the same email from your IBAM membership or course purchase</p>
+            </div>
+            
+            <button type="submit" class="access-button" id="accessButton">
+                <span id="buttonText">🚀 Access My Course Now</span>
+                <div class="loading" id="loadingSpinner"></div>
+            </button>
+        </form>
+        
+        <div class="features">
+            <h3>What You'll Get Instant Access To:</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">📚</div>
+                    <div class="feature-text">Complete IBAM Impact Member Training</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🧠</div>
+                    <div class="feature-text">Interactive modules and assessments</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💼</div>
+                    <div class="feature-text">Business planning tools & templates</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-text">AI-powered coaching assistance</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">Progress tracking & certificates</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security-note">
+            <p><strong>🔒 Secure & Private:</strong> Your email is encrypted and only used for course access. We automatically create your account if you're new, so you can start learning immediately.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('accessForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const button = document.getElementById('accessButton');
+            const buttonText = document.getElementById('buttonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            if (!email) {
+                alert('Please enter your email address');
+                return;
+            }
+            
+            if (!email.includes('@') || !email.includes('.')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Update button state
+            button.disabled = true;
+            buttonText.textContent = 'Opening Your Course...';
+            loadingSpinner.classList.add('active');
+            
+            // Save email for future use
+            if (typeof(Storage) !== 'undefined') {
+                localStorage.setItem('ibam-user-email', email);
+            }
+            
+            // Create SSO URL
+            const ssoUrl = 'https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=' + 
+                          encodeURIComponent(email) + 
+                          '&token=ibam-systeme-secret-2025&source=systemio-manual-entry';
+            
+            console.log('🚀 Accessing IBAM platform for:', email);
+            
+            // Open IBAM platform
+            try {
+                const platformWindow = window.open(ssoUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+                
+                if (platformWindow) {
+                    platformWindow.focus();
+                    console.log('✅ IBAM platform opened successfully');
+                    
+                    // Update button to success state
+                    buttonText.textContent = '✅ Course Opened Successfully!';
+                    loadingSpinner.classList.remove('active');
+                    
+                    // Reset after delay
+                    setTimeout(() => {
+                        button.disabled = false;
+                        buttonText.textContent = '🚀 Access My Course Now';
+                    }, 3000);
+                } else {
+                    console.log('❌ Popup blocked, redirecting same window');
+                    buttonText.textContent = '🔄 Redirecting...';
+                    window.location.href = ssoUrl;
+                }
+                
+            } catch (error) {
+                console.log('❌ Error opening platform:', error);
+                buttonText.textContent = '🔄 Redirecting...';
+                window.location.href = ssoUrl;
+            }
+        });
+        
+        // Auto-fill email if previously entered
+        window.addEventListener('load', function() {
+            if (typeof(Storage) !== 'undefined') {
+                const savedEmail = localStorage.getItem('ibam-user-email');
+                if (savedEmail) {
+                    document.getElementById('email').value = savedEmail;
+                    document.getElementById('email').focus();
+                }
+            }
+        });
+        
+        // Auto-focus email field
+        document.getElementById('email').focus();
+    </script>
+</body>
+</html>

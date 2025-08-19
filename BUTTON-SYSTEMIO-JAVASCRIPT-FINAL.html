@@ -1,0 +1,260 @@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 10px auto; max-width: 500px; width: 95%; text-align: center; font-family: Arial, sans-serif; box-sizing: border-box;">
+    
+    <div style="background: rgba(0,255,0,0.2); color: #00aa00; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(0,255,0,0.3); font-weight: bold;">
+        ✅ FINAL WORKING VERSION
+    </div>
+    
+    <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🎯 Welcome to IBAM Learning Platform
+    </h1>
+    
+    <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 32px; line-height: 1.5;">
+        Your faith-driven business mastery course is ready!
+    </p>
+    
+    <div style="margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="color: white; margin: 0 0 12px 0; font-size: 18px;">📚 What You'll Access:</h3>
+        <ul style="color: rgba(255,255,255,0.9); text-align: left; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li>Complete IBAM Impact Member Training</li>
+            <li>Interactive modules and assessments</li>
+            <li>Business planning tools & templates</li>
+            <li>AI-powered coaching assistance</li>
+            <li>Progress tracking & certificates</li>
+        </ul>
+    </div>
+    
+    <button id="accessBtn" onclick="accessIBAMPlatform()" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border: none; padding: 18px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); text-decoration: none; display: inline-block; min-width: 220px; width: 90%; max-width: 300px; touch-action: manipulation;">
+        <span style="margin-right: 12px; font-size: 24px;">🚀</span>
+        <span>Access Your Course Now</span>
+    </button>
+    
+    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid #4ecdc4;">
+        <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">✅ Smart Detection:</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 13px; line-height: 1.4;">
+            Automatically detects your System.io login and provides seamless access.
+        </p>
+    </div>
+    
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; font-style: italic;">
+        🔒 Secure • 🌟 Personalized • 📱 Mobile-Friendly
+    </p>
+</div>
+
+<script>
+console.log('✅ FINAL WORKING VERSION - System.io JavaScript Integration');
+
+function accessIBAMPlatform() {
+    console.log('🚀 Starting IBAM platform access...');
+    
+    var baseUrl = 'https://ibam-learn-platform-v3.vercel.app';
+    var secretToken = 'ibam-systeme-secret-2025';
+    var userEmail = null;
+    var detectionMethod = 'unknown';
+    
+    // METHOD 1: Try to get System.io user data from global objects
+    try {
+        // Check for common System.io global variables
+        if (typeof window.SystemeIO !== 'undefined' && window.SystemeIO.currentUser) {
+            userEmail = window.SystemeIO.currentUser.email;
+            detectionMethod = 'SystemeIO.currentUser';
+            console.log('✅ Method 1 - SystemeIO global:', userEmail);
+        } else if (typeof window.systeme !== 'undefined' && window.systeme.user) {
+            userEmail = window.systeme.user.email;
+            detectionMethod = 'systeme.user';
+            console.log('✅ Method 1 - systeme global:', userEmail);
+        } else if (typeof window.user !== 'undefined' && window.user.email) {
+            userEmail = window.user.email;
+            detectionMethod = 'window.user';
+            console.log('✅ Method 1 - window.user:', userEmail);
+        }
+    } catch (e) {
+        console.log('⚠️ Method 1 failed:', e.message);
+    }
+    
+    // METHOD 2: Check System.io cookies for user data
+    if (!userEmail) {
+        try {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.startsWith('systeme_user=') || cookie.startsWith('systemeio_user=') || cookie.startsWith('user_email=')) {
+                    var cookieValue = decodeURIComponent(cookie.split('=')[1]);
+                    if (cookieValue.includes('@')) {
+                        userEmail = cookieValue;
+                        detectionMethod = 'System.io cookie';
+                        console.log('✅ Method 2 - Cookie:', userEmail);
+                        break;
+                    } else if (cookieValue.startsWith('{')) {
+                        var userData = JSON.parse(cookieValue);
+                        if (userData.email) {
+                            userEmail = userData.email;
+                            detectionMethod = 'System.io cookie JSON';
+                            console.log('✅ Method 2 - Cookie JSON:', userEmail);
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('⚠️ Method 2 failed:', e.message);
+        }
+    }
+    
+    // METHOD 3: Check page content for user profile data
+    if (!userEmail) {
+        try {
+            // Look for profile sections that might contain email
+            var profileSelectors = [
+                '[data-user-email]',
+                '.user-email',
+                '.profile-email',
+                '[data-email]',
+                '.member-email'
+            ];
+            
+            for (var i = 0; i < profileSelectors.length; i++) {
+                var element = document.querySelector(profileSelectors[i]);
+                if (element) {
+                    var elementEmail = element.textContent || element.getAttribute('data-user-email') || element.getAttribute('data-email');
+                    if (elementEmail && elementEmail.includes('@')) {
+                        userEmail = elementEmail.trim();
+                        detectionMethod = 'page element: ' + profileSelectors[i];
+                        console.log('✅ Method 3 - Page element:', userEmail);
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('⚠️ Method 3 failed:', e.message);
+        }
+    }
+    
+    // METHOD 4: Extract from page text as last resort
+    if (!userEmail) {
+        try {
+            var pageText = document.body.innerText || document.body.textContent || '';
+            var emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+            var emails = pageText.match(emailRegex);
+            
+            if (emails && emails.length > 0) {
+                // Filter out common system emails
+                var userEmails = emails.filter(function(email) {
+                    return !email.toLowerCase().includes('support@') && 
+                           !email.toLowerCase().includes('noreply@') && 
+                           !email.toLowerCase().includes('info@') &&
+                           !email.toLowerCase().includes('admin@') &&
+                           !email.toLowerCase().includes('hello@') &&
+                           !email.toLowerCase().includes('contact@') &&
+                           !email.toLowerCase().includes('example@');
+                });
+                
+                if (userEmails.length > 0) {
+                    userEmail = userEmails[0];
+                    detectionMethod = 'page text extraction';
+                    console.log('✅ Method 4 - Page text:', userEmail);
+                }
+            }
+        } catch (e) {
+            console.log('⚠️ Method 4 failed:', e.message);
+        }
+    }
+    
+    // METHOD 5: Prompt with smart context
+    if (!userEmail) {
+        console.log('⚠️ All automatic methods failed, prompting user');
+        userEmail = prompt('To access your IBAM course, please enter the email address you use for System.io:');
+        detectionMethod = 'user prompt';
+        
+        if (!userEmail) {
+            alert('Email is required to access your course. Please contact support@ibam.org if you need assistance.');
+            return;
+        }
+        
+        // Validate email
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+    }
+    
+    console.log('🎯 FINAL EMAIL:', userEmail);
+    console.log('📍 Detection method:', detectionMethod);
+    
+    // Store for future use
+    if (typeof(Storage) !== 'undefined') {
+        localStorage.setItem('ibam-auth-email', userEmail);
+        localStorage.setItem('ibam-detection-method', detectionMethod);
+    }
+    
+    // Create SSO URL
+    var ssoUrl = baseUrl + '/api/auth/sso?email=' + encodeURIComponent(userEmail) + 
+                 '&token=' + secretToken + 
+                 '&source=systemio-js&method=' + encodeURIComponent(detectionMethod);
+    
+    console.log('🔗 Opening IBAM platform:', ssoUrl);
+    
+    // Update button
+    var button = document.getElementById('accessBtn');
+    var originalText = button.innerHTML;
+    button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">⏳</span><span>Opening Platform...</span>';
+    button.disabled = true;
+    
+    // Open IBAM platform
+    try {
+        var platformWindow = window.open(ssoUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+        
+        if (platformWindow) {
+            platformWindow.focus();
+            console.log('✅ IBAM platform opened successfully');
+        } else {
+            console.log('❌ Popup blocked, redirecting same window');
+            window.location.href = ssoUrl;
+        }
+        
+    } catch (error) {
+        console.log('❌ Error opening platform:', error);
+        window.location.href = ssoUrl;
+    }
+    
+    // Reset button
+    setTimeout(function() {
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }, 3000);
+}
+
+// Enhanced diagnostics on page load
+window.addEventListener('load', function() {
+    console.log('✅ FINAL WORKING VERSION LOADED');
+    console.log('=====================================');
+    
+    // Diagnostic information
+    console.log('🔍 DIAGNOSTIC SCAN:');
+    console.log('Current URL:', window.location.href);
+    console.log('Page title:', document.title);
+    
+    // Check for System.io objects
+    console.log('SystemeIO object:', typeof window.SystemeIO !== 'undefined' ? 'Available' : 'Not found');
+    console.log('systeme object:', typeof window.systeme !== 'undefined' ? 'Available' : 'Not found');
+    console.log('user object:', typeof window.user !== 'undefined' ? 'Available' : 'Not found');
+    
+    // Check cookies
+    var systemCookies = document.cookie.split(';').filter(function(cookie) {
+        return cookie.toLowerCase().includes('systeme') || cookie.toLowerCase().includes('user');
+    });
+    console.log('System.io related cookies:', systemCookies.length);
+    
+    // Check for user profile elements
+    var profileElements = document.querySelectorAll('[data-user-email], .user-email, .profile-email, [data-email]');
+    console.log('Profile elements found:', profileElements.length);
+    
+    // Check for emails in page
+    var pageText = document.body.innerText || '';
+    var emails = pageText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g);
+    console.log('Emails found in page:', emails ? emails.length : 0);
+    
+    console.log('🎯 Ready for IBAM platform access');
+});
+</script>

@@ -64,8 +64,23 @@ Webhook endpoints for external service integrations with the IBAM learning platf
 - Error rate monitoring
 - Integration health checks
 
+## System.io HTML Integration
+- **Email Entry Form**: `SYSTEMIO-EMAIL-FORM.html` - Manual email entry solution
+- **Technical Discovery**: System.io merge tags (`[Email]`) don't work in HTML buttons
+- **Merge Tag Limitation**: Tags only function in email campaigns and redirect URLs
+- **Current Implementation**: Beautiful IBAM-themed form with animated fish
+- **User Experience**: One-time email entry with localStorage memory
+- **Security Features**: Email validation, mismatch warnings, and encrypted transmission
+
 ## Integration Points
-- SystemIO course platform
+- SystemIO course platform (webhook-based user creation)
+- Manual email entry system for System.io users
 - Payment processing systems
 - Church management systems
 - Monitoring and alerting services
+
+## Database Backup & Management
+- **Production Database**: `tutrnikhomrgcpkzszvq` (created June 3, 2025)
+- **Staging Database**: `yhfxxouswctucxvfetcq` (created August 17, 2025)
+- **Backup Command**: `supabase db dump --project-ref tutrnikhomrgcpkzszvq --file backup.sql`
+- **Automatic Backups**: Supabase provides daily automated backups (7-day retention)

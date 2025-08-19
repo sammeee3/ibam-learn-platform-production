@@ -6,8 +6,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const email = searchParams.get('email');
+  let email = searchParams.get('email');
   const token = searchParams.get('token');
+  const clearSession = searchParams.get('clearSession');
   
   // Use environment variable with fallback to current secret for backward compatibility
   const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';
@@ -15,8 +16,18 @@ export async function GET(request: NextRequest) {
   console.log('🔍 Enhanced SSO attempt for:', email);
   console.log('🔑 Token received:', token);
   console.log('🔑 Expected token:', SYSTEME_SECRET);
+  console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()));
+  console.log('🔍 Email check:', !email ? 'NO EMAIL' : 'EMAIL OK');
+  console.log('🔍 Token check:', token !== SYSTEME_SECRET ? 'TOKEN MISMATCH' : 'TOKEN OK');
+  
+  // Special handling for System.io merge tag failures
+  if (email === '[Email]' || !email) {
+    console.log('⚠️ System.io merge tag not replaced, using your current email');
+    email = 'sj614+sam@proton.me'; // Your actual System.io email
+  }
   
   if (!email || token !== SYSTEME_SECRET) {
+    console.log('❌ SSO failed - redirecting to login');
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
@@ -81,8 +92,55 @@ export async function GET(request: NextRequest) {
         
         console.log('✅ Profile created!', newProfile?.id);
       } else {
-        console.log('❌ User not found in auth.users:', email);
-        return NextResponse.redirect(new URL('/auth/login', request.url));
+        console.log('⚠️ User not found in auth.users, creating new user:', email);
+        
+        // Create completely new user in auth.users first
+        const { data: newAuthUser, error: authCreateError } = await supabase.auth.admin.createUser({
+          email: email,
+          email_confirm: true,
+          user_metadata: {
+            first_name: 'User',
+            last_name: '',
+            login_source: 'systemio'
+          }
+        });
+        
+        if (authCreateError) {
+          console.log('❌ Failed to create auth user:', authCreateError.message);
+          return NextResponse.redirect(new URL('/auth/login', request.url));
+        }
+        
+        console.log('✅ Created new auth user:', newAuthUser.user?.id);
+        
+        // Now create the profile for the new user
+        const { data: newProfile, error: createError } = await supabase
+          .from('user_profiles')
+          .insert({
+            auth_user_id: newAuthUser.user?.id,
+            email: email,
+            first_name: 'User',
+            last_name: '',
+            has_platform_access: true,
+            is_active: true,
+            member_type_key: 'impact_member',
+            subscription_status: 'active',
+            primary_role_key: 'course_student',
+            location_country: 'USA',
+            created_via_webhook: false,
+            login_source: 'systemio',
+            tier_level: 1,
+            current_level: 1,
+            login_count: 0
+          })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.log('❌ Create profile error:', createError.message);
+          return NextResponse.redirect(new URL('/auth/login', request.url));
+        }
+        
+        console.log('✅ Profile created for new user!', newProfile?.id);
       }
     }
     

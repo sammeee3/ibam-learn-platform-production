@@ -1,0 +1,181 @@
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 10px auto; max-width: 500px; width: 95%; text-align: center; font-family: Arial, sans-serif; box-sizing: border-box;">
+    
+    <div style="background: rgba(0,255,0,0.2); color: #00aa00; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(0,255,0,0.3); font-weight: bold;">
+        🔧 SESSION FIX VERSION
+    </div>
+    
+    <h1 style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+        🎯 Welcome to IBAM Learning Platform
+    </h1>
+    
+    <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 32px; line-height: 1.5;">
+        Your faith-driven business mastery course is ready!
+    </p>
+    
+    <div style="margin: 24px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="color: white; margin: 0 0 12px 0; font-size: 18px;">📚 What You'll Access:</h3>
+        <ul style="color: rgba(255,255,255,0.9); text-align: left; margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li>Complete IBAM Impact Member Training</li>
+            <li>Interactive modules and assessments</li>
+            <li>Business planning tools & templates</li>
+            <li>AI-powered coaching assistance</li>
+            <li>Progress tracking & certificates</li>
+        </ul>
+    </div>
+    
+    <button id="accessBtn" onclick="accessIBAMPlatform()" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border: none; padding: 18px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); text-decoration: none; display: inline-block; min-width: 220px; width: 90%; max-width: 300px; touch-action: manipulation;">
+        <span style="margin-right: 12px; font-size: 24px;">🚀</span>
+        <span>Access Your Course Now</span>
+    </button>
+    
+    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid #4ecdc4;">
+        <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">🔧 Session Fix:</p>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 13px; line-height: 1.4;">
+            Automatically clears conflicting sessions and uses your current System.io login.
+        </p>
+    </div>
+    
+    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 20px; font-style: italic;">
+        🔒 Secure • 🌟 Personalized • 📱 Mobile-Friendly
+    </p>
+</div>
+
+<script>
+console.log('🔧 SESSION FIX VERSION - System.io Integration with Session Clearing');
+
+function accessIBAMPlatform() {
+    console.log('🚀 Starting IBAM platform access with session fix...');
+    
+    var baseUrl = 'https://ibam-learn-platform-v3.vercel.app';
+    var secretToken = 'ibam-systeme-secret-2025';
+    
+    // Update button to show progress
+    var button = document.getElementById('accessBtn');
+    var originalText = button.innerHTML;
+    button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">⏳</span><span>Clearing Sessions...</span>';
+    button.disabled = true;
+    
+    // STEP 1: Clear any existing conflicting sessions
+    try {
+        // Clear localStorage
+        if (typeof(Storage) !== 'undefined') {
+            localStorage.removeItem('ibam-auth-email');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('ibam-detection-method');
+            console.log('🧹 Cleared localStorage');
+        }
+        
+        // Clear conflicting cookies by setting them to expire
+        document.cookie = 'ibam_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'ibam_auth_server=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        console.log('🧹 Cleared conflicting cookies');
+        
+    } catch (e) {
+        console.log('⚠️ Session cleanup warning:', e.message);
+    }
+    
+    // STEP 2: Try System.io merge tag first
+    var systemioEmail = '[Email]';
+    
+    setTimeout(function() {
+        button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">🔍</span><span>Detecting Email...</span>';
+        
+        if (systemioEmail && systemioEmail !== '[Email]' && systemioEmail.includes('@')) {
+            // Merge tag worked - use it directly
+            console.log('✅ System.io merge tag worked:', systemioEmail);
+            
+            button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">🚀</span><span>Opening Platform...</span>';
+            
+            var ssoUrl = baseUrl + '/api/auth/sso?email=' + encodeURIComponent(systemioEmail) + 
+                         '&token=' + secretToken + 
+                         '&source=systemio-merge-tag&clearSession=true';
+            
+            console.log('🔗 Opening IBAM platform with merge tag:', ssoUrl);
+            
+            // Open in new window for better UX
+            try {
+                var platformWindow = window.open(ssoUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+                
+                if (platformWindow) {
+                    platformWindow.focus();
+                    console.log('✅ IBAM platform opened successfully');
+                } else {
+                    console.log('❌ Popup blocked, redirecting same window');
+                    window.location.href = ssoUrl;
+                }
+                
+            } catch (error) {
+                console.log('❌ Error opening platform:', error);
+                window.location.href = ssoUrl;
+            }
+            
+        } else {
+            // Merge tag failed - use advanced detection
+            console.log('⚠️ System.io merge tag failed, using detection system');
+            
+            button.innerHTML = '<span style="margin-right: 12px; font-size: 24px;">🔍</span><span>Auto-Detecting...</span>';
+            
+            var detectionUrl = baseUrl + '/api/auth/sso?token=' + secretToken + '&source=systemio-detection';
+            
+            console.log('🔗 Using detection system:', detectionUrl);
+            
+            // Open in new window for better UX
+            try {
+                var platformWindow = window.open(detectionUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
+                
+                if (platformWindow) {
+                    platformWindow.focus();
+                    console.log('✅ Detection system opened successfully');
+                } else {
+                    console.log('❌ Popup blocked, redirecting same window');
+                    window.location.href = detectionUrl;
+                }
+                
+            } catch (error) {
+                console.log('❌ Error opening detection system:', error);
+                window.location.href = detectionUrl;
+            }
+        }
+        
+        // Reset button after delay
+        setTimeout(function() {
+            if (button) {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }, 3000);
+        
+    }, 500); // Small delay to show session clearing message
+}
+
+// Diagnostic logging on page load
+window.addEventListener('load', function() {
+    console.log('🔧 SESSION FIX VERSION LOADED');
+    console.log('=====================================');
+    
+    // Enhanced diagnostics
+    console.log('🔍 DIAGNOSTIC SCAN:');
+    console.log('Current URL:', window.location.href);
+    console.log('Page title:', document.title);
+    console.log('System.io merge tag test:', '[Email]' === '[Email]' ? 'Not replaced' : 'Working');
+    
+    // Check for System.io environment
+    console.log('SystemeIO object:', typeof window.SystemeIO !== 'undefined' ? 'Available' : 'Not found');
+    console.log('systeme object:', typeof window.systeme !== 'undefined' ? 'Available' : 'Not found');
+    console.log('user object:', typeof window.user !== 'undefined' ? 'Available' : 'Not found');
+    
+    // Check existing cookies
+    var cookies = document.cookie.split(';').filter(function(cookie) {
+        return cookie.toLowerCase().includes('systeme') || cookie.toLowerCase().includes('user') || cookie.toLowerCase().includes('ibam');
+    });
+    console.log('Relevant cookies found:', cookies.length);
+    
+    // Check localStorage
+    if (typeof(Storage) !== 'undefined') {
+        var ibamEmail = localStorage.getItem('ibam-auth-email');
+        console.log('Stored IBAM email:', ibamEmail || 'None');
+    }
+    
+    console.log('🎯 Ready for session-fixed IBAM platform access');
+});
+</script>

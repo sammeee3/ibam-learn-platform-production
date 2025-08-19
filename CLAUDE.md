@@ -33,11 +33,14 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Build Process**: Must show "Route (app)" not "Route (pages)" in build output
 
 ## CURRENT STATUS: ✅ OPERATIONAL
-**Last Verified**: Aug 16, 2025 4:30 PM
+**Last Verified**: Aug 19, 2025 7:27 AM
 - ✅ **Production URL**: https://ibam-learn-platform-v3.vercel.app
-- ✅ **System.io Integration**: Fully functional seamless login
+- ✅ **System.io Integration**: Manual email entry system implemented (merge tags limitations discovered)
 - ✅ **User Identification**: Dashboard shows user names and dropdown works
 - ✅ **All API Routes**: Working correctly with App Router
+- ✅ **Email Entry Form**: IBAM-themed form with animated fish, validation, and security warnings
+- ✅ **Production Database Backup**: Available via CLI and Supabase dashboard
+- ✅ **Database Projects**: Production (tutrnikhomrgcpkzszvq) and Staging (yhfxxouswctucxvfetcq) environments
 
 ## Key Features
 - Module-based learning system with sessions
@@ -75,11 +78,13 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - Business plan data
 
 ## System.io Integration
-- **Webhook Endpoint**: `/api/webhooks/systemio` - Receives user enrollment data
-- **Magic Token System**: Automatic passwordless authentication for external users
-- **HTML Button**: `system-io-FINAL-working.html` - Ready-to-use System.io integration
-- **Automatic User Creation**: Webhook creates complete user profiles with platform access
-- **Seamless Access**: One-click login from System.io to IBAM platform
+- **Webhook Endpoint**: `/api/webhooks/systemio` - Receives user enrollment data and creates complete user accounts
+- **Magic Token System**: Automatic passwordless authentication for external users (24-hour expiry)
+- **Email Entry Form**: `SYSTEMIO-EMAIL-FORM.html` - Beautiful manual email entry with IBAM theming
+- **Technical Limitation**: System.io merge tags (`[Email]`) only work in emails/redirects, not HTML buttons
+- **Current Solution**: Manual email entry with validation, localStorage memory, and security warnings
+- **Automatic User Creation**: Webhook creates auth users + user profiles + magic tokens
+- **Database Integration**: Works with both production and staging environments
 
 ## Important Notes
 - Uses Supabase for backend services
