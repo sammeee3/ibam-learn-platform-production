@@ -30,3 +30,12 @@ This file tests that staging uses staging database after environment variable fi
 - This commit should ONLY deploy staging project
 - SUCCESS EXPECTED!
 - Test time: August 19, 2025 9:05 PM
+
+## Test 6: PRODUCTION DEPLOYMENT TEST
+- Production project RECONNECTED to Git
+- deployment_status Events: ENABLED ✅
+- repository_dispatch Events: ENABLED ✅
+- Build settings: Fixed to "Automatic"
+- This commit should deploy BOTH staging and production
+- PRODUCTION AUTO-DEPLOY TEST!
+- Test time: August 19, 2025 9:15 PM
