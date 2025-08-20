@@ -48,7 +48,48 @@ export async function GET(req: NextRequest) {
         .single();
 
       if (profileError || !userProfile) {
-        console.log('❌ User not found in user_profiles:', email);
+        console.log('⚠️ User not found in user_profiles, checking auth user:', email);
+        
+        // FALLBACK: Check if user exists in auth.users (recently signed up)
+        try {
+          const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+          const authUser = authUsers.users.find(u => u.email === email);
+          
+          if (authUser && authUser.email_confirmed_at) {
+            console.log('🔄 Creating missing user profile for verified auth user:', email);
+            
+            // Create the missing profile
+            const { data: newProfile, error: createError } = await supabaseAdmin
+              .from('user_profiles')
+              .insert({
+                auth_user_id: authUser.id,
+                email: email,
+                is_active: true,
+                has_platform_access: true,
+                created_via_webhook: false
+              })
+              .select()
+              .single();
+              
+            if (!createError && newProfile) {
+              console.log('✅ Created missing user profile:', email);
+              return NextResponse.json({
+                authenticated: true,
+                email: email,
+                userId: authUser.id,
+                source: authServerCookie ? 'server_cookie' : 'client_cookie',
+                accountStatus: 'active',
+                profileCreated: true
+              });
+            } else {
+              console.error('❌ Failed to create missing profile:', createError);
+            }
+          }
+        } catch (authCheckError) {
+          console.error('❌ Auth user check failed:', authCheckError);
+        }
+        
+        console.log('❌ User account not found and could not create profile:', email);
         return NextResponse.json(
           { error: 'User account not found' }, 
           { status: 401 }

@@ -27,33 +27,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create user profile for signup users
+    // Create user profile for signup users with minimal required fields
     const { data: newProfile, error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .insert({
         auth_user_id,
         email,
-        first_name: 'User', // Default name, can be updated later
-        last_name: '',
-        has_platform_access: true,
         is_active: true,
-        member_type_key: 'free_user',
-        subscription_status: 'active',
-        primary_role_key: 'course_student',
-        location_country: 'USA',
-        created_via_webhook: false,
-        tier_level: 1,
-        current_level: 1,
-        login_count: 0,
-        login_source: 'direct_signup'
+        has_platform_access: true,
+        created_via_webhook: false
       })
       .select()
       .single()
 
     if (profileError) {
       console.error('Profile creation failed:', profileError)
+      console.error('Profile error details:', JSON.stringify(profileError, null, 2))
       return NextResponse.json(
-        { error: 'Failed to create user profile' },
+        { 
+          error: 'Failed to create user profile',
+          details: profileError.message || 'Unknown database error',
+          code: profileError.code
+        },
         { status: 500 }
       )
     }
