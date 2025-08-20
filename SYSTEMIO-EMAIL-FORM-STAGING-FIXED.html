@@ -1,0 +1,142 @@
+<div style="max-width: 500px; margin: 20px auto; padding: 30px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #a855f7 70%, #c084fc 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3); text-align: center; font-family: Arial, sans-serif; border-top: 5px solid #22d3ee;">
+    
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; font-size: 36px;">
+        <span style="animation: swim1 3s ease-in-out infinite;">🐟</span>
+        <span style="animation: swim2 3s ease-in-out infinite 0.5s;">🐟</span>
+        <span style="animation: swim3 3s ease-in-out infinite 1s;">🐟</span>
+    </div>
+    
+    <style>
+        @keyframes swim1 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+        @keyframes swim2 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(-3deg); }
+        }
+        @keyframes swim3 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(8deg); }
+        }
+    </style>
+    
+    <h2 style="color: #f8fafc; margin-bottom: 10px; font-size: 24px; font-weight: bold;">Access Your IBAM Course</h2>
+    
+    <p style="color: #e2e8f0; margin-bottom: 20px; font-size: 16px;">Your faith-driven business training is ready</p>
+    
+    <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #f59e0b;">
+        <p style="color: #92400e; margin: 0; font-size: 14px; font-weight: bold;">🙏 We apologize for the login hassles. This one entry saves your access forever.</p>
+    </div>
+    
+    <form id="ibamAccessForm" style="margin-bottom: 20px;">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; color: #f1f5f9; font-weight: bold; margin-bottom: 8px; text-align: left;">Enter Your IBAM Email:</label>
+            <input 
+                type="email" 
+                id="ibamEmail" 
+                placeholder="your-email@example.com"
+                required
+                style="width: 100%; padding: 15px; border: 2px solid #475569; border-radius: 8px; font-size: 16px; box-sizing: border-box; transition: all 0.3s ease; background: #f8fafc; color: #1e293b;"
+                onfocus="this.style.borderColor='#22d3ee'; this.style.boxShadow='0 0 0 3px rgba(34, 211, 238, 0.2)'; this.style.background='#ffffff'"
+                onblur="this.style.borderColor='#94a3b8'; this.style.boxShadow='none'; this.style.background='#f8fafc'"
+            >
+            <p style="color: #cbd5e1; font-size: 13px; margin: 5px 0 0 0; text-align: center;">Use the same email from your IBAM membership</p>
+            <p style="color: #fca5a5; font-size: 12px; margin: 8px 0 0 0; text-align: center; font-weight: bold;">⚠️ IMPORTANT: Use YOUR email that matches your System.io login</p>
+        </div>
+        
+        <button 
+            type="submit" 
+            id="ibamSubmitBtn"
+            style="width: 100%; background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%); color: white; border: none; padding: 18px 24px; font-size: 18px; font-weight: bold; border-radius: 25px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.2);"
+            onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(249, 115, 22, 0.6)'; this.style.background='linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px rgba(249, 115, 22, 0.4)'; this.style.background='linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%)'"
+        >
+            🐟 Access My Course Now
+        </button>
+    </form>
+    
+    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 15px; border-radius: 8px; border-left: 4px solid #22d3ee;">
+        <p style="color: #0c4a6e; margin: 0; font-size: 13px; font-weight: 600;">
+            <strong>🔒 Secure & Protected:</strong> Your email is encrypted and only used for course access. New IBAM members are automatically enrolled.
+        </p>
+    </div>
+    
+</div>
+
+<script>
+document.getElementById('ibamAccessForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('ibamEmail').value.trim();
+    const button = document.getElementById('ibamSubmitBtn');
+    
+    if (!email || !email.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+    }
+    
+    // Check if this looks like the user's own email
+    const savedEmail = localStorage.getItem('ibam-saved-email');
+    if (savedEmail && savedEmail !== email) {
+        const confirmed = confirm(
+            'You previously used: ' + savedEmail + '\n' +
+            'You entered: ' + email + '\n\n' +
+            'Are you sure you want to use a different email? You should use YOUR email address that matches your System.io login.'
+        );
+        if (!confirmed) {
+            return;
+        }
+    }
+    
+    // Basic validation - warn about common mistakes
+    if (email.includes('test') || email.includes('example') || email.includes('demo')) {
+        alert('Please use your real email address, not a test email.');
+        return;
+    }
+    
+    // Update button
+    const originalText = button.innerHTML;
+    button.innerHTML = '⏳ Opening Course...';
+    button.disabled = true;
+    
+    // Save email for next time
+    try {
+        localStorage.setItem('ibam-saved-email', email);
+    } catch (e) {}
+    
+    // FIXED: Create access URL for STAGING with correct token
+    const accessUrl = 'https://ibam-learn-platform-v2.vercel.app/api/auth/sso?email=' + 
+                      encodeURIComponent(email) + 
+                      '&token=staging-secret-2025-secure&source=systemio-form';
+    
+    // Open course
+    try {
+        const courseWindow = window.open(accessUrl, '_blank', 'width=1200,height=800');
+        if (courseWindow) {
+            courseWindow.focus();
+            button.innerHTML = '✅ Course Opened!';
+        } else {
+            window.location.href = accessUrl;
+        }
+    } catch (error) {
+        window.location.href = accessUrl;
+    }
+    
+    // Reset button after 3 seconds
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }, 3000);
+});
+
+// Auto-fill saved email
+window.addEventListener('load', function() {
+    try {
+        const savedEmail = localStorage.getItem('ibam-saved-email');
+        if (savedEmail) {
+            document.getElementById('ibamEmail').value = savedEmail;
+        }
+    } catch (e) {}
+});
+</script>
