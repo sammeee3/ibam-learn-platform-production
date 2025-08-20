@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Admin API: Getting user list from staging database');
 
-    // Query user_profiles table
+    // Query user_profiles table with existing columns only
     const { data: profiles, error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .select(`
@@ -13,10 +13,6 @@ export async function GET(request: NextRequest) {
         email, 
         first_name,
         last_name,
-        member_type_key,
-        primary_role_key,
-        has_platform_access,
-        is_active,
         created_at
       `)
       .order('created_at', { ascending: false });
@@ -50,15 +46,12 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    // Format user profiles for response
+    // Format user profiles for response  
     const userProfiles = profiles || [];
     const formattedProfiles = userProfiles.map(user => ({
       name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'No name',
       email: user.email,
-      type: user.member_type_key || 'Unknown',
-      role: user.primary_role_key || 'Unknown', 
-      access: user.has_platform_access ? 'Yes' : 'No',
-      status: user.is_active ? 'Active' : 'Inactive',
+      id: user.id,
       created: new Date(user.created_at).toLocaleDateString()
     }));
 
