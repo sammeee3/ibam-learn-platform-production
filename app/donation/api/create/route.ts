@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdminAdmin } from '@/lib/supabaseAdmin-config';
 
 // Authorize.Net API endpoint
 const AUTHORIZE_NET_URL = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
@@ -508,7 +503,7 @@ export async function POST(request: NextRequest) {
     const calculatedTotalAmount = coverFees ? amount + calculatedProcessingFees : amount;
 
     // Create or update donor
-    const { data: existingDonor, error: donorFindError } = await supabase
+    const { data: existingDonor, error: donorFindError } = await supabaseAdmin
       .from('donation_donors')
       .select('id, total_donated')
       .eq('email', donor.email)
@@ -518,7 +513,7 @@ export async function POST(request: NextRequest) {
     if (existingDonor) {
       donorId = existingDonor.id;
       const newTotal = (existingDonor.total_donated || 0) + amount;
-      await supabase
+      await supabaseAdmin
         .from('donation_donors')
         .update({
           first_name: donor.firstName,
@@ -531,7 +526,7 @@ export async function POST(request: NextRequest) {
       
       console.log('Updated existing donor:', donorId);
     } else {
-      const { data: newDonor, error: donorCreateError } = await supabase
+      const { data: newDonor, error: donorCreateError } = await supabaseAdmin
         .from('donation_donors')
         .insert({
           email: donor.email,
@@ -618,7 +613,7 @@ export async function POST(request: NextRequest) {
     console.log(`${frequency === 'one-time' ? 'Payment' : 'Subscription'} successful:`, paymentResult.transactionId || paymentResult.subscriptionId);
 
     // Create transaction record
-    const { data: transaction, error: transactionError } = await supabase
+    const { data: transaction, error: transactionError } = await supabaseAdmin
       .from('donation_transactions')
       .insert({
         donor_id: donorId,
@@ -654,7 +649,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update goal progress
-    const { data: currentGoal } = await supabase
+    const { data: currentGoal } = await supabaseAdmin
       .from('donation_goals')
       .select('current_amount')
       .eq('year', 2026)
@@ -662,7 +657,7 @@ export async function POST(request: NextRequest) {
 
     if (currentGoal) {
       const newAmount = (currentGoal.current_amount || 0) + amount;
-      await supabase
+      await supabaseAdmin
         .from('donation_goals')
         .update({
           current_amount: newAmount,
