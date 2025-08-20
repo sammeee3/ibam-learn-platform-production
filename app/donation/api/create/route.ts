@@ -242,9 +242,9 @@ async function createAuthorizeNetSubscription(paymentData: any) {
     }
   };
 
-  console.log('🔍 SUBSCRIPTION: About to send request to Authorize.Net');
+  console.log('🔍 SUBSCRIPTION: Sending request to Authorize.Net');
   console.log('🔍 SUBSCRIPTION URL:', AUTHORIZE_NET_URL);
-  console.log('🔍 SUBSCRIPTION Request:', JSON.stringify(subscriptionRequest, null, 2));
+  // Subscription request details omitted for security
 
   try {
     const response = await fetch(AUTHORIZE_NET_URL, {
@@ -258,7 +258,8 @@ async function createAuthorizeNetSubscription(paymentData: any) {
 
     console.log('🔍 SUBSCRIPTION Response status:', response.status);
     const result = await response.json();
-    console.log('🔍 SUBSCRIPTION Full response:', JSON.stringify(result, null, 2));
+    console.log('🔍 SUBSCRIPTION Response received');
+    // Response details omitted for security
 
     if (result.subscriptionId) {
       return {
@@ -374,9 +375,9 @@ transactionKey: process.env.AUTHORIZE_NET_TRANSACTION_KEY
     };
   }
 
-  console.log('🔍 ONE-TIME: About to send request to Authorize.Net');
+  console.log('🔍 ONE-TIME: Sending request to Authorize.Net');
   console.log('🔍 ONE-TIME URL:', AUTHORIZE_NET_URL);
-  console.log('🔍 ONE-TIME Request:', JSON.stringify(authNetRequest, null, 2));
+  // Payment request details omitted for security
 
   try {
     const response = await fetch(AUTHORIZE_NET_URL, {
@@ -390,7 +391,8 @@ transactionKey: process.env.AUTHORIZE_NET_TRANSACTION_KEY
 
     console.log('🔍 ONE-TIME Response status:', response.status);
     const result = await response.json();
-    console.log('🔍 ONE-TIME Full response:', JSON.stringify(result, null, 2));
+    console.log('🔍 ONE-TIME Response received');
+    // Response details omitted for security
     
     if (result.transactionResponse) {
       const transactionResponse = result.transactionResponse;
