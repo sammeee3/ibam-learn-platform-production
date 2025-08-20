@@ -44,10 +44,12 @@ async function handleSSO(request: NextRequest) {
   const config = getSecureConfig();
   const SYSTEME_SECRET = config.auth.systemeSecret;
   
-  console.log('🔍 Enhanced SSO attempt for:', email);
-  // SECURITY: Never log sensitive tokens or secrets
-  console.log('🔍 Token provided:', !!token);
-  console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()));
+  console.log('🔍 SSO attempt for:', email);
+  // SECURITY: Never log sensitive tokens or secrets in production
+  if (config.security.secretLogging) {
+    console.log('🔍 Token provided:', !!token);
+    console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()));
+  }
   console.log('🔍 Email check:', !email ? 'NO EMAIL' : 'EMAIL OK');
   console.log('🔍 Token check:', token !== SYSTEME_SECRET ? 'TOKEN MISMATCH' : 'TOKEN OK');
   
