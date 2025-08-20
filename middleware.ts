@@ -70,18 +70,21 @@ export async function middleware(req: NextRequest) {
       console.log('❌ Invalid email format in cookie:', userEmail);
       userFound = false;
     } else {
-      // Check if user exists in user_profiles table
-      console.log('🔍 Checking user by email:', userEmail);
+      // SECURITY FIX: Check if user exists and is active in user_profiles table
+      console.log('🔍 Validating user in database:', userEmail);
       
       const { data: userProfile } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('id, email, is_active, has_platform_access')
         .eq('email', userEmail)
         .single();
       
-      if (userProfile) {
+      if (userProfile && userProfile.is_active && userProfile.has_platform_access) {
         userFound = true;
-        console.log('✅ User validated in profiles table');
+        console.log('✅ User validated and active in profiles table');
+      } else if (userProfile && (!userProfile.is_active || !userProfile.has_platform_access)) {
+        console.log('❌ User found but account inactive or access denied:', userEmail);
+        userFound = false;
       } else {
         console.log('❌ User not found in profiles table');
         userFound = false;
