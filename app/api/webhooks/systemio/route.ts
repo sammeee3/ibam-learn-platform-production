@@ -4,6 +4,9 @@ import crypto from 'crypto'
 
 const webhookLogs: any[] = []
 
+// Rate limiting storage
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+
 // Use secure configuration
 const supabase = supabaseAdmin
 
@@ -36,6 +39,67 @@ export async function GET(request: NextRequest) {
     availableCourses: Object.keys(TAG_TO_COURSE_MAP),
     note: 'Automatically assigns courses based on System.io tags'
   })
+}
+
+// Verify webhook signature for security
+function verifyWebhookSignature(payload: string, signature: string | null, secret: string): boolean {
+  if (!signature) {
+    console.log('🚫 WEBHOOK SECURITY: No signature provided')
+    return false
+  }
+  
+  try {
+    // Handle different signature formats (GitHub style, SystemIO style, etc.)
+    let providedSignature = signature
+    if (signature.startsWith('sha256=')) {
+      providedSignature = signature.slice(7)
+    } else if (signature.startsWith('sha1=')) {
+      providedSignature = signature.slice(5)
+    }
+    
+    // Calculate expected signature
+    const expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
+    
+    // Secure comparison to prevent timing attacks
+    const providedBuffer = Buffer.from(providedSignature, 'hex')
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex')
+    
+    if (providedBuffer.length !== expectedBuffer.length) {
+      console.log('🚫 WEBHOOK SECURITY: Signature length mismatch')
+      return false
+    }
+    
+    const isValid = crypto.timingSafeEqual(providedBuffer, expectedBuffer)
+    console.log(`🔐 WEBHOOK SECURITY: Signature validation ${isValid ? 'SUCCESS' : 'FAILED'}`)
+    return isValid
+    
+  } catch (error) {
+    console.error('🚫 WEBHOOK SECURITY: Signature verification error:', error)
+    return false
+  }
+}
+
+// Rate limiting check
+function checkRateLimit(clientIP: string): boolean {
+  const now = Date.now()
+  const windowMs = 60 * 1000 // 1 minute
+  const maxRequests = 10 // 10 requests per minute
+  
+  const clientData = rateLimitStore.get(clientIP)
+  
+  if (!clientData || now > clientData.resetTime) {
+    // New window or expired window
+    rateLimitStore.set(clientIP, { count: 1, resetTime: now + windowMs })
+    return true
+  }
+  
+  if (clientData.count >= maxRequests) {
+    console.log(`🚫 RATE LIMIT: Client ${clientIP} exceeded ${maxRequests} requests/minute`)
+    return false
+  }
+  
+  clientData.count++
+  return true
 }
 
 // Generate secure magic token for user access
@@ -159,9 +223,51 @@ async function handleWebhook(request: NextRequest) {
   const timestamp = new Date().toISOString()
   
   try {
+    // Security validations first
+    const clientIP = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     request.headers.get('cf-connecting-ip') || 
+                     'unknown'
+    
+    // Rate limiting check
+    if (!checkRateLimit(clientIP)) {
+      console.log(`🚫 WEBHOOK BLOCKED: Rate limit exceeded for ${clientIP}`)
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' }, 
+        { status: 429 }
+      )
+    }
+    
+    // Get raw body for signature verification
     const body = await request.text()
-    const webhookData = JSON.parse(body)
     const headers = Object.fromEntries(request.headers.entries())
+    
+    // Verify webhook signature
+    const signature = request.headers.get('x-signature') || 
+                      request.headers.get('x-hub-signature-256') || 
+                      request.headers.get('x-systemio-signature')
+    
+    const webhookSecret = process.env.IBAM_SYSTEME_SECRET
+    if (!webhookSecret) {
+      console.error('🚫 WEBHOOK SECURITY: Missing IBAM_SYSTEME_SECRET environment variable')
+      return NextResponse.json(
+        { error: 'Webhook configuration error' }, 
+        { status: 500 }
+      )
+    }
+    
+    if (!verifyWebhookSignature(body, signature, webhookSecret)) {
+      console.log(`🚫 WEBHOOK BLOCKED: Invalid signature from ${clientIP}`)
+      return NextResponse.json(
+        { error: 'Invalid webhook signature' }, 
+        { status: 401 }
+      )
+    }
+    
+    console.log(`🔐 WEBHOOK SECURITY: Verified request from ${clientIP}`)
+    
+    // Parse webhook data after security validation
+    const webhookData = JSON.parse(body)
     
     // Extract contact and tag information
     const contact = webhookData.contact
