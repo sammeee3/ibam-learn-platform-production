@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdminAdmin } from '@/lib/supabaseAdmin-config';
+import { supabaseAdmin } from '@/lib/supabase-config';
 
 // Authorize.Net API endpoint
 const AUTHORIZE_NET_URL = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
