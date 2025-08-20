@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-config';
 
 export async function GET() {
   try {
-    const { data: goal, error } = await supabase
+    const { data: goal, error } = await supabaseAdmin
       .from('donation_goals')
       .select('*')
       .eq('year', 2026)

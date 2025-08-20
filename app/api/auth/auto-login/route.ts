@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-config';
 
 // Force dynamic rendering to avoid build-time environment variable issues
 export const dynamic = 'force-dynamic';
@@ -37,23 +37,7 @@ export async function GET() {
 // Handle POST requests
 export async function POST(request: NextRequest) {
   try {
-    // Initialize Supabase Admin Client at runtime
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json(
-        { error: 'Supabase configuration missing' },
-        { status: 500, headers: corsHeaders }
-      );
-    }
-    
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    // Use centralized Supabase Admin Client
 
     const body = await request.json();
     const { email } = body;

@@ -32,19 +32,17 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Environment Variables Required**: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in Vercel
 - **Build Process**: Must show "Route (app)" not "Route (pages)" in build output
 
-## CURRENT STATUS: ✅ OPERATIONAL
-**Last Verified**: Aug 19, 2025 11:42 AM
+## CURRENT STATUS: ✅ OPERATIONAL - DUAL REPOSITORY ARCHITECTURE
+**Last Verified**: Aug 19, 2025 4:13 PM
 - ✅ **Production URL**: https://ibam-learn-platform-v3.vercel.app
-- ✅ **Production Deployment**: Auto-deploys from main branch via GitHub integration
-- ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app
-- ✅ **System.io Integration**: Manual email entry system implemented (merge tags limitations discovered)
-- ✅ **Staging System.io Integration**: Working correctly with staging database and deployment
+- ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-jeff-samuelsons-projects.vercel.app
+- ✅ **PERFECT DEPLOYMENT ISOLATION**: Staging and production completely isolated via separate repositories
+- ✅ **Staging Repository**: ibam-learn-platform-staging (clean, daily development workspace)
+- ✅ **Production Repository**: ibam-learn-platform-v2 (complete archive with all history)
+- ✅ **System.io Integration**: Working on both staging and production with correct database separation
 - ✅ **User Identification**: Dashboard shows user names and dropdown works
 - ✅ **All API Routes**: Working correctly with App Router
-- ✅ **Build Errors Fixed**: systemio-bridge route now deploys successfully
-- ✅ **Email Entry Form**: IBAM-themed form with animated fish, validation, and security warnings
-- ✅ **Staging Email Form**: SYSTEMIO-EMAIL-FORM-STAGING.html pointing to correct deployment URL
-- ✅ **Production Database Backup**: Available via CLI and Supabase dashboard
+- ✅ **Samuelson Donation Page**: Complete donation system preserved in staging repository
 - ✅ **Database Projects**: Production (tutrnikhomrgcpkzszvq) and Staging (yhfxxouswctucxvfetcq) environments
 
 ## Key Features
@@ -93,59 +91,57 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Database Integration**: Works with both production and staging environments
 - **Environment Isolation**: Staging uses staging database (yhfxxouswctucxvfetcq), production uses production database (tutrnikhomrgcpkzszvq)
 
-## DEPLOYMENT PROCESS 🚀
+## 🚀 PROFESSIONAL DUAL-REPOSITORY DEPLOYMENT WORKFLOW
 
-**Staging Deployment Method**: Automatic GitHub Integration ✅
-- **Repository**: https://github.com/sammeee3/ibam-learn-platform-v2
-- **Staging Project**: `ibam-learn-platform-staging-v2`
-- **Auto-Deploy Branch**: `staging`
-- **Process**: Push to staging → Automatic deployment to staging environment
+### Repository Architecture
+- **Staging Repository**: `/Users/jeffreysamuelson/Desktop/ibam-learn-platform-staging` (306.9 MB)
+  - GitHub: https://github.com/sammeee3/ibam-learn-platform-staging
+  - Vercel Project: ibam-learn-platform-staging-v2
+  - Database: Staging (yhfxxouswctucxvfetcq)
+  - Purpose: Daily development workspace
 
-**Production Deployment Method**: Manual Vercel CLI ✅
-- **Production Project**: `ibam-learn-platform-production-v3` (DISCONNECTED from Git)
-- **Target URL**: https://ibam-learn-platform-v3.vercel.app
-- **Process**: Manual deployment using Vercel CLI commands
+- **Production Repository**: `/Users/jeffreysamuelson/Desktop/ibam-learn-platform-v2` (821.7 MB)
+  - GitHub: https://github.com/sammeee3/ibam-learn-platform-v2  
+  - Vercel Project: ibam-learn-platform-production-v3
+  - Database: Production (tutrnikhomrgcpkzszvq)
+  - Purpose: Complete project archive and production releases
 
-### Manual Production Deployment Options
+### Daily Development Workflow
 
-**Option 1: Vercel Dashboard Manual Deploy**
-1. Go to Vercel Dashboard → `ibam-learn-platform-production-v3`
-2. Click "Deployments" → "Create Deployment"
-3. Select branch `main` → Deploy
-
-**Option 2: Re-connect Git Temporarily** 
-1. Connect production project to Git when ready to deploy
-2. Push to main branch → Auto-deploy
-3. Disconnect Git again for safety
-
-**Option 3: CLI Deploy (if permissions allow)**
+1. **Work in Staging Repository**
 ```bash
-# Deploy current branch to production project
-vercel --prod --scope jeff-samuelsons-projects
-
-# Or specify project ID directly
-vercel --prod --token [YOUR_TOKEN]
+cd /Users/jeffreysamuelson/Desktop/ibam-learn-platform-staging
+# Make changes, commit, push
+git push origin main  # → Auto-deploys STAGING only
 ```
 
-### Deployment Workflow
-1. **Test in Staging**: Push changes to `staging` branch → Auto-deploys to staging
-2. **Verify Staging**: Test all functionality in staging environment
-3. **Merge to Main**: Create PR from staging → main (when ready for production)
-4. **Deploy Production**: Run `vercel --prod` command manually
-5. **Verify Production**: Confirm deployment success
-- **Process**: `vercel deploy` from staging branch
-- **Working URL**: https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app
+2. **Test in Staging Environment**
+- URL: https://ibam-learn-platform-staging-v2-jeff-samuelsons-projects.vercel.app
+- Verify all functionality works with staging database
 
-**Deployment Verification Commands**:
+3. **Promote to Production (when ready)**
 ```bash
-# Test production deployment success
-curl -I "https://ibam-learn-platform-v3.vercel.app/api/auth/sso-debug"
-# Should return: HTTP/2 200
-
-# Test SSO flow
-curl -I "https://ibam-learn-platform-v3.vercel.app/api/auth/sso?email=test@example.com&token=ibam-systeme-secret-2025"
-# Should return: HTTP/2 307 with dashboard redirect
+# From staging repository, promote to production
+git push production main  # → Auto-deploys PRODUCTION only
 ```
+
+4. **Sync Production Repository (optional)**
+```bash
+cd /Users/jeffreysamuelson/Desktop/ibam-learn-platform-v2
+git pull origin main  # Gets latest promoted changes
+```
+
+### Perfect Isolation Achieved ✅
+- ✅ Staging pushes → Only staging deploys
+- ✅ Production promotions → Only production deploys  
+- ✅ Separate databases maintained
+- ✅ Zero cross-deployment risk
+- ✅ Enterprise-grade deployment control
+
+### VS Code Workspace Management
+- **Daily Work**: Use staging VS Code ONLY (`ibam-learn-platform-staging`)
+- **Production Viewing**: Open production VS Code only for debugging/viewing
+- **Safety**: Close production VS Code to prevent accidental edits
 
 ## Important Notes
 - Uses Supabase for backend services

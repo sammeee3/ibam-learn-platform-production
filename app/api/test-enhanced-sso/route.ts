@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { supabaseAdmin } from '@/lib/supabase-config';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const email = searchParams.get('email') || 'sammeee@yahoo.com';
   
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = supabaseAdmin;
     
     // Test the enhanced logic
     console.log('🧪 Testing enhanced SSO logic for:', email);

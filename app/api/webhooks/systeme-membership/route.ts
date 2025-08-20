@@ -3,22 +3,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// Dynamic import to prevent build-time initialization
-async function getSupabaseClient() {
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error(`Missing Supabase credentials`);
-  }
-  
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
+import { supabaseAdmin } from '@/lib/supabase-config';
+
+// Use centralized Supabase configuration
+function getSupabaseClient() {
+  return supabaseAdmin;
 }
 
 // Map System.io tags to YOUR subscription tiers
@@ -65,7 +54,7 @@ export async function POST(req: NextRequest) {
   try {
     console.log('🚀 IBAM Webhook received');
     
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     const rawBody = await req.text();
     const payload = JSON.parse(rawBody);
     
@@ -233,7 +222,7 @@ export async function POST(req: NextRequest) {
 // GET endpoint for testing
 export async function GET() {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     const { count, error } = await supabase
       .from('user_profiles')
