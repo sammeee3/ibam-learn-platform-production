@@ -44,9 +44,14 @@ function validateEnvironmentVariables(): void {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const isProduction = process.env.NODE_ENV === 'production';
   const hasProductionDB = supabaseUrl.includes('tutrnikhomrgcpkzszvq');
+  const hasStagingDB = supabaseUrl.includes('yhfxxouswctucxvfetcq');
 
   if (!isProduction && hasProductionDB) {
-    console.warn('⚠️ WARNING: Production database detected in non-production environment');
+    throw new Error('🚨 SECURITY: Production database credentials detected in non-production environment');
+  }
+  
+  if (isProduction && hasStagingDB) {
+    throw new Error('🚨 SECURITY: Staging database credentials detected in production environment');
   }
 }
 
