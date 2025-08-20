@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Calendar, User, BookOpen, Award, TrendingUp, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
+import { Calendar, User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-// Supabase configuration
-const supabaseUrl = 'https://tutrnikhomrgcpkzszvq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM4MTQ4MDEsImV4cCI6MjAyOTM5MDgwMX0.VhWbNcOjwqoOTI32qByfOV46lJKUKiPG0qV3rvYJvlY';
+// Supabase configuration - Use environment variables for proper staging/production isolation
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // IBAM Logo Component
@@ -540,20 +540,6 @@ useEffect(() => {
 
      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-       {/* Vision Statement */}
-       <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-l-4 border-teal-500">
-         <div className="flex items-start space-x-4">
-           <div className="bg-teal-100 rounded-lg p-3">
-             <TrendingUp className="w-6 h-6 text-teal-600" />
-           </div>
-           <div>
-             <h2 className="text-xl font-semibold text-gray-900 mb-2">Your Mission</h2>
-             <p className="text-gray-700 leading-relaxed">
-               "Multiplying Followers of Jesus Christ through excellent, Faith-Driven Businesses."
-             </p>
-           </div>
-         </div>
-       </div>
 
        {/* Quick Actions */}
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

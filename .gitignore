@@ -28,3 +28,4 @@ node_modules/
 .env
 .env.local
 # Force v3 deployment Sat Aug 16 15:28:21 PDT 2025
+node_modules/
