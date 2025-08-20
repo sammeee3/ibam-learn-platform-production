@@ -5,8 +5,10 @@ import { validateInput, SSORequestSchema, sanitizeUserInput } from '@/lib/valida
 import { withCorsMiddleware, validateOrigin } from '@/lib/security/cors';
 
 async function handleSSO(request: NextRequest) {
-  // Validate origin for security
-  if (!validateOrigin(request)) {
+  // For SSO, allow direct access (no origin header) since users come from external systems
+  // Only validate origin if one is present
+  const origin = request.headers.get('origin');
+  if (origin && !validateOrigin(request)) {
     secureLog('🚨 SSO request from unauthorized origin', true);
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
