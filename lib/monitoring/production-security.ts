@@ -189,11 +189,11 @@ ${metrics.suspiciousActivities > 0 ? '⚠️ Suspicious activities detected' : '
  * Middleware wrapper for existing production routes
  * This can be added to production without changing core logic
  */
-export function withSecurityMonitoring<T extends Function>(
-  routeHandler: T,
+export function withSecurityMonitoring(
+  routeHandler: Function,
   routeName: string
-): T {
-  return (async (...args: any[]) => {
+) {
+  return async (...args: any[]) => {
     const request = args[0] as Request;
     const startTime = Date.now();
     
@@ -238,5 +238,5 @@ export function withSecurityMonitoring<T extends Function>(
       
       throw error;
     }
-  }) as T;
+  };
 }

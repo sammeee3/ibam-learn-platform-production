@@ -116,8 +116,8 @@ export function withCors(response: NextResponse, request?: Request): NextRespons
 /**
  * CORS middleware wrapper for API routes
  */
-export function withCorsMiddleware<T extends Function>(handler: T): T {
-  return (async (request: Request, ...args: any[]) => {
+export function withCorsMiddleware(handler: Function) {
+  return async (request: Request, ...args: any[]) => {
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       return handlePreflight(request);
@@ -128,7 +128,7 @@ export function withCorsMiddleware<T extends Function>(handler: T): T {
     
     // Add CORS headers to the response
     return withCors(response, request);
-  }) as T;
+  };
 }
 
 /**
