@@ -6,7 +6,7 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     build: 'successful',
-    version: '2.0-clean',
+    version: '2.0-premium',
     features: {
       authentication: 'operational',
       webhooks: 'operational', 
