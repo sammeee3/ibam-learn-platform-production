@@ -48,7 +48,15 @@ export const SystemIOWebhookSchema = z.object({
     email: EmailSchema,
     first_name: NameSchema.optional(),
     last_name: NameSchema.optional(),
-    id: z.string().optional()
+    id: z.string().optional(),
+    fields: z.array(z.object({
+      slug: z.string(),
+      value: z.any()
+    })).optional(),
+    tags: z.array(z.object({
+      name: z.string(),
+      id: z.string().optional()
+    })).optional()
   }),
   tag: z.object({
     name: z.string().min(1).max(100),
