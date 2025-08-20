@@ -36,8 +36,8 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 **Last Verified**: Aug 20, 2025 9:30 AM
 **Security Status**: A-Grade (Enterprise Ready)
 **Last Security Audit**: Aug 20, 2025 - All critical vulnerabilities resolved
-- ✅ **Production URL**: https://ibam-learn-platform-v3.vercel.app
-- ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-jeff-samuelsons-projects.vercel.app
+- ✅ **Production URL**: https://ibam-learn-platform-production-v3-qvh1exnnp.vercel.app
+- ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-om0npwraj-ibam-projects.vercel.app
 - ✅ **PERFECT DEPLOYMENT ISOLATION**: Staging and production completely isolated via separate repositories
 - ✅ **Staging Repository**: ibam-learn-platform-staging (clean, daily development workspace)
 - ✅ **Production Repository**: ibam-learn-platform-v2 (complete archive with all history)
@@ -167,7 +167,7 @@ git push origin main  # → Auto-deploys STAGING only
 ```
 
 2. **Test in Staging Environment**
-- URL: https://ibam-learn-platform-staging-v2-jeff-samuelsons-projects.vercel.app
+- URL: https://ibam-learn-platform-staging-v2-om0npwraj-ibam-projects.vercel.app
 - Verify all functionality works with staging database
 
 3. **Promote to Production (when ready)**
