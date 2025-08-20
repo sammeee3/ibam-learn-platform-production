@@ -37,25 +37,12 @@ export async function middleware(req: NextRequest) {
     return ssoResponse;
   }
   
-  // Check for auth cookie (normal flow) - REQUIRE server cookie for security
+  // Check for auth cookie (normal flow) - Prefer server cookie for security
   const serverCookie = req.cookies.get('ibam_auth_server');
   const clientCookie = req.cookies.get('ibam_auth');
   
-  // Security: Prefer server cookie, only accept client cookie in specific cases
-  let authCookie: any = null;
-  if (serverCookie) {
-    // Server cookie exists - use it (most secure)
-    authCookie = serverCookie;
-  } else if (clientCookie && clientCookie.value === 'authenticated') {
-    // Only allow client cookie if it's the generic 'authenticated' value
-    // This prevents client-side manipulation of email addresses
-    console.log('⚠️ Using client cookie fallback (less secure)');
-    authCookie = clientCookie;
-  } else {
-    // No valid authentication found
-    console.log('❌ No valid server cookie found');
-    authCookie = null;
-  }
+  // Use server cookie if available, otherwise use client cookie
+  const authCookie = serverCookie || clientCookie;
   
   if (!authCookie) {
     console.log('❌ No auth cookie found, redirecting to login');
@@ -75,75 +62,28 @@ export async function middleware(req: NextRequest) {
     // Initialize as undefined to handle both types
     let userFound = false;
     
-    // Determine cookie type and extract user identifier
-    let userIdentifier = authCookie.value;
+    // Extract email from authentication cookie
+    const userEmail = authCookie.value;
     
-    // Extract user identifier from authentication cookie
-    // Server cookie contains email, client cookie should only be 'authenticated'
-    if (serverCookie) {
-      userIdentifier = serverCookie.value; // Server cookie has the email
-    } else if (authCookie.value === 'authenticated') {
-      // Client cookie fallback - we need additional validation
-      console.log('⚠️ Client cookie authentication - requires additional validation');
-      userIdentifier = 'authenticated';
-    }
-    
-    // Check if the cookie value is an email (SSO users) or a user ID (regular users)
-    if (userIdentifier.includes('@')) {
-      // It's an email from SSO - check user_profiles table
-      console.log('🔍 Checking SSO user by email:', userIdentifier);
+    // Validate email format
+    if (!userEmail.includes('@')) {
+      console.log('❌ Invalid email format in cookie:', userEmail);
+      userFound = false;
+    } else {
+      // Check if user exists in user_profiles table
+      console.log('🔍 Checking user by email:', userEmail);
       
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('email', userIdentifier)
+        .eq('email', userEmail)
         .single();
       
       if (userProfile) {
-        // User exists in profiles table - they're authenticated
         userFound = true;
-        console.log('✅ SSO user validated in profiles table');
+        console.log('✅ User validated in profiles table');
       } else {
-        console.log('❌ SSO user not found in profiles table');
-      }
-      
-    } else if (userIdentifier !== 'authenticated') {
-      // It's a regular user ID - check auth.users table
-      console.log('🔍 Checking regular user by ID:', userIdentifier);
-      
-      try {
-        const { data: authData } = await supabase.auth.admin.getUserById(userIdentifier);
-        
-        if (authData?.user) {
-          userFound = true;
-          console.log('✅ Regular user validated in auth system');
-        } else {
-          console.log('❌ Regular user not found in auth system');
-        }
-      } catch (e) {
-        // getUserById might fail if it's not a valid UUID
-        console.log('❌ Invalid user ID format');
-      }
-    } else {
-      // Client cookie with 'authenticated' status - enhanced validation required
-      console.log('⚠️ Client cookie authentication requires additional checks');
-      
-      // For client cookies, we need to check if there's a valid session another way
-      // This is a fallback for compatibility but less secure
-      
-      // Check if there are any active user sessions (less specific but safer)
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('email')
-        .limit(1);
-      
-      if (profiles && profiles.length > 0) {
-        // There are users in the system, but we can't verify which one
-        // This is the least secure path - log for monitoring
-        console.log('⚠️ WARNING: Using insecure client cookie fallback');
-        userFound = true;
-      } else {
-        console.log('❌ No valid user sessions found');
+        console.log('❌ User not found in profiles table');
         userFound = false;
       }
     }

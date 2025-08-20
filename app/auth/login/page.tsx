@@ -1,13 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-// Create Supabase client OUTSIDE component
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -59,8 +53,8 @@ export default function LoginPage() {
 
       localStorage.setItem('ibam_session', JSON.stringify(userSession))
       
-      // Set HTTP cookie for middleware (THIS IS THE SECURITY ADDITION)
-      document.cookie = `ibam_auth=${authData.user.id}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+      // Set HTTP cookie for middleware - store email to match middleware expectations
+      document.cookie = `ibam_auth=${email}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
       
       // Redirect to dashboard
       window.location.href = '/dashboard'

@@ -26,17 +26,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // STRICT VALIDATION: Reject obvious test/debug emails only
-    const debugEmails = ['sammeee@yahoo.com', 'test@example.com', 'debug@test.com'];
-    // Note: sj614+sam@proton.me removed as it may be a legitimate user email
-    if (debugEmails.includes(email.toLowerCase())) {
-      console.log('🚫 Rejecting debug/test email session:', email);
-      return NextResponse.json(
-        { error: 'Debug session not allowed in production' }, 
-        { status: 401 }
-      );
-    }
-
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {

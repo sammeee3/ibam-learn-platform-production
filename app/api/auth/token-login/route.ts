@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: 'https://ibam-learn-platform-v3.vercel.app/auth/callback?next=/dashboard'
+        redirectTo: 'https://ibam-learn-platform-staging-v2-jeff-samuelsons-projects.vercel.app/auth/callback?next=/dashboard'
       }
     });
 
