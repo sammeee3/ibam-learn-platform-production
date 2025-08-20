@@ -53,8 +53,44 @@ export default function LoginPage() {
 
       localStorage.setItem('ibam_session', JSON.stringify(userSession))
       
-      // Set HTTP cookie for middleware - store email to match middleware expectations
+      // Set HTTP cookies for middleware - both client and server cookies
       document.cookie = `ibam_auth=${email}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+      document.cookie = `ibam_auth_server=${email}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict; httponly`;
+      
+      // Ensure user profile exists (critical for new auth users)
+      try {
+        console.log('🔍 Ensuring user profile exists for:', email);
+        const profileResponse = await fetch('/api/auth/create-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            auth_user_id: authData.user.id,
+          }),
+        });
+        
+        if (profileResponse.ok) {
+          console.log('✅ User profile ensured');
+        } else {
+          console.warn('⚠️ Profile creation check failed, but proceeding...');
+        }
+      } catch (profileError) {
+        console.warn('Profile creation error:', profileError);
+      }
+      
+      // Verify session works before redirecting
+      try {
+        const sessionCheck = await fetch('/api/auth/session');
+        if (!sessionCheck.ok) {
+          console.warn('Session validation failed, but proceeding...');
+        } else {
+          console.log('✅ Session validation successful');
+        }
+      } catch (sessionError) {
+        console.warn('Session check failed:', sessionError);
+      }
       
       // Redirect to dashboard
       window.location.href = '/dashboard'
