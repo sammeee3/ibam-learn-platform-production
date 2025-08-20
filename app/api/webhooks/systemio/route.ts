@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-config'
+import { getSecureConfig } from '@/lib/config/security'
+import { validateInput, SystemIOWebhookSchema, sanitizeUserInput } from '@/lib/validation/schemas'
+import { withCorsMiddleware } from '@/lib/security/cors'
 import crypto from 'crypto'
 
 const webhookLogs: any[] = []
 
-// Initialize Supabase client with staging fallback for build-time issues
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://yhfxxouswctucxvfetcq.supabase.co'
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloZnh4b3Vzd2N0dWN4dmZldGNxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTQ0OTk3NCwiZXhwIjoyMDcxMDI1OTc0fQ.z4-H9xZVC-zjv4LEljpOfGXAFJdeCz1LThTD5iZCRqM'
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+// Use secure configuration
+const supabase = supabaseAdmin
 
 // Course assignment logic based on tags
 const TAG_TO_COURSE_MAP = {
@@ -157,7 +158,7 @@ async function createSecureUserAccount(courseAssignment: any) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handleWebhook(request: NextRequest) {
   const timestamp = new Date().toISOString()
   
   try {
@@ -165,9 +166,23 @@ export async function POST(request: NextRequest) {
     const webhookData = JSON.parse(body)
     const headers = Object.fromEntries(request.headers.entries())
     
+    // Sanitize and validate webhook data
+    const sanitizedData = sanitizeUserInput(webhookData)
+    
+    // Validate webhook schema
+    const validation = await validateInput(SystemIOWebhookSchema)(sanitizedData)
+    
+    if (!validation.success) {
+      console.error('SystemIO webhook validation failed:', validation.error)
+      return NextResponse.json({ 
+        success: false, 
+        error: `Invalid webhook data: ${validation.error}` 
+      }, { status: 400 })
+    }
+    
     // Extract contact and tag information
-    const contact = webhookData.contact
-    const tag = webhookData.tag
+    const contact = validation.data.contact
+    const tag = validation.data.tag
     const eventType = headers['x-webhook-event']
     
     console.log(`🎯 Processing ${eventType} for ${contact?.email}`)
@@ -241,3 +256,6 @@ export async function POST(request: NextRequest) {
     }, { status: 200 })
   }
 }
+
+// Export the secured webhook handler
+export const POST = withCorsMiddleware(handleWebhook)
