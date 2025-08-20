@@ -1,55 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-config';
-import { getSecureConfig, secureLog } from '@/lib/config/security';
-import { validateInput, SSORequestSchema, sanitizeUserInput } from '@/lib/validation/schemas';
-import { withCorsMiddleware, validateOrigin } from '@/lib/security/cors';
 
 async function handleSSO(request: NextRequest) {
-  // For SSO, allow direct access (no origin header) since users come from external systems
-  // Only validate origin if one is present
-  const origin = request.headers.get('origin');
-  if (origin && !validateOrigin(request)) {
-    secureLog('🚨 SSO request from unauthorized origin', true);
-    return NextResponse.redirect(new URL('/auth/login', request.url));
-  }
-
   const searchParams = request.nextUrl.searchParams;
+  const email = searchParams.get('email');
+  const token = searchParams.get('token');
   
-  // Sanitize and validate input
-  const rawData = {
-    email: searchParams.get('email'),
-    token: searchParams.get('token'),
-    source: searchParams.get('source'),
-    clearSession: searchParams.get('clearSession')
-  };
-  
-  const sanitizedData = sanitizeUserInput(rawData);
-  
-  // Validate input schema
-  const validation = await validateInput(SSORequestSchema)({
-    email: sanitizedData.email,
-    token: sanitizedData.token,
-    source: sanitizedData.source,
-    clearSession: sanitizedData.clearSession
-  });
-  
-  if (!validation.success) {
-    secureLog(`🚨 SSO validation failed: ${validation.error}`);
-    return NextResponse.redirect(new URL('/auth/login', request.url));
-  }
-  
-  const { email, token, source, clearSession } = validation.data;
-  
-  // Get secure configuration
-  const config = getSecureConfig();
-  const SYSTEME_SECRET = config.auth.systemeSecret;
+  // Use environment variable for the secret
+  const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET;
   
   console.log('🔍 SSO attempt for:', email);
-  // SECURITY: Never log sensitive tokens or secrets in production
-  if (config.security.secretLogging) {
-    console.log('🔍 Token provided:', !!token);
-    console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()));
-  }
   console.log('🔍 Email check:', !email ? 'NO EMAIL' : 'EMAIL OK');
   console.log('🔍 Token check:', token !== SYSTEME_SECRET ? 'TOKEN MISMATCH' : 'TOKEN OK');
   
@@ -219,5 +179,5 @@ async function handleSSO(request: NextRequest) {
   return response;
 }
 
-// Export the secured handler
-export const GET = withCorsMiddleware(handleSSO);
+// Export the handler
+export const GET = handleSSO;

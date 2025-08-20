@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
-import { getSecureConfig } from '@/lib/config/security'
-import { validateInput, SystemIOWebhookSchema, sanitizeUserInput } from '@/lib/validation/schemas'
-import { withCorsMiddleware } from '@/lib/security/cors'
 import crypto from 'crypto'
 
 const webhookLogs: any[] = []
@@ -166,23 +163,9 @@ async function handleWebhook(request: NextRequest) {
     const webhookData = JSON.parse(body)
     const headers = Object.fromEntries(request.headers.entries())
     
-    // Sanitize and validate webhook data
-    const sanitizedData = sanitizeUserInput(webhookData)
-    
-    // Validate webhook schema
-    const validation = await validateInput(SystemIOWebhookSchema)(sanitizedData)
-    
-    if (!validation.success) {
-      console.error('SystemIO webhook validation failed:', validation.error)
-      return NextResponse.json({ 
-        success: false, 
-        error: `Invalid webhook data: ${validation.error}` 
-      }, { status: 400 })
-    }
-    
     // Extract contact and tag information
-    const contact = validation.data.contact
-    const tag = validation.data.tag
+    const contact = webhookData.contact
+    const tag = webhookData.tag
     const eventType = headers['x-webhook-event']
     
     console.log(`🎯 Processing ${eventType} for ${contact?.email}`)
@@ -257,5 +240,5 @@ async function handleWebhook(request: NextRequest) {
   }
 }
 
-// Export the secured webhook handler
-export const POST = withCorsMiddleware(handleWebhook)
+// Export the webhook handler
+export const POST = handleWebhook

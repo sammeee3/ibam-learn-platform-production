@@ -1,32 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-config';
-import { getSecureConfig } from '@/lib/config/security';
-import { validateInput, TokenLoginSchema, sanitizeUserInput } from '@/lib/validation/schemas';
 
 const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Sanitize and validate input
-    const sanitizedBody = sanitizeUserInput(body);
-    
-    // Validate input schema
-    const validation = await validateInput(TokenLoginSchema)(sanitizedBody);
-    
-    if (!validation.success) {
-      return NextResponse.json({ 
-        success: false, 
-        error: `Invalid input: ${validation.error}` 
-      }, { status: 400 });
-    }
-    
-    const { email, secret } = validation.data;
+    const { email, secret } = body;
 
-    // Use secure configuration
-    const config = getSecureConfig();
-    const SYSTEME_SECRET = config.auth.systemeSecret;
+    // Use environment variable
+    const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET;
     
     if (secret !== SYSTEME_SECRET) {
       return NextResponse.json({ success: false, error: 'Invalid secret' }, { status: 401 });
