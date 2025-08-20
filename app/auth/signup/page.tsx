@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-config";
 
 export default function SignupPage() {
   const [mounted, setMounted] = useState(false)
@@ -28,6 +29,7 @@ export default function SignupPage() {
     setMessage('')
 
     try {
+      // Step 1: Create auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -38,9 +40,35 @@ export default function SignupPage() {
 
       if (error) {
         setError(error.message)
-      } else {
-        setMessage('Check your email for the confirmation link!')
+        return
       }
+
+      // Step 2: Create user profile for new signup
+      if (data.user && !data.user.email_confirmed_at) {
+        try {
+          // Call our API to create the user profile
+          const profileResponse = await fetch('/api/auth/create-profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email,
+              auth_user_id: data.user.id,
+            }),
+          })
+
+          if (!profileResponse.ok) {
+            console.warn('Profile creation failed, but user signup succeeded')
+          } else {
+            console.log('✅ User profile created successfully')
+          }
+        } catch (profileError) {
+          console.warn('Profile creation error:', profileError)
+        }
+      }
+
+      setMessage('Check your email for the confirmation link!')
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
