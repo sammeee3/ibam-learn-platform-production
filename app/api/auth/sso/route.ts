@@ -1,18 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-config';
+import { getSecureConfig, secureLog } from '@/lib/config/security';
+import { validateInput, SSORequestSchema, sanitizeUserInput } from '@/lib/validation/schemas';
+import { withCorsMiddleware, validateOrigin } from '@/lib/security/cors';
 
-export async function GET(request: NextRequest) {
+async function handleSSO(request: NextRequest) {
+  // Validate origin for security
+  if (!validateOrigin(request)) {
+    secureLog('🚨 SSO request from unauthorized origin', true);
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
   const searchParams = request.nextUrl.searchParams;
-  let email = searchParams.get('email');
-  const token = searchParams.get('token');
-  const clearSession = searchParams.get('clearSession');
   
-  // Use environment variable with fallback to current secret for backward compatibility
-  const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';
+  // Sanitize and validate input
+  const rawData = {
+    email: searchParams.get('email'),
+    token: searchParams.get('token'),
+    source: searchParams.get('source'),
+    clearSession: searchParams.get('clearSession')
+  };
+  
+  const sanitizedData = sanitizeUserInput(rawData);
+  
+  // Validate input schema
+  const validation = await validateInput(SSORequestSchema)({
+    email: sanitizedData.email,
+    token: sanitizedData.token,
+    source: sanitizedData.source,
+    clearSession: sanitizedData.clearSession
+  });
+  
+  if (!validation.success) {
+    secureLog(`🚨 SSO validation failed: ${validation.error}`);
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+  
+  const { email, token, source, clearSession } = validation.data;
+  
+  // Get secure configuration
+  const config = getSecureConfig();
+  const SYSTEME_SECRET = config.auth.systemeSecret;
   
   console.log('🔍 Enhanced SSO attempt for:', email);
-  console.log('🔑 Token received:', token);
-  console.log('🔑 Expected token:', SYSTEME_SECRET);
+  // SECURITY: Never log sensitive tokens or secrets
+  console.log('🔍 Token provided:', !!token);
   console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()));
   console.log('🔍 Email check:', !email ? 'NO EMAIL' : 'EMAIL OK');
   console.log('🔍 Token check:', token !== SYSTEME_SECRET ? 'TOKEN MISMATCH' : 'TOKEN OK');
@@ -182,3 +214,6 @@ export async function GET(request: NextRequest) {
   
   return response;
 }
+
+// Export the secured handler
+export const GET = withCorsMiddleware(handleSSO);
