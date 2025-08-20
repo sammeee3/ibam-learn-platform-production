@@ -1,13 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-config';
+import { getSecureConfig } from '@/lib/config/security';
+import { validateInput, SSORequestSchema, sanitizeUserInput } from '@/lib/validation/schemas';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const email = searchParams.get('email');
-  const token = searchParams.get('token');
   
-  // Use environment variable with fallback for backward compatibility
-  const SYSTEME_SECRET = process.env.IBAM_SYSTEME_SECRET || 'ibam-systeme-secret-2025';
+  // Sanitize and validate input
+  const rawData = {
+    email: searchParams.get('email'),
+    token: searchParams.get('token'),
+    source: 'direct-auth'
+  };
+  
+  const sanitizedData = sanitizeUserInput(rawData);
+  
+  // Validate input schema
+  const validation = await validateInput(SSORequestSchema)(sanitizedData);
+  
+  if (!validation.success) {
+    console.error('Direct auth validation failed:', validation.error);
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+  
+  const { email, token } = validation.data;
+  
+  // Use secure configuration
+  const config = getSecureConfig();
+  const SYSTEME_SECRET = config.auth.systemeSecret;
   
   if (!email || token !== SYSTEME_SECRET) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
