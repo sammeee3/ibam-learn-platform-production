@@ -35,11 +35,33 @@ export async function GET(request: NextRequest) {
   // Handle NEW magic link code exchange
   if (code) {
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       
-      if (!error) {
-        console.log('Successfully authenticated with code');
-        return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+      if (!error && data.user && data.user.email) {
+        console.log('Successfully authenticated with code for:', data.user.email);
+        
+        // Set authentication cookies that middleware expects
+        const response = NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+        
+        // Set client cookie (7 days)
+        response.cookies.set('ibam_auth', data.user.email, {
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+          secure: true,
+          sameSite: 'lax'
+        });
+        
+        // Set server cookie (7 days)
+        response.cookies.set('ibam_auth_server', data.user.email, {
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+          secure: true,
+          sameSite: 'lax',
+          httpOnly: true
+        });
+        
+        console.log('✅ Authentication cookies set for:', data.user.email);
+        return response;
       } else {
         console.error('Code exchange error:', error);
       }
@@ -51,14 +73,36 @@ export async function GET(request: NextRequest) {
   // Handle OLD OTP format (fallback)
   if (token_hash && type) {
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         token_hash,
         type: type as any,
       });
       
-      if (!error) {
-        console.log('Successfully authenticated with OTP');
-        return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+      if (!error && data.user && data.user.email) {
+        console.log('Successfully authenticated with OTP for:', data.user.email);
+        
+        // Set authentication cookies that middleware expects
+        const response = NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+        
+        // Set client cookie (7 days)
+        response.cookies.set('ibam_auth', data.user.email, {
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+          secure: true,
+          sameSite: 'lax'
+        });
+        
+        // Set server cookie (7 days)
+        response.cookies.set('ibam_auth_server', data.user.email, {
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+          secure: true,
+          sameSite: 'lax',
+          httpOnly: true
+        });
+        
+        console.log('✅ Authentication cookies set for:', data.user.email);
+        return response;
       } else {
         console.error('OTP verification error:', error);
       }
