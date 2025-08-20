@@ -128,7 +128,7 @@ export function withCorsMiddleware<T extends Function>(handler: T): T {
     
     // Add CORS headers to the response
     return withCors(response, request);
-  }) as T;
+  }) as unknown as T;
 }
 
 /**

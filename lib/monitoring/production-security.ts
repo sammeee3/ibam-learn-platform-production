@@ -238,5 +238,5 @@ export function withSecurityMonitoring<T extends Function>(
       
       throw error;
     }
-  }) as T;
+  }) as unknown as T;
 }
