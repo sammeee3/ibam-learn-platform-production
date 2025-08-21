@@ -46,7 +46,6 @@ import type {
   PreviousAction, 
   AIMessage, 
   ActionStep,
-  PathwayMode,
   SectionCompletionState,
   LookingUpProgressState,
   AutoSaveHookReturn
@@ -66,7 +65,6 @@ import { calculateReadingTime, parseMainContentIntoChunks, extractKeyPoints } fr
 import AnonymousSessionSurvey from '../../../../components/feedback/AnonymousSessionSurvey';
 import ActionBuilderComponent from '../../../../components/actions/ActionBuilderComponent';
 import EnhancedScriptureReference from '../../../../components/scripture/EnhancedScriptureReference';
-import VisionStatement from '../../../../components/common/VisionStatement';
 import EnhancedQuizSection from '../../../../components/quiz/EnhancedQuizSection';
 import EnhancedReadingChunks from '../../../../components/reading/EnhancedReadingChunks';
 import UniversalReadingWithToggle from '../../../../components/reading/UniversalReadingWithToggle';
@@ -212,7 +210,6 @@ export default function SessionPage({ params }: SessionPageProps) {
     }
   };
   
-  const [pathwayMode, setPathwayMode] = useState<'individual' | 'small_group'>('individual');
   const [savedActions, setSavedActions] = useState<ActionCommitment[]>([]);
   const [actionsLoaded, setActionsLoaded] = useState(false);
 
@@ -529,55 +526,6 @@ const navigateTo = (path: string) => {
     );
   }
 
-  // Pathway Toggle Component
-  const PathwayToggle = () => (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <h3 className="font-bold text-lg mb-3 text-gray-800">🎯 Choose Your Learning Path</h3>
-      <p className="text-gray-600 mb-4 text-sm">
-        This choice changes your exercises, prayers, and accountability approach throughout the session.
-      </p>
-      <div className="grid md:grid-cols-2 gap-4">
-        <button
-          onClick={() => setPathwayMode('individual')}
-          className={`flex flex-col items-start p-6 rounded-lg font-medium transition-all text-left ${
-            pathwayMode === 'individual' 
-              ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <div className="flex items-center mb-3">
-            <User className="w-6 h-6 mr-3" />
-            <span className="text-lg font-bold">Individual Study</span>
-          </div>
-          <ul className={`text-sm space-y-1 ${pathwayMode === 'individual' ? 'text-blue-100' : 'text-gray-600'}`}>
-            <li>• Personal reflection questions</li>
-            <li>• Individual prayer & meditation</li>
-            <li>• Self-guided action planning</li>
-            <li>• Private learning pace</li>
-          </ul>
-        </button>
-        <button
-          onClick={() => setPathwayMode('small_group')}
-          className={`flex flex-col items-start p-6 rounded-lg font-medium transition-all text-left ${
-            pathwayMode === 'small_group' 
-              ? 'bg-purple-600 text-white shadow-lg transform scale-105' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <div className="flex items-center mb-3">
-            <Users className="w-6 h-6 mr-3" />
-            <span className="text-lg font-bold">Small Group</span>
-          </div>
-          <ul className={`text-sm space-y-1 ${pathwayMode === 'small_group' ? 'text-purple-100' : 'text-gray-600'}`}>
-            <li>• Group discussion prompts</li>
-            <li>• Collaborative prayer time</li>
-            <li>• Accountability partnerships</li>
-            <li>• Shared learning experience</li>
-          </ul>
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -667,7 +615,7 @@ const navigateTo = (path: string) => {
               <div className="p-6 bg-blue-50">
                 <EnhancedLookingBack 
                   sessionData={sessionData}
-                  pathwayMode={pathwayMode}
+                  pathwayMode="individual"
                   onComplete={() => markSectionComplete('lookback')}
                 />
               </div>
@@ -695,7 +643,7 @@ const navigateTo = (path: string) => {
             {expandedSection === 'lookup' && (
               <BeautifulLookingUpSection 
                 sessionData={sessionData}
-                pathwayMode={pathwayMode}
+                pathwayMode="individual"
                 onMarkComplete={markLookingUpComplete}
               />
             )}
@@ -704,7 +652,7 @@ const navigateTo = (path: string) => {
           <LookingForwardSection
             savedActions={savedActions}
             onSaveAction={handleSaveAction}
-            pathwayMode={pathwayMode}
+            pathwayMode="individual"
             sharingCommitment={sharingCommitment}
             setSharingCommitment={setSharingCommitment}
             actionsLoaded={actionsLoaded}
