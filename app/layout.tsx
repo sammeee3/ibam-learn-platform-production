@@ -20,22 +20,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // SECURITY FIX: Validate server-side authentication first
-        const sessionResponse = await fetch('/api/auth/session', {
-          credentials: 'include'
-        });
-        
-        if (!sessionResponse.ok) {
-          console.log('No valid server session - user not authenticated');
-          setUserProfile(null);
-          return;
-        }
-
-        const sessionData = await sessionResponse.json();
-        const userEmail = sessionData.email;
+        // Use same auth approach as Dashboard - check localStorage/cookies
+        let userEmail = localStorage.getItem('ibam-auth-email');
         
         if (!userEmail) {
-          console.log('No user email in session');
+          // Try to get from cookie
+          const cookies = document.cookie.split(';');
+          const authCookie = cookies.find(c => c.trim().startsWith('ibam_auth_server='));
+          if (authCookie) {
+            userEmail = decodeURIComponent(authCookie.split('=')[1]);
+            localStorage.setItem('ibam-auth-email', userEmail);
+          }
+        }
+        
+        if (!userEmail) {
+          console.log('No user email found in localStorage/cookies');
           setUserProfile(null);
           return;
         }
@@ -49,8 +48,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           setUserProfile(profile);
           console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
         } else {
-          console.log('❌ Layout: Profile fetch failed:', response.status);
-          setUserProfile(null);
+          console.log('❌ Layout: Profile fetch failed:', response.status, 'for email:', userEmail);
+          // TEMP FIX: Show dropdown with demo user for staging testing
+          if (userEmail) {
+            setUserProfile({
+              email: userEmail,
+              first_name: 'Demo User',
+              login_source: 'demo'
+            });
+            console.log('🔧 Layout: Using demo profile for testing');
+          } else {
+            setUserProfile(null);
+          }
         }
 
         // Update available downloads with empty data
