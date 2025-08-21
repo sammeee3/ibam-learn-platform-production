@@ -43,8 +43,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         }
         
-        // STAGING FALLBACK: If no auth found, use demo user for testing
-        if (!userEmail) {
+        // STAGING FALLBACK: If no auth found, use demo user for testing (non-production only)
+        // Use URL-based detection since this runs on client-side
+        const isProduction = typeof window !== 'undefined' && 
+                            window.location.hostname.includes('ibam-learn-platform-v3');
+        
+        if (!userEmail && !isProduction) {
           console.log('🔧 STAGING: No auth found, using demo fallback');
           userEmail = 'demo@staging.test';
           localStorage.setItem('ibam-auth-email', userEmail);
@@ -54,14 +58,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         console.log('🔍 Layout: Fetching profile for user:', userEmail);
 
-        // Fetch user profile using API endpoint
-        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
-        if (response.ok) {
-          const profile = await response.json();
-          setUserProfile(profile);
-          console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
-        } else {
-          console.log('❌ Layout: Profile fetch failed:', response.status, 'for email:', userEmail);
+        // Fetch user profile using API endpoint (only if userEmail exists)
+        if (userEmail) {
+          const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+          if (response.ok) {
+            const profile = await response.json();
+            setUserProfile(profile);
+            console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
+          } else {
+            console.log('❌ Layout: Profile fetch failed:', response.status, 'for email:', userEmail);
+          }
         }
 
         // ALWAYS show dropdown with user data - critical for staging functionality

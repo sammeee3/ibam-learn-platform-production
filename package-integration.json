@@ -1,0 +1,15 @@
+{
+  "name": "ibam-supabase-claude-integration",
+  "version": "1.0.0",
+  "description": "Integration script for IBAM platform with Supabase and Claude",
+  "main": "scripts/supabase-claude-integration.js",
+  "scripts": {
+    "analyze": "node scripts/supabase-claude-integration.js",
+    "test-schema": "node -e \"require('./scripts/supabase-claude-integration.js').testDatabaseSchema()\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@anthropic-ai/sdk": "^0.9.1",
+    "dotenv": "^16.3.1"
+  }
+}

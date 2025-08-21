@@ -29,3 +29,18 @@ node_modules/
 .env.local
 # Force v3 deployment Sat Aug 16 15:28:21 PDT 2025
 node_modules/
+
+# 🔒 SECURITY: Database migration files and sensitive scripts
+*.sql
+SYSTEMIO-*.html
+BUTTON-*.html
+check-*.js
+debug-*.js
+test-*.js
+create-*.js
+analyze-*.js
+automated-*.js
+*MIGRATION*.sql
+*FIX*.sql
+*UUID*.sql
+*FINAL*.sql

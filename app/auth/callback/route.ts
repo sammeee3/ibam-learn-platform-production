@@ -38,12 +38,16 @@ export async function GET(request: NextRequest) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       
       if (!error && data.user && data.user.email) {
-        console.log('Successfully authenticated with code for:', data.user.email);
+        console.log('🔐 Successfully authenticated with code for:', data.user.email);
         
-        // Set authentication cookies that middleware expects
+        // Clear any existing sessions first to prevent conflicts
         const response = NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
         
-        // Set client cookie (7 days)
+        // Clear existing cookies first
+        response.cookies.delete('ibam_auth');
+        response.cookies.delete('ibam_auth_server');
+        
+        // Set new authentication cookies that middleware expects
         response.cookies.set('ibam_auth', data.user.email, {
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -51,7 +55,6 @@ export async function GET(request: NextRequest) {
           sameSite: 'lax'
         });
         
-        // Set server cookie (7 days)
         response.cookies.set('ibam_auth_server', data.user.email, {
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
           httpOnly: true
         });
         
-        console.log('✅ Authentication cookies set for:', data.user.email);
+        console.log('✅ Clean authentication cookies set for:', data.user.email);
         return response;
       } else {
         console.error('Code exchange error:', error);

@@ -58,7 +58,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      database: 'staging (yhfxxouswctucxvfetcq)',
+      database: (() => {
+        const isProduction = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('tutrnikhomrgcpkzszvq');
+        const dbName = isProduction ? 'production' : 'staging';
+        const dbId = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+        return `${dbName} (${dbId})`;
+      })(),
       summary: {
         profileCount: userProfiles.length,
         authCount: authUserCount,

@@ -1,132 +1,331 @@
-<div style="max-width: 500px; margin: 20px auto; padding: 30px; background: linear-gradient(135deg, #059669 0%, #047857 30%, #065f46 70%, #064e3b 100%); border-radius: 16px; box-shadow: 0 20px 40px rgba(5, 150, 105, 0.3); text-align: center; font-family: Arial, sans-serif; border-top: 5px solid #10b981;">
-    
-    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; font-size: 36px;">
-        <span style="animation: swim1 3s ease-in-out infinite;">🐟</span>
-        <span style="animation: swim2 3s ease-in-out infinite 0.5s;">🐟</span>
-        <span style="animation: swim3 3s ease-in-out infinite 1s;">🐟</span>
-    </div>
-    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Your IBAM Business Course - STAGING</title>
     <style>
-        @keyframes swim1 {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(5deg); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        @keyframes swim2 {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-6px) rotate(-3deg); }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        @keyframes swim3 {
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #f5576c;
+        }
+        
+        .staging-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(245, 87, 108, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 30px auto 20px;
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .logo::after {
+            content: '🐟';
+            font-size: 32px;
+            animation: swim 2s ease-in-out infinite;
+        }
+        
+        @keyframes swim {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(8deg); }
+            50% { transform: translateY(-5px) rotate(2deg); }
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.5;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #f5576c;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.2);
+        }
+        
+        .access-button {
+            width: 100%;
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .access-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.3);
+        }
+        
+        .access-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .security-note {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff5f5;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            border-left: 4px solid #f5576c;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border-left: 4px solid #e74c3c;
+            display: none;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .success-message {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f2fdf5;
+            border-radius: 5px;
+            border-left: 4px solid #27ae60;
+            display: none;
+            position: relative;
+            z-index: 2;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .access-button {
+                font-size: 16px;
+                padding: 16px;
+            }
         }
     </style>
-    
-    <div style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 8px 16px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: bold;">
-        🧪 STAGING ENVIRONMENT - FOR TESTING ONLY
-    </div>
-    
-    <h2 style="color: #f8fafc; margin-bottom: 10px; font-size: 24px; font-weight: bold;">Access IBAM Course (Staging)</h2>
-    
-    <p style="color: #e2e8f0; margin-bottom: 20px; font-size: 16px;">Testing environment for development</p>
-    
-    <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #f59e0b;">
-        <p style="color: #92400e; margin: 0; font-size: 14px; font-weight: bold;">🧪 This is the STAGING version for testing. Use any email for testing purposes.</p>
-    </div>
-    
-    <form id="ibamAccessForm" style="margin-bottom: 20px;">
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; color: #f1f5f9; font-weight: bold; margin-bottom: 8px; text-align: left;">Enter Test Email:</label>
-            <input 
-                type="email" 
-                id="ibamEmail" 
-                placeholder="test@example.com"
-                required
-                style="width: 100%; padding: 15px; border: 2px solid #475569; border-radius: 8px; font-size: 16px; box-sizing: border-box; transition: all 0.3s ease; background: #f8fafc; color: #1e293b;"
-                onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.2)'; this.style.background='#ffffff'"
-                onblur="this.style.borderColor='#94a3b8'; this.style.boxShadow='none'; this.style.background='#f8fafc'"
-            >
-            <p style="color: #cbd5e1; font-size: 13px; margin: 5px 0 0 0; text-align: center;">This is staging - you can use any email for testing</p>
-            <p style="color: #a7f3d0; font-size: 12px; margin: 8px 0 0 0; text-align: center; font-weight: bold;">✅ STAGING: Test accounts will be created automatically</p>
-        </div>
+</head>
+<body>
+    <div class="container">
+        <div class="staging-banner">🚧 STAGING ENVIRONMENT - TESTING ONLY 🚧</div>
+        <div class="logo"></div>
+        <h1>Welcome to IBAM</h1>
+        <p class="subtitle">Enter your email to access your Business As Mission course (Staging)</p>
         
-        <button 
-            type="submit" 
-            id="ibamSubmitBtn"
-            style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%); color: white; border: none; padding: 18px 24px; font-size: 18px; font-weight: bold; border-radius: 25px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.2);"
-            onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(16, 185, 129, 0.6)'; this.style.background='linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px rgba(16, 185, 129, 0.4)'; this.style.background='linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)'"
-        >
-            🐟 Access Staging Course
-        </button>
-    </form>
-    
-    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
-        <p style="color: #065f46; margin: 0; font-size: 13px; font-weight: 600;">
-            <strong>🧪 Staging Environment:</strong> This connects to the staging database and is safe for testing. No real user data will be affected.
-        </p>
+        <form id="accessForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    placeholder="Enter your email address"
+                    autocomplete="email"
+                >
+            </div>
+            
+            <button type="submit" class="access-button">
+                Access My Course (Staging)
+            </button>
+            
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+        </form>
+        
+        <div class="security-note">
+            🧪 <strong>Staging Environment:</strong> This connects to the staging database for testing. Use any email for testing. Data will not persist to production.
+        </div>
     </div>
-    
-</div>
 
-<script>
-document.getElementById('ibamAccessForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('ibamEmail').value.trim();
-    const button = document.getElementById('ibamSubmitBtn');
-    
-    if (!email || !email.includes('@')) {
-        alert('Please enter a valid email address');
-        return;
-    }
-    
-    // Update button
-    const originalText = button.innerHTML;
-    button.innerHTML = '🧪 Opening Staging...';
-    button.disabled = true;
-    
-    // Save email for testing
-    try {
-        localStorage.setItem('ibam-staging-email', email);
-    } catch (e) {}
-    
-    // Create staging access URL - working deployment with current SSO code
-    const accessUrl = 'https://ibam-learn-platform-staging-v2-1o9m2nvzl.vercel.app/api/auth/sso?email=' + 
-                      encodeURIComponent(email) + 
-                      '&token=ibam-systeme-secret-2025&source=systemio-staging';
-    
-    console.log('🧪 Accessing IBAM staging for:', email);
-    
-    // Open staging course
-    try {
-        const courseWindow = window.open(accessUrl, '_blank', 'width=1200,height=800');
-        if (courseWindow) {
-            courseWindow.focus();
-            button.innerHTML = '✅ Staging Opened!';
-        } else {
-            window.location.href = accessUrl;
-        }
-    } catch (error) {
-        window.location.href = accessUrl;
-    }
-    
-    // Reset button after 3 seconds
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }, 3000);
-});
+    <script>
+        // Check for stored email on page load
+        window.addEventListener('load', function() {
+            const storedEmail = localStorage.getItem('ibam-staging-email');
+            if (storedEmail) {
+                document.getElementById('email').value = storedEmail;
+            }
+        });
 
-// Auto-fill saved staging email
-window.addEventListener('load', function() {
-    try {
-        const savedEmail = localStorage.getItem('ibam-staging-email');
-        if (savedEmail) {
-            document.getElementById('ibamEmail').value = savedEmail;
-        } else {
-            // Default test email for staging
-            document.getElementById('ibamEmail').value = 'staging-test@ibam.org';
-        }
-    } catch (e) {}
-});
-</script>
+        document.getElementById('accessForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const button = document.querySelector('.access-button');
+            
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Validate email
+            if (!email) {
+                errorDiv.textContent = 'Please enter your email address.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errorDiv.textContent = 'Please enter a valid email address.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Store email for future use (separate from production)
+            localStorage.setItem('ibam-staging-email', email);
+            
+            // Show success message
+            successDiv.textContent = 'Redirecting to staging course...';
+            successDiv.style.display = 'block';
+            
+            // Disable button during redirect
+            button.textContent = 'Accessing Staging...';
+            button.disabled = true;
+            
+            // STAGING: Redirect to staging environment with staging database
+            const accessUrl = 'https://ibam-learn-platform-v2.vercel.app/api/auth/sso?email=' + 
+                              encodeURIComponent(email) + 
+                              '&token=ibam-systeme-secret-2025&source=systemio-form';
+            
+            // Small delay for better UX
+            setTimeout(function() {
+                window.location.href = accessUrl;
+            }, 1000);
+        });
+        
+        // Email verification on blur
+        document.getElementById('email').addEventListener('blur', function() {
+            const email = this.value.trim();
+            const storedEmail = localStorage.getItem('ibam-staging-email');
+            const errorDiv = document.getElementById('errorMessage');
+            
+            if (storedEmail && email && email !== storedEmail) {
+                errorDiv.textContent = `Note: This differs from your previously used staging email (${storedEmail}). Please ensure this is correct.`;
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
