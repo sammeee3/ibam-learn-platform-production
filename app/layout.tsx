@@ -58,15 +58,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         console.log('🔍 Layout: Fetching profile for user:', userEmail);
 
-        // Fetch user profile using API endpoint (only if userEmail exists)
+        // Try to fetch user profile, but don't block if it fails
         if (userEmail) {
-          const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
-          if (response.ok) {
-            const profile = await response.json();
-            setUserProfile(profile);
-            console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
-          } else {
-            console.log('❌ Layout: Profile fetch failed:', response.status, 'for email:', userEmail);
+          try {
+            const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+            if (response.ok) {
+              const profile = await response.json();
+              setUserProfile(profile);
+              console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
+            } else {
+              console.log('❌ Layout: Profile fetch failed:', response.status, 'for email:', userEmail);
+              // Set fallback immediately on API failure
+              setUserProfile({
+                email: userEmail,
+                first_name: userEmail.includes('demo') ? 'Demo User' : 'User',
+                login_source: userEmail.includes('demo') ? 'staging' : 'sso'
+              });
+            }
+          } catch (err) {
+            console.log('❌ Layout: Profile fetch error:', err);
+            // Set fallback immediately on fetch error  
+            setUserProfile({
+              email: userEmail,
+              first_name: userEmail.includes('demo') ? 'Demo User' : 'User',
+              login_source: userEmail.includes('demo') ? 'staging' : 'sso'
+            });
           }
         }
 

@@ -62,11 +62,11 @@ export default function LoginPage() {
       localStorage.setItem('ibam_session', JSON.stringify(userSession))
       localStorage.setItem('ibam-auth-email', authData.user.email!)
 
-      // Wait a moment for session to be established
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Store minimal data for immediate redirect
+      localStorage.setItem('ibam-auth-email', authData.user.email!)
       
-      // Redirect to dashboard
-      window.location.href = '/dashboard'
+      // Immediate redirect without waiting - bypass profile fetch issues
+      window.location.replace('/dashboard')
 
     } catch (error: any) {
       console.error('Login error:', error)
