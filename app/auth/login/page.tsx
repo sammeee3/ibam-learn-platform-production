@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function ImprovedLoginPage() {
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,18 +16,11 @@ export default function ImprovedLoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    setResetMessage('')
 
     try {
-      // Clear any existing sessions and cookies completely
-      await supabase.auth.signOut()
-      localStorage.clear()
-      sessionStorage.clear()
-      
-      // Clear all cookies
-      document.cookie.split(";").forEach(function(c) { 
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-      });
+      // Only clear specific items, not all cookies
+      localStorage.removeItem('ibam_session')
+      localStorage.removeItem('ibam_profile')
 
       console.log('🔐 Attempting login for:', email)
 
@@ -70,7 +63,7 @@ export default function ImprovedLoginPage() {
       localStorage.setItem('ibam-auth-email', authData.user.email!)
 
       // Wait a moment for session to be established
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       // Redirect to dashboard
       window.location.href = '/dashboard'
