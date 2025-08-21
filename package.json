@@ -37,7 +37,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.8",
+    "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
