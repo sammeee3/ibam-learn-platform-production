@@ -583,6 +583,25 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
            <div className="hidden sm:flex items-center space-x-4">
              <Calendar className="w-5 h-5" />
              <span className="text-sm">{new Date().toLocaleDateString()}</span>
+             
+             {/* Database Environment Indicator */}
+             <div className="flex items-center space-x-2 bg-white/20 rounded-full px-3 py-1">
+               <div className={`w-2 h-2 rounded-full ${
+                 typeof window !== 'undefined' && window.location.hostname.includes('staging') ? 'bg-green-400' : 'bg-blue-400'
+               }`}></div>
+               <span className="text-xs font-medium">
+                 {typeof window !== 'undefined' && window.location.hostname.includes('staging') ? 'STAGING' : 'PRODUCTION'}
+               </span>
+             </div>
+             
+             {/* Quick Database Check Link */}
+             <a 
+               href="/debug/database" 
+               className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors"
+               title="View Database Connection Details"
+             >
+               DB Info
+             </a>
            </div>
          </div>
        </div>
