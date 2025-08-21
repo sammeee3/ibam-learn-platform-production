@@ -601,7 +601,6 @@ const navigateTo = (path: string) => {
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <VisionStatement />
 
         {/* Navigation Controls */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -643,8 +642,6 @@ const navigateTo = (path: string) => {
           </div>
         </div>
 
-        {/* Pathway Toggle */}
-        <PathwayToggle />
 
         {/* Three main sections */}
         <div className="space-y-4 mb-8">

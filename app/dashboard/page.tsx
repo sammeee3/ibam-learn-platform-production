@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Calendar, User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import LearningPathOnboarding from '../components/common/LearningPathOnboarding';
 
 // Supabase configuration - Use environment variables for proper staging/production isolation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -147,7 +148,10 @@ const IBAMDashboard: React.FC = () => {
     last_name: string;
     email: string;
     login_source: string;
+    learning_path?: string;
+    learning_mode?: string;
   } | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
 
   // Continue Where You Left Off State
   const [continueSession, setContinueSession] = useState<{
@@ -431,6 +435,13 @@ useEffect(() => {
           const profile = await response.json();
           setUserProfile(profile);
           console.log('✅ User profile loaded:', profile.first_name, profile.login_source);
+          
+          // Show onboarding if no learning preferences are set (first time users)
+          // Only show for users who haven't seen it before
+          const hasSeenOnboarding = localStorage.getItem('ibam-learning-path-onboarding');
+          if ((!profile.learning_path || !profile.learning_mode) && !hasSeenOnboarding) {
+            setShowOnboarding(true);
+          }
         } else {
           console.log('❌ Profile fetch failed:', response.status);
         }
@@ -446,6 +457,45 @@ useEffect(() => {
   const timer = setTimeout(fetchUserProfile, 100);
   return () => clearTimeout(timer);
 }, []);
+
+// Handle learning preferences selection from onboarding
+const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', learningMode: 'individual' | 'group') => {
+  if (!userProfile?.email) return;
+
+  try {
+    const response = await fetch('/api/user/learning-path', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: userProfile.email,
+        learning_path: learningPath,
+        learning_mode: learningMode,
+      }),
+    });
+
+    if (response.ok) {
+      // Update local state
+      setUserProfile(prev => prev ? { 
+        ...prev, 
+        learning_path: learningPath,
+        learning_mode: learningMode 
+      } : null);
+      setShowOnboarding(false);
+      // Mark onboarding as seen
+      localStorage.setItem('ibam-learning-path-onboarding', 'true');
+      console.log('✅ Learning preferences saved:', learningPath, learningMode);
+    } else {
+      console.error('Failed to save learning preferences');
+      // Even if save fails, don't show onboarding again
+      localStorage.setItem('ibam-learning-path-onboarding', 'true');
+      setShowOnboarding(false);
+    }
+  } catch (error) {
+    console.error('Error saving learning preferences:', error);
+  }
+};
 
  // Helper functions
  const getModuleProgress = (moduleId: number): number => {
@@ -739,6 +789,16 @@ useEffect(() => {
          </div>
        </div>
      )}
+
+     {/* Learning Path Onboarding Modal */}
+     <LearningPathOnboarding
+       isOpen={showOnboarding}
+       onClose={() => {
+         setShowOnboarding(false);
+         localStorage.setItem('ibam-learning-path-onboarding', 'true');
+       }}
+       onSelect={handleLearningPathSelect}
+     />
 
      {/* IBAM Footer */}
      <footer className="bg-white border-t border-gray-200 py-8 mt-12">
