@@ -26,6 +26,12 @@ const TAG_TO_COURSE_MAP = {
     courseId: 'stewardship-course',
     courseName: 'Biblical Stewardship',
     modules: ['giving-principles', 'financial-discipleship']
+  },
+  'Staging Work Only': {
+    courseId: 'staging-access',
+    courseName: 'Staging Platform Access',
+    modules: ['staging-testing', 'development-environment'],
+    stagingOnly: true
   }
 }
 
