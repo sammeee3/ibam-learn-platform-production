@@ -594,7 +594,7 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
        {/* Quick Actions */}
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
          <button
-           onClick={() => window.location.href = '/business-planner'}
+           onClick={() => router.push('/business-planner')}
            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
          >
            <div className="flex items-center space-x-4">
@@ -658,7 +658,7 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
                    </div>
                   
                    <button
-                     onClick={() => window.location.href = `/modules/${module.id}`}
+                     onClick={() => router.push(`/modules/${module.id}`)}
                      disabled={status === 'locked'}
                      className={`w-full py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
                        status === 'locked'
@@ -686,7 +686,7 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
                <p className="text-gray-600">Explore our complete course curriculum, meet all trainers, and see success stories.</p>
              </div>
              <button
-               onClick={() => window.location.href = '/course-info'}
+               onClick={() => router.push('/course-info')}
                className="bg-gradient-to-r from-teal-400 to-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200 whitespace-nowrap ml-4"
              >
                Course Information
@@ -779,7 +779,7 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
              <button
                onClick={() => {
                  setShowTrainersModal(false);
-                 window.location.href = '/trainers';
+                 router.push('/trainers');
                }}
                className="bg-gradient-to-r from-teal-400 to-teal-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-all"
              >
