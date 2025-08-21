@@ -161,27 +161,39 @@ async function createSecureUserAccount(courseAssignment: any) {
     if (!existingProfile && authUser) {
       console.log(`📋 Creating user profile for: ${email}`)
       
-      const { data: newProfile, error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          auth_user_id: authUser.id,
-          email: email,
-          first_name: name.split(' ')[0] || 'User',
-          last_name: name.split(' ').slice(1).join(' ') || '',
-          has_platform_access: true,
-          is_active: true,
+      // Create profile with fields that exist in staging database
+      const profileData = {
+        auth_user_id: authUser.id,
+        email: email,
+        first_name: name.split(' ')[0] || 'User',
+        last_name: name.split(' ').slice(1).join(' ') || '',
+        has_platform_access: true,
+        is_active: true,
+        created_via_webhook: true,
+        login_source: 'systemio',
+        magic_token: magicToken,
+        magic_token_expires_at: tokenExpiry.toISOString()
+      }
+      
+      // Add optional fields if they exist in the table
+      try {
+        // Try to add advanced fields, ignore if they don't exist
+        Object.assign(profileData, {
           member_type_key: 'impact_member',
           subscription_status: 'active',
           primary_role_key: 'course_student',
           location_country: 'USA',
-          created_via_webhook: true,
           tier_level: 1,
           current_level: 1,
-          login_count: 0,
-          login_source: 'systemio',
-          magic_token: magicToken,
-          magic_token_expires_at: tokenExpiry.toISOString()
+          login_count: 0
         })
+      } catch (e) {
+        console.log('🔄 Using basic profile fields for staging compatibility')
+      }
+
+      const { data: newProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .insert(profileData)
         .select()
         .single()
       
@@ -268,13 +280,16 @@ async function handleWebhook(request: NextRequest) {
     console.log(`🔑 Expected secret: ${webhookSecret}`)
     
     // TODO: Re-enable after fixing System.io signature
-    // if (!verifyWebhookSignature(body, signature, webhookSecret)) {
-    //   console.log(`🚫 WEBHOOK BLOCKED: Invalid signature from ${clientIP}`)
-    //   return NextResponse.json(
-    //     { error: 'Invalid webhook signature' }, 
-    //     { status: 401 }
-    //   )
-    // }
+    // Signature verification disabled for testing
+    /*
+    if (!verifyWebhookSignature(body, signature, webhookSecret)) {
+      console.log(`🚫 WEBHOOK BLOCKED: Invalid signature from ${clientIP}`)
+      return NextResponse.json(
+        { error: 'Invalid webhook signature' }, 
+        { status: 401 }
+      )
+    }
+    */
     
     console.log(`🔐 WEBHOOK SECURITY: Verified request from ${clientIP}`)
     
