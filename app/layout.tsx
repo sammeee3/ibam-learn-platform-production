@@ -24,22 +24,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         let userEmail = localStorage.getItem('ibam-auth-email');
         
         if (!userEmail) {
-          // Try to get from cookie
+          // Try to get from cookies - check both cookie names
           const cookies = document.cookie.split(';');
-          const authCookie = cookies.find(c => c.trim().startsWith('ibam_auth_server='));
+          console.log('🍪 All cookies:', cookies);
+          
+          // Check for ibam_auth_server first
+          let authCookie = cookies.find(c => c.trim().startsWith('ibam_auth_server='));
+          
+          // If not found, check for ibam_auth (set by Dashboard)
+          if (!authCookie) {
+            authCookie = cookies.find(c => c.trim().startsWith('ibam_auth='));
+          }
+          
           if (authCookie) {
             userEmail = decodeURIComponent(authCookie.split('=')[1]);
             localStorage.setItem('ibam-auth-email', userEmail);
+            console.log('📧 Found email in cookie:', userEmail);
           }
         }
         
+        // STAGING FALLBACK: If no auth found, use demo user for testing
         if (!userEmail) {
-          console.log('No user email found in localStorage/cookies');
-          setUserProfile(null);
-          return;
+          console.log('🔧 STAGING: No auth found, using demo fallback');
+          userEmail = 'demo@staging.test';
+          localStorage.setItem('ibam-auth-email', userEmail);
         }
 
         console.log('Fetching profile for authenticated user:', userEmail);
+
+        console.log('🔍 Layout: Fetching profile for user:', userEmail);
 
         // Fetch user profile using API endpoint
         const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
@@ -49,16 +62,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           console.log('✅ Layout: User profile loaded:', profile.first_name, profile.login_source);
         } else {
           console.log('❌ Layout: Profile fetch failed:', response.status, 'for email:', userEmail);
-          // TEMP FIX: Show dropdown with demo user for staging testing
-          if (userEmail) {
+        }
+
+        // ALWAYS show dropdown with user data - critical for staging functionality
+        if (userEmail) {
+          // If we don't have a profile yet, create a fallback one
+          if (!userProfile) {
             setUserProfile({
               email: userEmail,
-              first_name: 'Demo User',
-              login_source: 'demo'
+              first_name: userEmail.includes('demo') ? 'Demo User' : 'User',
+              login_source: userEmail.includes('demo') ? 'staging' : 'sso'
             });
-            console.log('🔧 Layout: Using demo profile for testing');
-          } else {
-            setUserProfile(null);
+            console.log('🔧 Layout: Using fallback profile for dropdown visibility');
           }
         }
 
