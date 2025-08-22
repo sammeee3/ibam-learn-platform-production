@@ -160,7 +160,12 @@ export async function GET(request: NextRequest) {
 
     let created = 0
     let errors = 0
-    const results = []
+    const results: Array<{
+      feedbackId: string;
+      status: 'created' | 'already_exists' | 'error';
+      taskId?: string;
+      error?: string;
+    }> = []
 
     for (const feedback of unprocessedFeedback) {
       // Check if task already exists
