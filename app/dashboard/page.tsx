@@ -587,10 +587,16 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
              {/* Database Environment Indicator */}
              <div className="flex items-center space-x-2 bg-white/20 rounded-full px-3 py-1">
                <div className={`w-2 h-2 rounded-full ${
-                 typeof window !== 'undefined' && window.location.hostname.includes('staging') ? 'bg-green-400' : 'bg-blue-400'
+                 typeof window !== 'undefined' && (
+                   window.location.hostname.includes('staging') || 
+                   window.location.hostname.includes('ibam-learn-platform-v2.vercel.app')
+                 ) ? 'bg-green-400' : 'bg-blue-400'
                }`}></div>
                <span className="text-xs font-medium">
-                 {typeof window !== 'undefined' && window.location.hostname.includes('staging') ? 'STAGING' : 'PRODUCTION'}
+                 {typeof window !== 'undefined' && (
+                   window.location.hostname.includes('staging') || 
+                   window.location.hostname.includes('ibam-learn-platform-v2.vercel.app')
+                 ) ? 'STAGING' : 'PRODUCTION'}
                </span>
              </div>
              
