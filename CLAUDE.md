@@ -1,5 +1,26 @@
 # IBAM Learning Platform v2
 
+## 📋 ACTIVE TASK MANAGEMENT
+**CRITICAL**: Always check and update the running task list using TodoWrite tool:
+
+### Quick Commands:
+- **"Tasks"** → Show current task status instantly
+- **"ADD [description]"** → Add new task to list immediately 
+- **Screenshots** → Include screenshots with ADD commands to document issues
+- **Auto-check** → Review task list at start of every conversation
+
+### Usage Examples:
+- `Tasks` → Shows all current tasks
+- `ADD Fix login button alignment on mobile` → Adds new task
+- `ADD [screenshot] Dashboard header overlaps on tablets` → Adds task with visual reference
+
+### Current Task Categories:
+- Phase 1 Foundation (Database, permissions, features)
+- Church Platform Development (Organization management, dashboards) 
+- Multi-Role System (Context-aware assignments, role switching)
+- Security & Architecture (Data isolation, admin interfaces)
+- Bug Fixes & UI Issues (Added via ADD command)
+
 ## Project Overview
 This is a Next.js-based learning platform for IBAM (International Business and Ministry) focused on discipleship training and business development education.
 
