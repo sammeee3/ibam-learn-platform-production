@@ -8,6 +8,15 @@ import { securityScheduler } from '@/lib/security/scheduler'
 import { securityMonitor } from '@/lib/security/monitor'
 
 export async function GET(request: NextRequest) {
+  // Allow access from same domain or localhost
+  const origin = request.headers.get('origin')
+  const host = request.headers.get('host')
+  const isAuthorized = origin?.includes(host || '') || host?.includes('localhost') || !origin
+
+  if (!isAuthorized) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     // Get monitoring status
     const monitoringStatus = securityScheduler.getStatus()

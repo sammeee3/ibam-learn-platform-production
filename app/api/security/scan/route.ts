@@ -7,17 +7,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { securityMonitor } from '@/lib/security/monitor'
 
 export async function GET(request: NextRequest) {
-  // Security: Only allow access from localhost or with proper admin authentication
-  const host = request.headers.get('host')
+  // Allow access from same domain or localhost
   const origin = request.headers.get('origin')
-  
-  // Allow localhost access for automated monitoring
-  const isLocalhost = host?.includes('localhost') || origin?.includes('localhost')
-  
-  // TODO: Add proper admin authentication check
-  // const isAdmin = await checkAdminAuth(request)
-  
-  if (!isLocalhost) {
+  const host = request.headers.get('host')
+  const isAuthorized = origin?.includes(host || '') || host?.includes('localhost') || !origin
+
+  if (!isAuthorized) {
     return NextResponse.json({ 
       error: 'Unauthorized access to security endpoint' 
     }, { status: 403 })

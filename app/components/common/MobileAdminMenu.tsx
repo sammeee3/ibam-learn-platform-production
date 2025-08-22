@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Download, Settings, HelpCircle, X, Menu } from 'lucide-react';
+import { User, Download, Settings, HelpCircle, X, Menu, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface MobileAdminMenuProps {
@@ -52,6 +52,14 @@ const MobileAdminMenu: React.FC<MobileAdminMenuProps> = ({
         color: 'text-gray-600'
       }
     ]),
+    // Security Dashboard (admin access)
+    {
+      icon: <Shield className="w-5 h-5" />,
+      label: 'Security',
+      sublabel: 'Monitor threats',
+      onClick: () => router.push('/admin/security'),
+      color: 'text-red-600'
+    },
     {
       icon: <HelpCircle className="w-5 h-5" />,
       label: 'Help',

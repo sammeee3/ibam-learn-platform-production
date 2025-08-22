@@ -6,17 +6,57 @@ export default function SafeFeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState('');
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
 
-  const handleSubmit = () => {
+  const handleScreenshot = () => {
+    // For now, prompt user to take screenshot manually
+    // In the future, we could implement automatic screenshot capture
+    alert('📸 Please take a screenshot and paste it below, or describe the issue in detail including which page/section you were on.');
+  };
+
+  const handleSubmit = async () => {
     if (!feedbackType || !description) {
       alert('Please select bug/feature and add description');
       return;
     }
     
-    alert(`Feedback submitted: ${feedbackType} - ${description}`);
-    setIsOpen(false);
-    setFeedbackType('');
-    setDescription('');
+    setIsSubmitting(true);
+    
+    try {
+      const feedbackData = {
+        type: feedbackType,
+        description,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        userEmail: localStorage.getItem('user_email') || null,
+        screenshot: screenshot,
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch('/api/feedback/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
+      });
+
+      if (response.ok) {
+        alert('✅ Feedback submitted! We\'ll review this and add it to our task list. Thank you!');
+      } else {
+        alert('❌ Failed to submit feedback. Please try again.');
+      }
+    } catch (error) {
+      console.error('Feedback submission error:', error);
+      alert('❌ Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+      setIsOpen(false);
+      setFeedbackType('');
+      setDescription('');
+      setScreenshot(null);
+    }
   };
 
   return (
@@ -97,14 +137,31 @@ export default function SafeFeedbackWidget() {
               </button>
             </div>
             
+            {/* Screenshot Button */}
+            <div style={{marginBottom: '12px'}}>
+              <button 
+                onClick={handleScreenshot}
+                style={{
+                  padding: '8px 16px', 
+                  border: '2px solid #888', 
+                  borderRadius: '6px', 
+                  background: '#f9f9f9', 
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                📸 Screenshot Help
+              </button>
+            </div>
+
             {/* Text Area */}
             <textarea 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Tell us what happened or what you'd like to see..."
+              placeholder="Tell us what happened or what you'd like to see... Include which page/section you were on if relevant."
               style={{
                 width: '100%', 
-                height: '100px', 
+                height: '120px', 
                 padding: '12px', 
                 border: '2px solid #ddd', 
                 borderRadius: '6px', 
@@ -131,16 +188,17 @@ export default function SafeFeedbackWidget() {
               </button>
               <button 
                 onClick={handleSubmit}
+                disabled={isSubmitting}
                 style={{
                   padding: '10px 20px', 
                   border: 'none', 
                   borderRadius: '6px', 
-                  background: 'purple', 
+                  background: isSubmitting ? '#ccc' : 'purple', 
                   color: 'white', 
-                  cursor: 'pointer'
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer'
                 }}
               >
-                Submit
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </div>

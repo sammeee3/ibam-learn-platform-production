@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Calendar, User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import LearningPathOnboarding from '../components/common/LearningPathOnboarding';
+import SafeFeedbackWidget from '../components/feedback/SafeFeedbackWidget';
 
 // Supabase configuration - Use environment variables for proper staging/production isolation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -916,6 +917,9 @@ const handleLogout = async () => {
        }}
        onSelect={handleLearningPathSelect}
      />
+
+     {/* Feedback Widget - Always visible */}
+     <SafeFeedbackWidget />
 
      {/* IBAM Footer */}
      <footer className="bg-white border-t border-gray-200 py-8 mt-12">
