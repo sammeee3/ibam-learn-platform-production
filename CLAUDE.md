@@ -6,6 +6,7 @@
 ### Quick Commands:
 - **"Tasks"** → Show current task status instantly
 - **"ADD [description]"** → Add new task to list immediately 
+- **"SYNC"** → Pull latest production user feedback and create tasks
 - **Screenshots** → Include screenshots with ADD commands to document issues
 - **Auto-check** → Review task list at start of every conversation
 
@@ -13,6 +14,7 @@
 - `Tasks` → Shows all current tasks
 - `ADD Fix login button alignment on mobile` → Adds new task
 - `ADD [screenshot] Dashboard header overlaps on tablets` → Adds task with visual reference
+- `SYNC` → Pulls production user feedback and creates staging tasks automatically
 
 ### Current Task Categories:
 - Phase 1 Foundation (Database, permissions, features)
@@ -20,6 +22,7 @@
 - Multi-Role System (Context-aware assignments, role switching)
 - Security & Architecture (Data isolation, admin interfaces)
 - Bug Fixes & UI Issues (Added via ADD command)
+- Production User Feedback (Auto-synced from production environment)
 
 ## Project Overview
 This is a Next.js-based learning platform for IBAM (International Business and Ministry) focused on discipleship training and business development education.
