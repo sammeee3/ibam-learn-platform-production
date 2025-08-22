@@ -7,8 +7,16 @@ node_modules/
 .next/
 out/
 
-# Environment variables
-.env*.local
+# Environment variables - SECURITY CRITICAL
+.env*
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.vercel
+.env.vercel.production
+.env.staging-v2.production
 
 # Debug logs
 npm-debug.log*

@@ -274,14 +274,10 @@ async function handleWebhook(request: NextRequest) {
       )
     }
     
-    // TEMP: Disable signature verification for testing
-    console.log(`🔧 TESTING: Signature verification disabled`)
-    console.log(`📝 Received signature: ${signature}`)
-    console.log(`🔑 Expected secret: ${webhookSecret}`)
+    // 🔒 SECURITY: Webhook signature verification (PRODUCTION READY)
+    console.log(`🔐 WEBHOOK SECURITY: Verifying signature from ${clientIP}`)
+    console.log(`📝 Received signature: ${signature ? 'Present' : 'Missing'}`)
     
-    // TODO: Re-enable after fixing System.io signature
-    // Signature verification disabled for testing
-    /*
     if (!verifyWebhookSignature(body, signature, webhookSecret)) {
       console.log(`🚫 WEBHOOK BLOCKED: Invalid signature from ${clientIP}`)
       return NextResponse.json(
@@ -289,7 +285,6 @@ async function handleWebhook(request: NextRequest) {
         { status: 401 }
       )
     }
-    */
     
     console.log(`🔐 WEBHOOK SECURITY: Verified request from ${clientIP}`)
     

@@ -37,11 +37,20 @@ export async function middleware(req: NextRequest) {
     return ssoResponse;
   }
   
-  // Check for auth cookie (normal flow) - Prefer server cookie for security
+  // 🔒 SECURITY: Prefer server-side httpOnly cookies (enhanced security)
   const serverCookie = req.cookies.get('ibam_auth_server');
   const clientCookie = req.cookies.get('ibam_auth');
   
-  // Use server cookie if available, otherwise use client cookie
+  // SECURITY ENHANCEMENT: Log cookie types for monitoring
+  if (serverCookie && clientCookie) {
+    console.log('🔐 Both server and client cookies present');
+  } else if (serverCookie) {
+    console.log('✅ Server cookie only (secure)');
+  } else if (clientCookie) {
+    console.log('⚠️ Client cookie only (less secure)');
+  }
+  
+  // Use server cookie if available, otherwise client cookie (transitional security)
   const authCookie = serverCookie || clientCookie;
   
   if (!authCookie) {
