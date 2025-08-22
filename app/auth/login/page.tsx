@@ -62,8 +62,10 @@ export default function LoginPage() {
       localStorage.setItem('ibam_session', JSON.stringify(userSession))
       localStorage.setItem('ibam-auth-email', authData.user.email!)
 
-      // Store minimal data for immediate redirect
-      localStorage.setItem('ibam-auth-email', authData.user.email!)
+      // Set auth cookie for middleware (critical for incognito mode)
+      document.cookie = `ibam_auth=${authData.user.email}; path=/; max-age=${24 * 60 * 60}; secure; samesite=strict`
+      
+      console.log('✅ Session and cookies set for:', authData.user.email)
       
       // Immediate redirect without waiting - bypass profile fetch issues
       window.location.replace('/dashboard')
