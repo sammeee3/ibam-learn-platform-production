@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const isHealthy = await checkProductionDatabaseHealth()
     if (!isHealthy) {
       return NextResponse.json({
-        success: false,
+        api_success: false,
         error: 'Production database health check failed',
         message: 'Cannot connect to production database for reading feedback'
       }, { status: 503 })
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const result = await syncProductionFeedbackToStagingTasks()
     
     return NextResponse.json({
-      success: true,
+      api_success: true,
       timestamp: new Date().toISOString(),
       environment: 'staging',
       ...result
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     console.error('❌ Production feedback sync API error:', error)
     
     return NextResponse.json({
-      success: false,
+      api_success: false,
       error: 'Production feedback sync failed',
       message: error.message,
       timestamp: new Date().toISOString()
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const result = await syncProductionFeedbackToStagingTasks()
     
     return NextResponse.json({
-      success: true,
+      api_success: true,
       manual_trigger: true,
       timestamp: new Date().toISOString(),
       ...result
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     return NextResponse.json({
-      success: false,
+      api_success: false,
       error: 'Manual sync failed',
       message: error.message
     }, { status: 500 })

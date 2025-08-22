@@ -90,11 +90,11 @@ export default function SafeFeedbackWidget() {
     
     try {
       // Convert screenshot to base64 if provided
-      let screenshotData = null;
+      let screenshotData: string | null = null;
       if (screenshot) {
         const reader = new FileReader();
-        screenshotData = await new Promise((resolve) => {
-          reader.onload = () => resolve(reader.result);
+        screenshotData = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
           reader.readAsDataURL(screenshot);
         });
       }
