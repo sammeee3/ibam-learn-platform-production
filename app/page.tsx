@@ -68,31 +68,6 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <Link 
-                  href="/auth/login"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '0.5rem 1.5rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: 'white',
-                    border: '1px solid white',
-                    borderRadius: '0.375rem',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
-                    e.currentTarget.style.color = '#1f2937';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                >
-                  Sign In
-                </Link>
               </div>
             </header>
             
