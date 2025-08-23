@@ -3,7 +3,13 @@
 // This replaces your current 2300+ line file with organized architecture
 
 import BusinessPlannerApp from './components/BusinessPlannerApp';
+import SafeFeedbackWidget from '../components/feedback/SafeFeedbackWidget';
 
 export default function BusinessPlannerPage() {
-  return <BusinessPlannerApp />;
+  return (
+    <>
+      <BusinessPlannerApp />
+      <SafeFeedbackWidget />
+    </>
+  );
 }

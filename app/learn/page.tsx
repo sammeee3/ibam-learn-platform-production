@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import IBAMLogo from '@/components/IBAMLogo'
+import SafeFeedbackWidget from '../components/feedback/SafeFeedbackWidget'
 
 export default function LearnPage() {
   const modules = [
@@ -157,6 +158,7 @@ export default function LearnPage() {
           </Link>
         ))}
       </nav>
+      <SafeFeedbackWidget />
     </div>
   )
 }

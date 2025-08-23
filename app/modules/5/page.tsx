@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import SafeFeedbackWidget from '../../components/feedback/SafeFeedbackWidget';
 import { createClient } from '@supabase/supabase-js';
 import {   
   ArrowLeft,  
@@ -707,6 +708,7 @@ const Module5BusinessPlanning: React.FC = () => {
       </div>
 
       <IBAMFooter />  
+      <SafeFeedbackWidget />
     </div>  
   );  
 };

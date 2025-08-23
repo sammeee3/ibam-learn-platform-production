@@ -63,6 +63,7 @@ import { VimeoVideo } from '../../../../components/video/VimeoVideo';
 import AIChatInterface from '../../../../components/coaching/AIChatInterface';
 import { calculateReadingTime, parseMainContentIntoChunks, extractKeyPoints } from '../../../../lib/utils';
 import AnonymousSessionSurvey from '../../../../components/feedback/AnonymousSessionSurvey';
+import SafeFeedbackWidget from '../../../../components/feedback/SafeFeedbackWidget';
 import ActionBuilderComponent from '../../../../components/actions/ActionBuilderComponent';
 import EnhancedScriptureReference from '../../../../components/scripture/EnhancedScriptureReference';
 import EnhancedQuizSection from '../../../../components/quiz/EnhancedQuizSection';
@@ -671,56 +672,7 @@ const navigateTo = (path: string) => {
 </div>
 
 {/* Feedback Widget */}
-<div
-  onClick={() => {
-    const modal = document.getElementById('feedback-modal');
-    if (modal) modal.style.display = 'flex';
-  }}
-  style={{position: 'fixed', bottom: '20px', right: '20px', background: 'purple', color: 'white', padding: '15px', borderRadius: '50px', cursor: 'pointer', zIndex: 9999}}
->
-  💬 REPORT BUG or REQUEST
-</div>
-
-<div
-  id="feedback-modal"
-  style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'none', alignItems: 'center', justifyContent: 'center', zIndex: 10000}}
-  onClick={(e) => {
-    const target = e.target as HTMLElement;
-    if (target.id === 'feedback-modal') {
-      target.style.display = 'none';
-    }
-  }}
->
-  <div style={{background: 'white', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '90%'}} onClick={e => e.stopPropagation()}>
-    <h3 style={{margin: '0 0 16px 0'}}>Beta Feedback</h3>
-    <div style={{marginBottom: '16px'}}>
-      <button style={{padding: '8px 16px', marginRight: '8px', border: '2px solid #ddd', borderRadius: '6px', cursor: 'pointer'}}>🐛 Bug Report</button>
-      <button style={{padding: '8px 16px', border: '2px solid #ddd', borderRadius: '6px', cursor: 'pointer'}}>💡 Feature Request</button>
-    </div>
-    <textarea placeholder="Tell us what happened..." style={{width: '100%', height: '100px', padding: '12px', border: '2px solid #ddd', borderRadius: '6px', boxSizing: 'border-box'}} />
-    <div style={{marginTop: '16px', textAlign: 'right'}}>
-      <button
-        onClick={() => {
-          const modal = document.getElementById('feedback-modal');
-          if (modal) modal.style.display = 'none';
-        }}
-        style={{padding: '10px 20px', marginRight: '12px', border: '2px solid #ddd', borderRadius: '6px', cursor: 'pointer'}}
-      >
-        Cancel
-      </button>
-      <button
-        onClick={() => {
-          alert('Feedback submitted!');
-          const modal = document.getElementById('feedback-modal');
-          if (modal) modal.style.display = 'none';
-        }}
-        style={{padding: '10px 20px', border: 'none', borderRadius: '6px', background: 'purple', color: 'white', cursor: 'pointer'}}
-      >
-        Submit
-      </button>
-    </div>
-  </div>
-</div>
+<SafeFeedbackWidget />
 
       </div>
     </div>
