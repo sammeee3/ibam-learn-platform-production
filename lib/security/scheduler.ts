@@ -63,14 +63,21 @@ export class SecurityScheduler {
       await this.collectMetrics()
     }, this.config.intervals.metrics * 60 * 1000)
 
+    // NEW: Repository security scan (every 30 minutes)
+    this.intervals.repository = setInterval(async () => {
+      await this.scanRepositoryForSecrets()
+    }, 30 * 60 * 1000)
+
     // Run initial scans
     this.runCriticalCheck()
     this.collectMetrics()
+    this.scanRepositoryForSecrets() // NEW: Initial repository scan
 
     console.log('✅ Automated security monitoring started')
     console.log(`   - Critical checks: every ${this.config.intervals.critical} minutes`)
     console.log(`   - Full scans: every ${this.config.intervals.standard} minutes`)
     console.log(`   - Metrics: every ${this.config.intervals.metrics} minutes`)
+    console.log(`   - Repository scans: every 30 minutes`) // NEW
   }
 
   /**
@@ -164,6 +171,43 @@ export class SecurityScheduler {
       
     } catch (error) {
       console.error('Metrics collection failed:', error)
+    }
+  }
+
+  /**
+   * 🔍 Scan repository for exposed secrets
+   */
+  private async scanRepositoryForSecrets(): Promise<void> {
+    try {
+      console.log('🔍 Scanning repository for exposed secrets...')
+      
+      // Call the repository scanning API
+      const response = await fetch('/api/security/scan-repository')
+      const result = await response.json()
+      
+      if (result.status === 'VULNERABLE') {
+        console.error('🚨 EXPOSED SECRETS DETECTED IN REPOSITORY!')
+        console.error(`   Risk Level: ${result.riskLevel}`)
+        console.error(`   Total Exposures: ${result.totalExposures}`)
+        console.error(`   Threats Found: ${result.threats.length}`)
+        
+        // Send critical alert
+        await this.handleCriticalAlerts(result.threats.map((t: any) => ({
+          type: 'CRITICAL',
+          title: `Repository Security: ${t.type}`,
+          description: `Found in ${t.file}: ${t.action}`
+        })))
+        
+        // Log all threats
+        result.threats.forEach((threat: any) => {
+          console.error(`   🚨 ${threat.type} in ${threat.file}`)
+        })
+      } else {
+        console.log('✅ Repository scan complete - no exposed secrets found')
+      }
+      
+    } catch (error) {
+      console.error('Repository scan failed:', error)
     }
   }
 
