@@ -58,7 +58,7 @@ async function createSecureUserAccount(courseAssignment: any) {
     
     // Step 1: Check if user already exists in auth.users
     const { data: authUsers } = await supabase.auth.admin.listUsers()
-    let authUser = authUsers.users.find(user => user.email === email)
+    let authUser = authUsers?.users?.find((user: any) => user.email === email)
     
     // Step 2: Create auth user if doesn't exist
     if (!authUser) {
