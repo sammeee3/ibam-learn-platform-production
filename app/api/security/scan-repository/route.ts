@@ -164,7 +164,11 @@ export async function GET() {
 }
 
 function generateRecommendations(threats: any[]) {
-  const recommendations = [];
+  const recommendations: Array<{
+    priority: string;
+    action: string;
+    steps: string[];
+  }> = [];
   
   if (threats.some(t => t.type.includes('Exposed'))) {
     recommendations.push({
