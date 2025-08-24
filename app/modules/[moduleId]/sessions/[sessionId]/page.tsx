@@ -195,7 +195,8 @@ export default function SessionPage({ params }: SessionPageProps) {
     resources: false
   });
   const handleNextSession = () => {
-    const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 3 };
+    // FIXED: Correct session counts from production database
+    const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 5 };
     const maxSessionInModule = moduleSessionCounts[parseInt(moduleId)];
     const currentSession = parseInt(sessionId);
     
@@ -440,23 +441,20 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
     const currentModuleId = sessionData?.module_id || 1;
     const currentSessionNumber = sessionData?.session_number || 1;
     
+    // Use the same counts as handleNextSession
+    const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 5 };
+    const maxSessionInModule = moduleSessionCounts[currentModuleId] || 0;
+    
     if (direction === 'next') {
-      // Module 1 has 4 sessions, Module 2 has 4 sessions
-      if (currentModuleId === 1 && currentSessionNumber < 4) {
-        // Stay in Module 1
+      if (currentSessionNumber < maxSessionInModule) {
+        // Stay in current module, go to next session
         router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 1 && currentSessionNumber === 4) {
-        // Move to Module 2 Session 1 (NOT Module 5!)
-        router.push(`/modules/2/sessions/1`);
-      } else if (currentModuleId === 2 && currentSessionNumber < 4) {
-        // Stay in Module 2
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
-      } else if (currentModuleId === 2 && currentSessionNumber === 4) {
-        // Move to Module 3 Session 1
-        router.push(`/modules/3/sessions/1`);
+      } else if (currentModuleId < 5) {
+        // Move to next module's first session
+        router.push(`/modules/${currentModuleId + 1}/sessions/1`);
       } else {
-        // For other modules, increment session within module
-        router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
+        // End of course, go to dashboard
+        router.push('/dashboard');
       }
     } else {
       // Previous direction
@@ -466,7 +464,7 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
       } else if (currentModuleId > 1) {
         // Go to last session of previous module
         const prevModule = currentModuleId - 1;
-        const lastSessionInPrevModule = prevModule === 1 ? 4 : 4; // Both have 4 sessions
+        const lastSessionInPrevModule = moduleSessionCounts[prevModule] || 1;
         router.push(`/modules/${prevModule}/sessions/${lastSessionInPrevModule}`);
       }
     }
