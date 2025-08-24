@@ -204,8 +204,8 @@ export default function SessionPage({ params }: SessionPageProps) {
       window.location.href = `/modules/${moduleId}/sessions/${currentSession + 1}`;
     } else {
       const nextModule = parseInt(moduleId) + 1;
-      // Skip to next module with content (skip empty modules 4 & 5)
-      if (nextModule <= 3) {
+      // Move to next module or dashboard if course complete
+      if (nextModule <= 5) {
         window.location.href = `/modules/${nextModule}/sessions/1`;
       } else {
         window.location.href = '/dashboard';
