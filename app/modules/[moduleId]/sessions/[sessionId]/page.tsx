@@ -203,7 +203,8 @@ export default function SessionPage({ params }: SessionPageProps) {
       window.location.href = `/modules/${moduleId}/sessions/${currentSession + 1}`;
     } else {
       const nextModule = parseInt(moduleId) + 1;
-      if (nextModule <= 5) {
+      // Skip to next module with content (skip empty modules 4 & 5)
+      if (nextModule <= 3) {
         window.location.href = `/modules/${nextModule}/sessions/1`;
       } else {
         window.location.href = '/dashboard';
@@ -365,7 +366,12 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
 
         if (fetchError) {
           console.error('Database error:', fetchError);
-          setError(`Failed to load session data: ${fetchError.message}`);
+          // More helpful error message for debugging
+          if (fetchError.code === 'PGRST116') {
+            setError(`Session ${sessionId} not found in Module ${moduleId}. This content may not be available yet.`);
+          } else {
+            setError(`Failed to load session data: ${fetchError.message}`);
+          }
           return;
         }
 
