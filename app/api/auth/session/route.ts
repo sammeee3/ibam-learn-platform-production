@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         // FALLBACK: Check if user exists in auth.users (recently signed up)
         try {
           const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
-          const authUser = authUsers.users.find(u => u.email === email);
+          const authUser = authUsers?.users?.find((u: any) => u.email === email);
           
           if (authUser && authUser.email_confirmed_at) {
             console.log('🔄 Creating missing user profile for verified auth user:', email);

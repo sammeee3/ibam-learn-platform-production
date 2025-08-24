@@ -1,0 +1,25 @@
+IMPORTANT: Get the Staging Service Role Key
+============================================
+
+The service role key in our files appears to be invalid or expired.
+You need to get the correct one from Supabase:
+
+1. Go to Staging Supabase Dashboard:
+   https://supabase.com/dashboard/project/yhfxxouswctucxvfetcq
+
+2. Navigate to: Settings → API
+
+3. Find the "service_role" key (NOT the anon key!)
+   - It will be a long string starting with "eyJ..."
+   - This key has FULL access to the database
+
+4. Copy that key and update the import script:
+   - Open: import-production-to-staging.js
+   - Replace the key on line 14
+   - Save the file
+
+5. Then run: node import-production-to-staging.js
+
+NOTE: The service_role key is different from the anon key!
+- anon key = limited access (for public users)
+- service_role key = full access (for admin operations)

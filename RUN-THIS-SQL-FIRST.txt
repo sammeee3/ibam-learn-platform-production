@@ -1,0 +1,76 @@
+STAGING DATABASE RESET INSTRUCTIONS
+====================================
+
+1. GO TO STAGING SUPABASE:
+   https://supabase.com/dashboard/project/yhfxxouswctucxvfetcq/sql/new
+
+2. RUN THIS SQL (Copy everything below):
+
+-- 🛡️ SAFE NUCLEAR RESET FOR STAGING DATABASE
+-- This script BACKS UP your data before making changes
+
+-- STEP 1: BACKUP CURRENT DATA (SAFE!)
+-- This renames your current table, preserving ALL data
+ALTER TABLE sessions RENAME TO sessions_old_backup_aug24_2025;
+
+-- Verify backup was created:
+SELECT COUNT(*) as backed_up_sessions FROM sessions_old_backup_aug24_2025;
+
+-- STEP 2: CREATE NEW TABLE WITH PRODUCTION SCHEMA
+CREATE TABLE sessions (
+    id BIGINT PRIMARY KEY,
+    module_id INTEGER,
+    session_number INTEGER,
+    title TEXT,
+    subtitle TEXT,
+    duration INTEGER,
+    video_id TEXT,
+    video_key TEXT,
+    video_url TEXT,
+    scripture_reference TEXT,
+    learning_objective TEXT,
+    content JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    sequence_order INTEGER,
+    reading_content TEXT,
+    principles JSONB,
+    case_studies JSONB,
+    reflection_questions JSONB,
+    transformation_promise TEXT,
+    hook TEXT,
+    fast_track_summary TEXT,
+    mobile_transformation JSONB,
+    case_study TEXT,
+    faq_questions JSONB,
+    business_plan_questions JSONB,
+    engagement_mechanics JSONB,
+    estimated_time TEXT,
+    module TEXT,
+    scripture TEXT,
+    reflection TEXT,
+    becoming_gods_entrepreneur JSONB,
+    extra_materials JSONB,
+    vision_alignment_prompts JSONB,
+    accountability_triggers JSONB,
+    celebration_messages JSONB
+);
+
+-- Add indexes for performance
+CREATE INDEX idx_sessions_module_id ON sessions(module_id);
+CREATE INDEX idx_sessions_session_number ON sessions(session_number);
+CREATE INDEX idx_sessions_module_session ON sessions(module_id, session_number);
+
+-- STEP 3: VERIFY NEW TABLE IS READY
+SELECT 
+    'Old Backup Table' as table_type,
+    COUNT(*) as session_count 
+FROM sessions_old_backup_aug24_2025
+UNION ALL
+SELECT 
+    'New Sessions Table' as table_type,
+    COUNT(*) as session_count 
+FROM sessions;
+
+3. AFTER SQL RUNS SUCCESSFULLY, COME BACK AND RUN:
+   node import-production-to-staging.js
