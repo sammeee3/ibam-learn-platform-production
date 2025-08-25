@@ -654,7 +654,7 @@ const handleLogout = async () => {
              </a>
 
              {/* Admin Analytics Dashboard Link - Only for super admins */}
-             {userProfile?.email === 'sammeee3@yahoo.com' && (
+             {userProfile?.email === 'sammeee@yahoo.com' && (
                <a 
                  href="/admin/analytics" 
                  className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-bold transition-colors"
@@ -701,7 +701,7 @@ const handleLogout = async () => {
                        >
                          Settings
                        </a>
-                       {userProfile.email === 'sammeee3@yahoo.com' && (
+                       {userProfile.email === 'sammeee@yahoo.com' && (
                          <a
                            href="/admin/analytics"
                            className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"

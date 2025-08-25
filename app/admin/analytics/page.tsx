@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // SUPER ADMIN EMAILS - Must match the list in route.ts
 const SUPER_ADMIN_EMAILS = [
-  'sammeee3@yahoo.com', // Jeffrey Samuelson
+  'sammeee@yahoo.com', // Jeffrey Samuelson
   // Add more admin emails as needed
 ];
 

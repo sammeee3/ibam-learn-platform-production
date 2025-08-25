@@ -6,7 +6,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // SUPER ADMIN EMAILS - Add your email(s) here
 const SUPER_ADMIN_EMAILS = [
-  'sammeee3@yahoo.com', // Jeffrey Samuelson
+  'sammeee@yahoo.com', // Jeffrey Samuelson
   // Add more admin emails as needed
 ];
 
