@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Calendar, User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
+import { User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import LearningPathOnboarding from '../components/common/LearningPathOnboarding';
 import SafeFeedbackWidget from '../components/feedback/SafeFeedbackWidget';
@@ -653,7 +653,6 @@ const handleLogout = async () => {
 
            </div>
            <div className="hidden sm:flex items-center space-x-4">
-             <Calendar className="w-5 h-5" />
              <span className="text-sm">{new Date().toLocaleDateString()}</span>
              
              {/* Developer Info - Only for Super Admins */}
