@@ -653,14 +653,16 @@ const handleLogout = async () => {
                DB Info
              </a>
 
-             {/* Admin Analytics Dashboard Link */}
-             <a 
-               href="/admin/analytics" 
-               className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-bold transition-colors"
-               title="Super Admin Analytics Dashboard"
-             >
-               📊 Analytics
-             </a>
+             {/* Admin Analytics Dashboard Link - Only for super admins */}
+             {userProfile?.email === 'sammeee3@yahoo.com' && (
+               <a 
+                 href="/admin/analytics" 
+                 className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-bold transition-colors"
+                 title="Super Admin Analytics Dashboard"
+               >
+                 📊 Analytics
+               </a>
+             )}
 
              {/* User Profile Dropdown */}
              {userProfile?.email && (
@@ -699,12 +701,14 @@ const handleLogout = async () => {
                        >
                          Settings
                        </a>
-                       <a
-                         href="/admin/analytics"
-                         className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"
-                       >
-                         📊 Analytics Dashboard
-                       </a>
+                       {userProfile.email === 'sammeee3@yahoo.com' && (
+                         <a
+                           href="/admin/analytics"
+                           className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"
+                         >
+                           📊 Analytics Dashboard
+                         </a>
+                       )}
                        <button
                          onClick={handleLogout}
                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"

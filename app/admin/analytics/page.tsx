@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import { 
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -12,7 +13,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// SUPER ADMIN EMAILS - Must match the list in route.ts
+const SUPER_ADMIN_EMAILS = [
+  'sammeee3@yahoo.com', // Jeffrey Samuelson
+  // Add more admin emails as needed
+];
+
 export default function SuperAdminDashboard() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [feedbackCount, setFeedbackCount] = useState(0);
@@ -26,11 +35,42 @@ export default function SuperAdminDashboard() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
 
   useEffect(() => {
-    loadDashboardData();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadDashboardData, 30000);
-    return () => clearInterval(interval);
-  }, [selectedTimeRange]);
+    checkAuthorization();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthorized) {
+      loadDashboardData();
+      // Refresh every 30 seconds
+      const interval = setInterval(loadDashboardData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedTimeRange, isAuthorized]);
+
+  const checkAuthorization = async () => {
+    try {
+      // Check if user is logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push('/auth/login?redirect=/admin/analytics');
+        return;
+      }
+
+      // Check if user is super admin
+      if (!SUPER_ADMIN_EMAILS.includes(user.email || '')) {
+        // Not authorized - redirect to dashboard
+        alert('⛔ Admin access only. This incident has been logged.');
+        router.push('/dashboard');
+        return;
+      }
+
+      setIsAuthorized(true);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      router.push('/auth/login');
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -168,6 +208,18 @@ export default function SuperAdminDashboard() {
   };
 
   const COLORS = ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#3B82F6'];
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <div className="text-2xl text-gray-800 mb-2">Admin Access Required</div>
+          <div className="text-gray-600">Verifying authorization...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
