@@ -446,6 +446,11 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
     const maxSessionInModule = moduleSessionCounts[currentModuleId] || 0;
     
     if (direction === 'next') {
+      // Trigger micro-survey when completing a session
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('show_micro_survey', 'true');
+      }
+      
       if (currentSessionNumber < maxSessionInModule) {
         // Stay in current module, go to next session
         router.push(`/modules/${currentModuleId}/sessions/${currentSessionNumber + 1}`);
