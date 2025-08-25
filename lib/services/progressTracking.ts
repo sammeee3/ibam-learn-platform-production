@@ -62,7 +62,7 @@ export class ProgressTracker {
       };
 
       // Update section completion status
-      const updatedProgress = {
+      const updatedProgress: any = {
         user_id: userId,
         module_id: moduleId,
         session_id: sessionId,
@@ -136,7 +136,7 @@ export class ProgressTracker {
       const totalTimeSpent = sessions.reduce((sum, s) => sum + (s.time_spent_seconds || 0), 0);
       const moduleCompletion = Math.round((completedSessions / totalSessions) * 100);
 
-      const moduleData = {
+      const moduleData: any = {
         user_id: userId,
         module_id: moduleId,
         sessions_completed: completedSessions,
