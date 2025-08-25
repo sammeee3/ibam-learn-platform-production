@@ -591,68 +591,8 @@ const handleLogout = async () => {
                <p className="text-teal-100 mt-1">Your faith-driven business journey continues</p>
              </div>
 
-      {/* Getting Started Banner for New Users */}
-      {!continueSession && (
-        <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl shadow-xl p-8 mb-8 text-white">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-4 md:mb-0">
-              <h2 className="text-3xl font-bold mb-2">
-                🎯 New Here? Start Your Journey!
-              </h2>
-              <p className="text-lg text-blue-100">
-                Learn the IBAM method and choose your learning path
-              </p>
-            </div>
-            
-            <a
-              href="/getting-started"
-              className="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
-            >
-              Getting Started Guide
-              <ArrowRight className="w-6 h-6 ml-2" />
-            </a>
-          </div>
-        </div>
-      )}
-
-      {/* Continue Where You Left Off Section */}
-      {continueSession && (
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 shadow-xl mb-8">
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <h2 className="text-2xl font-bold mb-2 flex items-center">
-                <Play className="w-8 h-8 mr-3" />
-                Continue Your Journey
-              </h2>
-              <p className="text-blue-100 text-lg">
-                Module {continueSession.module_id}, Session {continueSession.session_id}
-              </p>
-              <div className="flex items-center mt-2">
-                <div className="bg-white/20 rounded-full h-2 w-48 mr-3">
-                  <div 
-                    className="bg-white rounded-full h-2 transition-all"
-                    style={{ width: `${continueSession.completion_percentage}%` }}
-                  />
-                </div>
-                <span className="text-sm text-blue-100">
-                  {continueSession.completion_percentage}% complete
-                </span>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`)}
-              className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
-            >
-              Continue Session
-              <ArrowRight className="w-6 h-6 ml-2" />
-            </button>
-          </div>
-        </div>
-      )}
-
            </div>
-           <div className="hidden sm:flex items-center space-x-4 ml-auto mr-4">
+           <div className="hidden sm:flex items-center space-x-4">
              <span className="text-sm">{new Date().toLocaleDateString()}</span>
              
              {/* Developer Info - Only for Super Admins */}
@@ -749,6 +689,65 @@ const handleLogout = async () => {
      </div>
 
      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+       {/* Getting Started Banner for New Users */}
+       {!continueSession && (
+         <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl shadow-xl p-8 mb-8 text-white">
+           <div className="flex flex-col md:flex-row items-center justify-between">
+             <div className="mb-4 md:mb-0">
+               <h2 className="text-3xl font-bold mb-2">
+                 🎯 New Here? Start Your Journey!
+               </h2>
+               <p className="text-lg text-blue-100">
+                 Learn the IBAM method and choose your learning path
+               </p>
+             </div>
+             
+             <a
+               href="/getting-started"
+               className="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
+             >
+               Getting Started Guide
+               <ArrowRight className="w-6 h-6 ml-2" />
+             </a>
+           </div>
+         </div>
+       )}
+
+       {/* Continue Where You Left Off Section */}
+       {continueSession && (
+         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 shadow-xl mb-8">
+           <div className="flex items-center justify-between">
+             <div className="text-white">
+               <h2 className="text-2xl font-bold mb-2 flex items-center">
+                 <Play className="w-8 h-8 mr-3" />
+                 Continue Your Journey
+               </h2>
+               <p className="text-blue-100 text-lg">
+                 Module {continueSession.module_id}, Session {continueSession.session_id}
+               </p>
+               <div className="flex items-center mt-2">
+                 <div className="bg-white/20 rounded-full h-2 w-48 mr-3">
+                   <div 
+                     className="bg-white rounded-full h-2 transition-all"
+                     style={{ width: `${continueSession.completion_percentage}%` }}
+                   />
+                 </div>
+                 <span className="text-sm text-blue-100">
+                   {continueSession.completion_percentage}% complete
+                 </span>
+               </div>
+             </div>
+             
+             <button
+               onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`)}
+               className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
+             >
+               Continue Session
+               <ArrowRight className="w-6 h-6 ml-2" />
+             </button>
+           </div>
+         </div>
+       )}
 
 
        {/* Quick Actions */}
