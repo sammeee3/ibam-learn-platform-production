@@ -163,6 +163,10 @@ const IBAMDashboard: React.FC = () => {
     completion_percentage: number;
   } | null>(null);
 
+  // Super Admin Check
+  const isSuperAdmin = userProfile?.email === 'sammeee@yahoo.com' || 
+                       userProfile?.email === 'sj614+superadmin@proton.me';
+
   // Fetch last accessed session
   const fetchLastAccessedSession = async (userId: string) => {
     const { data, error } = await supabase
@@ -621,7 +625,7 @@ const handleLogout = async () => {
                 Continue Your Journey
               </h2>
               <p className="text-blue-100 text-lg">
-                Module {continueSession.module_id}, Session 1
+                Module {continueSession.module_id}, Session {continueSession.session_id}
               </p>
               <div className="flex items-center mt-2">
                 <div className="bg-white/20 rounded-full h-2 w-48 mr-3">
@@ -637,7 +641,7 @@ const handleLogout = async () => {
             </div>
             
             <button
-              onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/1`)}
+              onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`)}
               className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
             >
               Continue Session
@@ -652,33 +656,38 @@ const handleLogout = async () => {
              <Calendar className="w-5 h-5" />
              <span className="text-sm">{new Date().toLocaleDateString()}</span>
              
-             {/* Database Environment Indicator */}
-             <div className="flex items-center space-x-2 bg-white/20 rounded-full px-3 py-1">
-               <div className={`w-2 h-2 rounded-full ${
-                 typeof window !== 'undefined' && (
-                   window.location.hostname.includes('staging') || 
-                   window.location.hostname.includes('ibam-learn-platform-v2.vercel.app')
-                 ) ? 'bg-green-400' : 'bg-blue-400'
-               }`}></div>
-               <span className="text-xs font-medium">
-                 {typeof window !== 'undefined' && (
-                   window.location.hostname.includes('staging') || 
-                   window.location.hostname.includes('ibam-learn-platform-v2.vercel.app')
-                 ) ? 'STAGING' : 'PRODUCTION'}
-               </span>
-             </div>
-             
-             {/* Quick Database Check Link */}
-             <a 
-               href="/debug/database" 
-               className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors"
-               title="View Database Connection Details"
-             >
-               DB Info
-             </a>
+             {/* Developer Info - Only for Super Admins */}
+             {isSuperAdmin && (
+               <>
+                 {/* Database Environment Indicator */}
+                 <div className="flex items-center space-x-2 bg-white/20 rounded-full px-3 py-1">
+                   <div className={`w-2 h-2 rounded-full ${
+                     typeof window !== 'undefined' && (
+                       window.location.hostname.includes('staging') || 
+                       window.location.hostname.includes('ibam-learn-platform-v2.vercel.app')
+                     ) ? 'bg-green-400' : 'bg-blue-400'
+                   }`}></div>
+                   <span className="text-xs font-medium">
+                     {typeof window !== 'undefined' && (
+                       window.location.hostname.includes('staging') || 
+                       window.location.hostname.includes('ibam-learn-platform-v2.vercel.app')
+                     ) ? 'STAGING' : 'PRODUCTION'}
+                   </span>
+                 </div>
+                 
+                 {/* Quick Database Check Link */}
+                 <a 
+                   href="/debug/database" 
+                   className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors"
+                   title="View Database Connection Details"
+                 >
+                   DB Info
+                 </a>
+               </>
+             )}
 
              {/* Admin Analytics Dashboard Link - Only for super admins */}
-             {userProfile?.email === 'sammeee@yahoo.com' && (
+             {isSuperAdmin && (
                <a 
                  href="/admin/analytics" 
                  className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-bold transition-colors"

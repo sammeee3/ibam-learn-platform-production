@@ -347,7 +347,7 @@ export default function SafeFeedbackWidget() {
           zIndex: 9999
         }}
       >
-        💬 BETA
+        💬 Help & Feedback
       </div>
 
       {/* Form Modal */}
@@ -377,7 +377,10 @@ export default function SafeFeedbackWidget() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{margin: '0 0 16px 0', color: '#333'}}>Beta Feedback</h3>
+            <h3 style={{margin: '0 0 16px 0', color: '#333'}}>Help & Feedback</h3>
+            <p style={{fontSize: '12px', color: '#666', marginBottom: '12px'}}>
+              Questions? Contact Jeffrey at jsamuelson@ibam.org
+            </p>
             
             {/* Bug/Feature Buttons */}
             <div style={{marginBottom: '16px'}}>
