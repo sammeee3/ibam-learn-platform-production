@@ -57,14 +57,23 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Build Process**: Must show "Route (app)" not "Route (pages)" in build output
 
 ## CURRENT STATUS: ✅ OPERATIONAL & SECURE - DUAL REPOSITORY ARCHITECTURE
-**Last Verified**: Aug 20, 2025 9:30 AM
+**Last Verified**: Aug 25, 2025
 **Security Status**: A-Grade (Enterprise Ready)
 **Last Security Audit**: Aug 20, 2025 - All critical vulnerabilities resolved
-- ✅ **Production URL**: https://ibam-learn-platform-production-v3-qvh1exnnp.vercel.app
-- ✅ **Staging URL**: https://ibam-learn-platform-staging-v2-om0npwraj-ibam-projects.vercel.app
+
+### 🌐 PERMANENT URLs (USE THESE FOR CONFIGURATIONS):
+- ✅ **Production URL (Primary)**: https://ibam-learn-platform-production-v3.vercel.app
+- ✅ **Production URL (Deployment)**: https://ibam-learn-platform-production-v3-qvh1exnnp.vercel.app
+- ✅ **Staging URL (Primary)**: https://ibam-learn-platform-staging-v2.vercel.app  
+- ✅ **Staging URL (Deployment)**: https://ibam-learn-platform-staging-v2-om0npwraj-ibam-projects.vercel.app
+
+### 📊 ANALYTICS & TRACKING:
+- **Hotjar Installation**: Use PRODUCTION PRIMARY URL (ibam-learn-platform-production-v3.vercel.app)
+- **Beta Testing**: Track real users on production, not staging
+- **Analytics Dashboard**: Available at /admin/analytics
 - ✅ **PERFECT DEPLOYMENT ISOLATION**: Staging and production completely isolated via separate repositories
 - ✅ **Staging Repository**: ibam-learn-platform-staging (clean, daily development workspace)
-- ✅ **Production Repository**: ibam-learn-platform-v2 (complete archive with all history)
+- ✅ **Production Repository**: ibam-learn-platform-production (complete archive with all history)
 - ✅ **System.io Integration**: Working on both staging and production with correct database separation
 - ✅ **User Identification**: Dashboard shows user names and dropdown works
 - ✅ **All API Routes**: Working correctly with App Router
@@ -175,8 +184,8 @@ This is a Next.js-based learning platform for IBAM (International Business and M
   - Database: Staging (yhfxxouswctucxvfetcq)
   - Purpose: Daily development workspace
 
-- **Production Repository**: `/Users/jeffreysamuelson/Desktop/ibam-learn-platform-v2` (821.7 MB)
-  - GitHub: https://github.com/sammeee3/ibam-learn-platform-v2  
+- **Production Repository**: `/Users/jeffreysamuelson/Desktop/ibam-learn-platform-production` (821.7 MB)
+  - GitHub: https://github.com/sammeee3/ibam-learn-platform-production  
   - Vercel Project: ibam-learn-platform-production-v3
   - Database: Production (tutrnikhomrgcpkzszvq)
   - Purpose: Complete project archive and production releases
@@ -202,7 +211,7 @@ git push production main  # → Auto-deploys PRODUCTION only
 
 4. **Sync Production Repository (optional)**
 ```bash
-cd /Users/jeffreysamuelson/Desktop/ibam-learn-platform-v2
+cd /Users/jeffreysamuelson/Desktop/ibam-learn-platform-production
 git pull origin main  # Gets latest promoted changes
 ```
 

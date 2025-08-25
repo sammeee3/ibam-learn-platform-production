@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { progressTracker } from '../../../lib/services/progressTracking';
 
 export default function SafeFeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +12,58 @@ export default function SafeFeedbackWidget() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [showMicroSurvey, setShowMicroSurvey] = useState(false);
+  const [sessionRating, setSessionRating] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pageContext, setPageContext] = useState<any>({});
+  const [timeOnPage, setTimeOnPage] = useState(0);
+  const pageLoadTime = useRef(Date.now());
+
+  useEffect(() => {
+    // Track page context
+    const extractPageContext = () => {
+      const path = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
+      
+      // Extract module and session from URL
+      const moduleMatch = path.match(/modules\/(\d+)/);
+      const sessionMatch = path.match(/sessions\/(\d+)/);
+      
+      setPageContext({
+        url: window.location.href,
+        path: path,
+        moduleId: moduleMatch ? parseInt(moduleMatch[1]) : null,
+        sessionId: sessionMatch ? parseInt(sessionMatch[1]) : null,
+        pageName: document.title,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString(),
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      });
+    };
+
+    extractPageContext();
+    
+    // Track time on page
+    const timer = setInterval(() => {
+      setTimeOnPage(Math.floor((Date.now() - pageLoadTime.current) / 1000));
+    }, 1000);
+
+    // Check if we should show micro survey (after session completion)
+    const checkForMicroSurvey = () => {
+      const shouldShow = sessionStorage.getItem('show_micro_survey');
+      if (shouldShow === 'true') {
+        setTimeout(() => setShowMicroSurvey(true), 2000);
+        sessionStorage.removeItem('show_micro_survey');
+      }
+    };
+    
+    checkForMicroSurvey();
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleScreenshotInstructions = () => {
     setShowInstructions(!showInstructions);
@@ -99,6 +151,7 @@ export default function SafeFeedbackWidget() {
         });
       }
 
+      // Enhanced feedback data with context
       const feedbackData = {
         type: feedbackType,
         description,
@@ -108,8 +161,33 @@ export default function SafeFeedbackWidget() {
         screenshot: screenshotData,
         screenshotName: screenshot?.name || null,
         screenshotSize: screenshot?.size || null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        // New context fields
+        context: {
+          ...pageContext,
+          timeOnPageSeconds: timeOnPage,
+          scrollDepth: Math.round((window.scrollY / document.body.scrollHeight) * 100),
+          sessionRating: sessionRating || null
+        }
       };
+
+      // Log the feedback activity
+      const userId = localStorage.getItem('user_id');
+      if (userId) {
+        await progressTracker.logActivity({
+          userId,
+          activityType: 'feedback_submitted',
+          activityData: {
+            type: feedbackType,
+            hasScreenshot: !!screenshot,
+            rating: sessionRating
+          },
+          moduleId: pageContext.moduleId,
+          sessionId: pageContext.sessionId,
+          pageUrl: window.location.href,
+          timeOnPageSeconds: timeOnPage
+        });
+      }
 
       const response = await fetch('/api/feedback/submit', {
         method: 'POST',
@@ -138,8 +216,122 @@ export default function SafeFeedbackWidget() {
     }
   };
 
+  const handleMicroSurveySubmit = async (rating: number) => {
+    setSessionRating(rating);
+    
+    // Log the rating
+    const userId = localStorage.getItem('user_id');
+    if (userId) {
+      await progressTracker.logActivity({
+        userId,
+        activityType: 'session_rated',
+        activityData: { rating },
+        moduleId: pageContext.moduleId,
+        sessionId: pageContext.sessionId,
+        pageUrl: window.location.href
+      });
+    }
+
+    // Save rating to feedback API
+    await fetch('/api/feedback/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'rating',
+        description: `Session rated ${rating}/5 stars`,
+        userEmail: localStorage.getItem('user_email') || null,
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+        context: {
+          ...pageContext,
+          rating,
+          timeOnPageSeconds: timeOnPage
+        }
+      })
+    });
+
+    setShowMicroSurvey(false);
+  };
+
   return (
     <>
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+      
+      {/* Micro Survey Popup */}
+      {showMicroSurvey && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '80px',
+            right: '20px',
+            background: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+            zIndex: 9998,
+            maxWidth: '300px',
+            animation: 'slideIn 0.3s ease-out'
+          }}
+        >
+          <button
+            onClick={() => setShowMicroSurvey(false)}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              background: 'none',
+              border: 'none',
+              fontSize: '20px',
+              cursor: 'pointer',
+              color: '#999'
+            }}
+          >
+            ×
+          </button>
+          
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#333' }}>
+            How valuable was this session?
+          </h4>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() => handleMicroSurveySubmit(star)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: sessionRating >= star ? '#FFD700' : '#DDD',
+                  transition: 'color 0.2s',
+                  transform: 'scale(1)',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                ⭐
+              </button>
+            ))}
+          </div>
+          
+          <p style={{ fontSize: '12px', color: '#666', marginTop: '12px', textAlign: 'center' }}>
+            Your feedback helps us improve!
+          </p>
+        </div>
+      )}
+
       {/* Purple Button */}
       <div 
         onClick={() => setIsOpen(true)}

@@ -1,4 +1,5 @@
 import './globals.css'
+import HotjarScript from './components/analytics/HotjarScript'
 
 export default function RootLayout({
   children,
@@ -7,7 +8,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <HotjarScript />
+        {children}
+      </body>
     </html>
   )
 }

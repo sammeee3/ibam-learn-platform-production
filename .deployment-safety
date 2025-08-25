@@ -1,0 +1,10 @@
+⚠️ DEPLOYMENT SAFETY REMINDER ⚠️
+==================================
+This is the STAGING repository - Safe for local work
+
+PRODUCTION DEPLOYMENT RULES:
+1. NEVER use 'vercel --prod' from local folders
+2. Environment variables: Update with 'vercel env' ONLY (no deployment needed)
+3. Code changes: Deploy via GitHub push, not local commands
+
+If you see 'vercel --prod' in any instructions, STOP and reconsider!
