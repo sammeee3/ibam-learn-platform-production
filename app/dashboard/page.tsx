@@ -652,7 +652,7 @@ const handleLogout = async () => {
       )}
 
            </div>
-           <div className="hidden sm:flex items-center space-x-4">
+           <div className="hidden sm:flex items-center space-x-4 ml-auto mr-4">
              <span className="text-sm">{new Date().toLocaleDateString()}</span>
              
              {/* Developer Info - Only for Super Admins */}
@@ -673,15 +673,6 @@ const handleLogout = async () => {
                      ) ? 'STAGING' : 'PRODUCTION'}
                    </span>
                  </div>
-                 
-                 {/* Quick Database Check Link */}
-                 <a 
-                   href="/debug/database" 
-                   className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition-colors"
-                   title="View Database Connection Details"
-                 >
-                   DB Info
-                 </a>
                </>
              )}
 
