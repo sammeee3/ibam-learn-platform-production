@@ -653,6 +653,15 @@ const handleLogout = async () => {
                DB Info
              </a>
 
+             {/* Admin Analytics Dashboard Link */}
+             <a 
+               href="/admin/analytics" 
+               className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-bold transition-colors"
+               title="Super Admin Analytics Dashboard"
+             >
+               📊 Analytics
+             </a>
+
              {/* User Profile Dropdown */}
              {userProfile?.email && (
                <div className="relative">
@@ -689,6 +698,12 @@ const handleLogout = async () => {
                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                        >
                          Settings
+                       </a>
+                       <a
+                         href="/admin/analytics"
+                         className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"
+                       >
+                         📊 Analytics Dashboard
                        </a>
                        <button
                          onClick={handleLogout}
