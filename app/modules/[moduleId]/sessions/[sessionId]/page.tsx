@@ -64,6 +64,7 @@ import AIChatInterface from '../../../../components/coaching/AIChatInterface';
 import { calculateReadingTime, parseMainContentIntoChunks, extractKeyPoints } from '../../../../lib/utils';
 import AnonymousSessionSurvey from '../../../../components/feedback/AnonymousSessionSurvey';
 import SafeFeedbackWidget from '../../../../components/feedback/SafeFeedbackWidget';
+import { progressTracker } from '../../../../lib/services/progressTracking';
 import ActionBuilderComponent from '../../../../components/actions/ActionBuilderComponent';
 import EnhancedScriptureReference from '../../../../components/scripture/EnhancedScriptureReference';
 import EnhancedQuizSection from '../../../../components/quiz/EnhancedQuizSection';
@@ -73,6 +74,7 @@ import EnhancedLookingBack from '../../../../components/sections/LookingBack/Enh
 import BeautifulLookingUpSection from '../../../../components/sections/LookingUp/BeautifulLookingUpSection';
 import LookingForwardSection from '../../../../components/sections/LookingForward/LookingForwardSection';
 import BeautifulCaseStudyComponent from '../../../../components/case-study/BeautifulCaseStudyComponent';
+import SessionProgressOverview from '../../../../components/progress/SessionProgressOverview';
 // Real Supabase client
 const supabase = createClientComponentClient();
 
@@ -181,8 +183,18 @@ export default function SessionPage({ params }: SessionPageProps) {
   const [completedSections, setCompletedSections] = useState({
     lookback: false,
     lookup: false,
+    content: false,
+    quiz: false,
     lookforward: false
   });
+  const [sectionProgress, setSectionProgress] = useState({
+    lookback: 0,
+    lookup: 0,
+    content: 0,
+    quiz: 0,
+    lookforward: 0
+  });
+  const [sessionProgressPercent, setSessionProgressPercent] = useState(0);
   
   const [lookingUpProgress, setLookingUpProgress] = useState({
     wealth: false,
@@ -383,6 +395,39 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
 
         console.log('✅ Session data loaded:', data);
         setSessionData(data);
+        
+        // Load saved progress from database
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const progress = await progressTracker.getSessionProgress(
+              user.id,
+              parseInt(moduleId),
+              parseInt(sessionId)
+            );
+            
+            if (progress) {
+              // Restore completed sections
+              const completed = progress.sections_completed || {};
+              setCompletedSections(prev => ({
+                ...prev,
+                ...completed
+              }));
+              
+              // Restore section progress  
+              const sectionProg = progress.section_progress || {};
+              setSectionProgress(prev => ({
+                ...prev,
+                ...sectionProg
+              }));
+              
+              // Restore overall progress
+              setSessionProgressPercent(progress.completion_percentage || 0);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading progress:', error);
+        }
       } catch (err) {
         console.error('Fetch error:', err);
         setError('Failed to connect to database');
@@ -479,12 +524,55 @@ const navigateTo = (path: string) => {
   window.location.href = path;
 };
 
-  // Handle section completion
-  const markSectionComplete = (section: string) => {
+  // Handle section completion with database persistence
+  const markSectionComplete = async (section: string) => {
+    // Update local state immediately for responsive UI
     setCompletedSections(prev => ({
       ...prev,
       [section]: true
     }));
+    
+    // Update section progress
+    setSectionProgress(prev => ({
+      ...prev,
+      [section]: 100
+    }));
+    
+    // Calculate overall session progress
+    const sections = ['lookback', 'lookup', 'content', 'quiz', 'lookforward'];
+    const completedCount = sections.filter(s => 
+      s === section || completedSections[s as keyof typeof completedSections]
+    ).length;
+    const newProgress = Math.round((completedCount / sections.length) * 100);
+    setSessionProgressPercent(newProgress);
+    
+    // Save to database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await progressTracker.updateProgress(
+          user.id,
+          parseInt(moduleId),
+          parseInt(sessionId),
+          newProgress,
+          section
+        );
+        
+        // Track in analytics
+        await progressTracker.trackActivity(
+          user.id,
+          'section_completed',
+          {
+            module_id: moduleId,
+            session_id: sessionId,
+            section: section,
+            progress: newProgress
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
   };
 
   const markLookingUpComplete = (subsection: string) => {
@@ -600,6 +688,13 @@ const navigateTo = (path: string) => {
           </div>
         </div>
 
+        {/* Session Progress Overview */}
+        <SessionProgressOverview 
+          completedSections={completedSections}
+          sectionProgress={sectionProgress}
+          sessionProgressPercent={sessionProgressPercent}
+          currentSection={expandedSection || undefined}
+        />
 
         {/* Three main sections */}
         <div className="space-y-4 mb-8">
