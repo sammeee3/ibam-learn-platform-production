@@ -1,1 +1,16 @@
-{"projectId":"prj_OqxQUbpAdMmK4QY0rIbCOYwZ0xtZ","orgId":"team_Zjz0rvEwzTuQm7mcAiTxlyzf","projectName":"ibam-learn-platform-staging"}
+{
+  "projectId": "prj_OqxQUbpAdMmK4QY0rIbCOYwZ0xtZ",
+  "orgId": "team_Zjz0rvEwzTuQm7mcAiTxlyzf",
+  "projectName": "ibam-learn-platform-staging",
+  "settings": {
+    "createdAt": 1755653262361,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  }
+}
