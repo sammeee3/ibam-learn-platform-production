@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
 import { MEMBERSHIP_CONFIG, MembershipUtils } from '@/lib/membership-config'
 import { addWebhookLog } from '@/lib/webhook-logger'
+import { sendWelcomeEmail } from '@/lib/email-service'
 import crypto from 'crypto'
 
 const webhookLogs: any[] = []
@@ -236,6 +237,22 @@ async function createSecureUserAccount(courseAssignment: any) {
     console.log(`🎯 Secure account setup complete for: ${email}`)
     console.log(`🔑 Magic token generated: ${magicToken.substring(0, 8)}...`)
     console.log(`⏰ Token expires: ${tokenExpiry.toISOString()}`)
+    
+    // Send welcome email with magic link
+    const magicLinkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://ibam-learn-platform-staging-v2.vercel.app'}/auth/magic-login?token=${magicToken}&email=${encodeURIComponent(email)}`
+    
+    try {
+      const emailResult = await sendWelcomeEmail(email, name, magicLinkUrl)
+      if (emailResult.success) {
+        console.log(`📧 Welcome email sent to: ${email}`)
+      } else {
+        console.error(`📧 Failed to send welcome email:`, emailResult.error)
+        // Don't fail the whole process if email fails - user can still login
+      }
+    } catch (emailError) {
+      console.error(`📧 Email service error:`, emailError)
+      // Continue - email is not critical for account creation
+    }
     
     return true
     
