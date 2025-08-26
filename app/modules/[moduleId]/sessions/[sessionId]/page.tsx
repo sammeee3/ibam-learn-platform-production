@@ -64,7 +64,7 @@ import AIChatInterface from '../../../../components/coaching/AIChatInterface';
 import { calculateReadingTime, parseMainContentIntoChunks, extractKeyPoints } from '../../../../lib/utils';
 import AnonymousSessionSurvey from '../../../../components/feedback/AnonymousSessionSurvey';
 import SafeFeedbackWidget from '../../../../components/feedback/SafeFeedbackWidget';
-import { progressTracker } from '../../../../lib/services/progressTracking';
+import { progressTracker } from '../../../../../lib/services/progressTracking';
 import ActionBuilderComponent from '../../../../components/actions/ActionBuilderComponent';
 import EnhancedScriptureReference from '../../../../components/scripture/EnhancedScriptureReference';
 import EnhancedQuizSection from '../../../../components/quiz/EnhancedQuizSection';
@@ -400,10 +400,12 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            const progress = await progressTracker.getSessionProgress(
-              user.id,
-              parseInt(moduleId),
-              parseInt(sessionId)
+            // Get user's overall progress
+            const progressData = await progressTracker.getUserProgress(user.id);
+            
+            // Find progress for this specific session
+            const progress = progressData?.sessions?.find(
+              (s: any) => s.module_id === parseInt(moduleId) && s.session_id === parseInt(sessionId)
             );
             
             if (progress) {
@@ -550,25 +552,29 @@ const navigateTo = (path: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await progressTracker.updateProgress(
-          user.id,
-          parseInt(moduleId),
-          parseInt(sessionId),
-          newProgress,
-          section
-        );
+        // Update progress using existing method
+        const sectionsCompleted: any = {};
+        sectionsCompleted[section] = true;
         
-        // Track in analytics
-        await progressTracker.trackActivity(
-          user.id,
-          'section_completed',
-          {
-            module_id: moduleId,
-            session_id: sessionId,
+        await progressTracker.updateSessionProgress({
+          userId: user.id,
+          moduleId: parseInt(moduleId),
+          sessionId: parseInt(sessionId),
+          section: section,
+          sectionCompleted: sectionsCompleted as any
+        });
+        
+        // Track activity using existing method
+        await progressTracker.logActivity({
+          userId: user.id,
+          activityType: 'section_completed',
+          moduleId: parseInt(moduleId),
+          sessionId: parseInt(sessionId),
+          activityData: {
             section: section,
             progress: newProgress
           }
-        );
+        });
       }
     } catch (error) {
       console.error('Error saving progress:', error);
