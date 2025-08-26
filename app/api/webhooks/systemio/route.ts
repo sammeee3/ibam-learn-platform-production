@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
 import { MEMBERSHIP_CONFIG, MembershipUtils } from '@/lib/membership-config'
-import { logWebhook } from '@/app/api/admin/webhook-logs/route'
+import { addWebhookLog } from '@/lib/webhook-logger'
 import crypto from 'crypto'
 
 const webhookLogs: any[] = []
@@ -393,7 +393,7 @@ async function handleWebhook(request: NextRequest) {
     }
     
     // Log to webhook monitor
-    await logWebhook(logEntry)
+    await addWebhookLog(logEntry)
     
     // Also keep local log
     webhookLogs.push(logEntry)
@@ -420,7 +420,7 @@ async function handleWebhook(request: NextRequest) {
     console.error('❌ Webhook Processing Error:', error)
     
     // Log error to webhook monitor
-    await logWebhook({
+    await addWebhookLog({
       timestamp,
       event_type: 'ERROR',
       email: 'N/A',
