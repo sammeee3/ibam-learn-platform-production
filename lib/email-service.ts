@@ -90,7 +90,7 @@ export async function sendWelcomeEmail(email: string, name: string, magicLink: s
           </p>
           
           <p style="margin-top: 30px;">
-            <strong>Important:</strong> This link expires in 24 hours for security reasons. 
+            <strong>Important:</strong> This link expires in 7 days for security reasons. 
             If it expires, simply request a new one from the login page.
           </p>
           

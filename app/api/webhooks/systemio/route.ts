@@ -123,9 +123,9 @@ async function createSecureUserAccount(courseAssignment: any) {
   try {
     console.log(`🔐 Creating secure account for: ${email}`)
     
-    // Generate magic token with expiry (24 hours)
+    // Generate magic token with expiry (7 days)
     const magicToken = generateMagicToken()
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    const tokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
     
     // Step 1: Check if user already exists in auth.users
     const { data: authUsers } = await supabase.auth.admin.listUsers()
