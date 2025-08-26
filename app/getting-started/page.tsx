@@ -77,31 +77,31 @@ export default function GettingStartedPage() {
           </h3>
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {/* Look Back */}
-            <div className="bg-orange-50 rounded-lg p-6">
-              <div className="text-3xl mb-3">👀</div>
-              <h4 className="font-bold text-lg mb-2">Look Back</h4>
-              <p className="text-sm text-gray-700">
+            {/* Look Back - Using session blue color */}
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-lg transform hover:scale-105 transition-transform">
+              <div className="text-3xl mb-3">⏮️</div>
+              <h4 className="font-bold text-xl mb-2">Look Back</h4>
+              <p className="text-sm text-blue-50">
                 Review your actions and progress. What worked? What didn't? 
                 Just like Jesus asked His disciples "What happened?" after they returned.
               </p>
             </div>
 
-            {/* Look Up */}
-            <div className="bg-blue-50 rounded-lg p-6">
+            {/* Look Up - Using session green color */}
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white shadow-lg transform hover:scale-105 transition-transform">
               <div className="text-3xl mb-3">🙏</div>
-              <h4 className="font-bold text-lg mb-2">Look Up</h4>
-              <p className="text-sm text-gray-700">
+              <h4 className="font-bold text-xl mb-2">Look Up</h4>
+              <p className="text-sm text-green-50">
                 Connect with God's Word and wisdom. Every business decision is grounded 
                 in Scripture and prayer, seeking His guidance first.
               </p>
             </div>
 
-            {/* Look Forward */}
-            <div className="bg-green-50 rounded-lg p-6">
-              <div className="text-3xl mb-3">🚀</div>
-              <h4 className="font-bold text-lg mb-2">Look Forward</h4>
-              <p className="text-sm text-gray-700">
+            {/* Look Forward - Using session orange color */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white shadow-lg transform hover:scale-105 transition-transform">
+              <div className="text-3xl mb-3">🎯</div>
+              <h4 className="font-bold text-xl mb-2">Look Forward</h4>
+              <p className="text-sm text-orange-50">
                 Plan concrete actions based on what you've learned. 
                 Faith without works is dead - we learn by doing!
               </p>
@@ -125,43 +125,43 @@ export default function GettingStartedPage() {
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-            {/* Individual Path */}
+            {/* Individual Path - Purple/Blue gradient */}
             <button
               onClick={() => setSelectedPath('individual')}
-              className={`p-6 rounded-lg border-2 transition-all ${
+              className={`p-6 rounded-lg border-2 transition-all transform hover:scale-105 ${
                 selectedPath === 'individual' 
-                  ? 'border-purple-500 bg-purple-50' 
-                  : 'border-gray-200 hover:border-purple-300'
+                  ? 'border-purple-500 bg-gradient-to-br from-purple-500 to-blue-600 text-white shadow-lg' 
+                  : 'border-gray-200 hover:border-purple-300 hover:shadow-md bg-white'
               }`}
             >
               <div className="text-3xl mb-3">👤</div>
-              <h4 className="font-bold text-lg mb-2">Individual Study</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className={`font-bold text-lg mb-2 ${selectedPath === 'individual' ? 'text-white' : 'text-gray-800'}`}>Individual Study</h4>
+              <p className={`text-sm ${selectedPath === 'individual' ? 'text-purple-50' : 'text-gray-600'}`}>
                 Learn at your own pace, on your own schedule. 
                 Perfect for busy entrepreneurs.
               </p>
               {selectedPath === 'individual' && (
-                <CheckCircle className="w-6 h-6 text-purple-500 mt-3 mx-auto" />
+                <CheckCircle className="w-6 h-6 text-white mt-3 mx-auto" />
               )}
             </button>
 
-            {/* Group Path */}
+            {/* Group Path - Green gradient */}
             <button
               onClick={() => setSelectedPath('group')}
-              className={`p-6 rounded-lg border-2 transition-all ${
+              className={`p-6 rounded-lg border-2 transition-all transform hover:scale-105 ${
                 selectedPath === 'group' 
-                  ? 'border-purple-500 bg-purple-50' 
-                  : 'border-gray-200 hover:border-purple-300'
+                  ? 'border-green-500 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg' 
+                  : 'border-gray-200 hover:border-green-300 hover:shadow-md bg-white'
               }`}
             >
               <div className="text-3xl mb-3">👥</div>
-              <h4 className="font-bold text-lg mb-2">Group Study</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className={`font-bold text-lg mb-2 ${selectedPath === 'group' ? 'text-white' : 'text-gray-800'}`}>Group Study</h4>
+              <p className={`text-sm ${selectedPath === 'group' ? 'text-green-50' : 'text-gray-600'}`}>
                 Learn with others, share insights, and build accountability. 
                 Iron sharpens iron!
               </p>
               {selectedPath === 'group' && (
-                <CheckCircle className="w-6 h-6 text-purple-500 mt-3 mx-auto" />
+                <CheckCircle className="w-6 h-6 text-white mt-3 mx-auto" />
               )}
             </button>
           </div>
@@ -174,53 +174,53 @@ export default function GettingStartedPage() {
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-            {/* Fast Track */}
+            {/* Fast Track - Orange theme */}
             <button
               onClick={() => setSelectedPace('fast')}
-              className={`p-6 rounded-lg border-2 transition-all ${
+              className={`p-6 rounded-lg border-2 transition-all transform hover:scale-105 ${
                 selectedPace === 'fast' 
-                  ? 'border-green-500 bg-green-50' 
-                  : 'border-gray-200 hover:border-green-300'
+                  ? 'border-orange-500 bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg' 
+                  : 'border-gray-200 hover:border-orange-300 hover:shadow-md bg-white'
               }`}
             >
-              <Zap className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <h4 className="font-bold text-lg mb-2">Fast Track (5 weeks)</h4>
-              <p className="text-sm text-gray-600">
+              <Zap className={`w-12 h-12 mx-auto mb-3 ${selectedPace === 'fast' ? 'text-white' : 'text-orange-500'}`} />
+              <h4 className={`font-bold text-lg mb-2 ${selectedPace === 'fast' ? 'text-white' : 'text-gray-800'}`}>Fast Track (5 weeks)</h4>
+              <p className={`text-sm ${selectedPace === 'fast' ? 'text-orange-50' : 'text-gray-600'}`}>
                 Complete 1 module per week. For motivated self-starters 
                 ready to transform quickly.
               </p>
-              <ul className="text-xs text-gray-500 mt-3 space-y-1">
+              <ul className={`text-xs mt-3 space-y-1 ${selectedPace === 'fast' ? 'text-orange-100' : 'text-gray-500'}`}>
                 <li>• 1 hour daily commitment</li>
                 <li>• Intensive learning</li>
                 <li>• Quick implementation</li>
               </ul>
               {selectedPace === 'fast' && (
-                <CheckCircle className="w-6 h-6 text-green-500 mt-3 mx-auto" />
+                <CheckCircle className="w-6 h-6 text-white mt-3 mx-auto" />
               )}
             </button>
 
-            {/* Steady Pace */}
+            {/* Steady Pace - Blue theme */}
             <button
               onClick={() => setSelectedPace('slow')}
-              className={`p-6 rounded-lg border-2 transition-all ${
+              className={`p-6 rounded-lg border-2 transition-all transform hover:scale-105 ${
                 selectedPace === 'slow' 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-blue-300'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg' 
+                  : 'border-gray-200 hover:border-blue-300 hover:shadow-md bg-white'
               }`}
             >
-              <BookOpen className="w-12 h-12 text-blue-500 mx-auto mb-3" />
-              <h4 className="font-bold text-lg mb-2">Steady Pace (10 weeks)</h4>
-              <p className="text-sm text-gray-600">
+              <BookOpen className={`w-12 h-12 mx-auto mb-3 ${selectedPace === 'slow' ? 'text-white' : 'text-blue-500'}`} />
+              <h4 className={`font-bold text-lg mb-2 ${selectedPace === 'slow' ? 'text-white' : 'text-gray-800'}`}>Steady Pace (10 weeks)</h4>
+              <p className={`text-sm ${selectedPace === 'slow' ? 'text-blue-50' : 'text-gray-600'}`}>
                 Complete 1 module every 2 weeks. Time to reflect, apply, 
                 and integrate deeply.
               </p>
-              <ul className="text-xs text-gray-500 mt-3 space-y-1">
+              <ul className={`text-xs mt-3 space-y-1 ${selectedPace === 'slow' ? 'text-blue-100' : 'text-gray-500'}`}>
                 <li>• 30 minutes daily</li>
                 <li>• Deep reflection</li>
                 <li>• Thorough application</li>
               </ul>
               {selectedPace === 'slow' && (
-                <CheckCircle className="w-6 h-6 text-blue-500 mt-3 mx-auto" />
+                <CheckCircle className="w-6 h-6 text-white mt-3 mx-auto" />
               )}
             </button>
           </div>
@@ -233,13 +233,13 @@ export default function GettingStartedPage() {
           </h3>
 
           <div className="space-y-6">
-            {/* Module Structure */}
-            <div className="flex items-start">
-              <div className="bg-purple-100 rounded-full p-3 mr-4">
-                <span className="text-xl font-bold text-purple-600">5</span>
+            {/* Module Structure - Purple gradient */}
+            <div className="flex items-start p-4 rounded-lg hover:bg-purple-50 transition-colors">
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-4 mr-4 shadow-md">
+                <span className="text-2xl font-bold text-white">5</span>
               </div>
               <div>
-                <h4 className="font-bold text-lg mb-1">Modules</h4>
+                <h4 className="font-bold text-lg mb-1 text-gray-800">Modules</h4>
                 <p className="text-gray-600">
                   From foundational principles to advanced business planning. 
                   Each module builds on the previous one.
@@ -247,13 +247,13 @@ export default function GettingStartedPage() {
               </div>
             </div>
 
-            {/* Session Structure */}
-            <div className="flex items-start">
-              <div className="bg-blue-100 rounded-full p-3 mr-4">
-                <span className="text-xl font-bold text-blue-600">4-5</span>
+            {/* Session Structure - Blue gradient */}
+            <div className="flex items-start p-4 rounded-lg hover:bg-blue-50 transition-colors">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-4 mr-4 shadow-md">
+                <span className="text-xl font-bold text-white">4-5</span>
               </div>
               <div>
-                <h4 className="font-bold text-lg mb-1">Sessions per Module</h4>
+                <h4 className="font-bold text-lg mb-1 text-gray-800">Sessions per Module</h4>
                 <p className="text-gray-600">
                   Each session takes 20-30 minutes. Watch videos, read content, 
                   apply Scripture, and create action plans.
@@ -261,13 +261,13 @@ export default function GettingStartedPage() {
               </div>
             </div>
 
-            {/* Time Commitment */}
-            <div className="flex items-start">
-              <div className="bg-green-100 rounded-full p-3 mr-4">
-                <span className="text-xl font-bold text-green-600">20</span>
+            {/* Time Commitment - Orange gradient */}
+            <div className="flex items-start p-4 rounded-lg hover:bg-orange-50 transition-colors">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 mr-4 shadow-md">
+                <span className="text-2xl font-bold text-white">20</span>
               </div>
               <div>
-                <h4 className="font-bold text-lg mb-1">Minutes per Session</h4>
+                <h4 className="font-bold text-lg mb-1 text-gray-800">Minutes per Session</h4>
                 <p className="text-gray-600">
                   Short enough to fit in your day, deep enough to transform your business. 
                   Plus time for prayer and action planning.
