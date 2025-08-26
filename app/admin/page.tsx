@@ -37,54 +37,54 @@ export default function SuperAdminDashboard() {
       title: '👥 User Management',
       description: 'Add users, manage accounts, view activity',
       items: [
-        { name: 'Quick Add User', href: '/admin/quick-add', icon: '➕', color: 'bg-green-500' },
-        { name: 'User List', href: '/admin/users', icon: '📋', color: 'bg-blue-500' },
-        { name: 'Activity Log', href: '/admin/activity', icon: '📊', color: 'bg-purple-500' },
+        { name: 'Quick Add User', href: '/admin/quick-add', icon: '➕', color: 'bg-green-500', active: true },
+        { name: 'User List', href: '#', icon: '📋', color: 'bg-blue-500', active: false },
+        { name: 'Activity Log', href: '#', icon: '📊', color: 'bg-purple-500', active: false },
       ]
     },
     {
       title: '📈 Analytics & Reports',
       description: 'View metrics, conversion funnels, engagement',
       items: [
-        { name: 'Analytics Dashboard', href: '/admin/analytics', icon: '📊', color: 'bg-indigo-500' },
-        { name: 'Conversion Funnel', href: '/admin/funnel', icon: '📉', color: 'bg-pink-500' },
-        { name: 'Revenue Report', href: '/admin/revenue', icon: '💰', color: 'bg-yellow-500' },
+        { name: 'Analytics Dashboard', href: '/admin/analytics', icon: '📊', color: 'bg-indigo-500', active: true },
+        { name: 'Conversion Funnel', href: '#', icon: '📉', color: 'bg-pink-500', active: false },
+        { name: 'Revenue Report', href: '#', icon: '💰', color: 'bg-yellow-500', active: false },
       ]
     },
     {
       title: '🎓 Course Management',
       description: 'Manage modules, sessions, content',
       items: [
-        { name: 'Module Editor', href: '/admin/modules', icon: '📚', color: 'bg-red-500' },
-        { name: 'Content Library', href: '/admin/content', icon: '📝', color: 'bg-orange-500' },
-        { name: 'Assessment Results', href: '/admin/assessments', icon: '✅', color: 'bg-teal-500' },
+        { name: 'Module Editor', href: '#', icon: '📚', color: 'bg-red-500', active: false },
+        { name: 'Content Library', href: '#', icon: '📝', color: 'bg-orange-500', active: false },
+        { name: 'Assessment Results', href: '#', icon: '✅', color: 'bg-teal-500', active: false },
       ]
     },
     {
       title: '💳 Membership & Billing',
       description: 'Manage subscriptions, webhooks, pricing',
       items: [
-        { name: 'Membership Tiers', href: '/admin/membership', icon: '🏆', color: 'bg-amber-500' },
-        { name: 'Webhook Monitor', href: '/admin/webhooks', icon: '🔗', color: 'bg-cyan-500' },
-        { name: 'Pricing Config', href: '/admin/pricing', icon: '💵', color: 'bg-emerald-500' },
+        { name: 'Membership Tiers', href: '#', icon: '🏆', color: 'bg-amber-500', active: false },
+        { name: 'Webhook Monitor', href: '/admin/webhooks', icon: '🔗', color: 'bg-cyan-500', active: true },
+        { name: 'Pricing Config', href: '#', icon: '💵', color: 'bg-emerald-500', active: false },
       ]
     },
     {
       title: '⚙️ System & Security',
       description: 'System health, security logs, configurations',
       items: [
-        { name: 'Security Monitor', href: '/admin/security', icon: '🔒', color: 'bg-gray-600' },
-        { name: 'System Health', href: '/admin/health', icon: '🏥', color: 'bg-lime-500' },
-        { name: 'Database Tools', href: '/admin/database', icon: '💾', color: 'bg-slate-600' },
+        { name: 'Security Monitor', href: '#', icon: '🔒', color: 'bg-gray-600', active: false },
+        { name: 'System Health', href: '#', icon: '🏥', color: 'bg-lime-500', active: false },
+        { name: 'Database Tools', href: '#', icon: '💾', color: 'bg-slate-600', active: false },
       ]
     },
     {
       title: '📧 Communications',
       description: 'Email campaigns, notifications, announcements',
       items: [
-        { name: 'Send Broadcast', href: '/admin/broadcast', icon: '📢', color: 'bg-violet-500' },
-        { name: 'Email Templates', href: '/admin/templates', icon: '📨', color: 'bg-fuchsia-500' },
-        { name: 'Notification Center', href: '/admin/notifications', icon: '🔔', color: 'bg-rose-500' },
+        { name: 'Send Broadcast', href: '#', icon: '📢', color: 'bg-violet-500', active: false },
+        { name: 'Email Templates', href: '#', icon: '📨', color: 'bg-fuchsia-500', active: false },
+        { name: 'Notification Center', href: '#', icon: '🔔', color: 'bg-rose-500', active: false },
       ]
     }
   ]
@@ -167,12 +167,12 @@ export default function SuperAdminDashboard() {
             >
               ➕ Add User
             </Link>
-            <Link
-              href="/admin/broadcast"
-              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
+            <button
+              disabled
+              className="bg-white/70 text-blue-400 px-6 py-3 rounded-lg font-semibold cursor-not-allowed shadow-md opacity-75"
             >
-              📢 Send Broadcast
-            </Link>
+              📢 Send Broadcast (Soon)
+            </button>
             <Link
               href="/admin/analytics"
               className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
@@ -185,12 +185,12 @@ export default function SuperAdminDashboard() {
             >
               🔗 Check Webhooks
             </Link>
-            <Link
-              href="/admin/security"
-              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
+            <button
+              disabled
+              className="bg-white/70 text-blue-400 px-6 py-3 rounded-lg font-semibold cursor-not-allowed shadow-md opacity-75"
             >
-              🔒 Security Status
-            </Link>
+              🔒 Security Status (Soon)
+            </button>
           </div>
         </div>
 
@@ -202,16 +202,29 @@ export default function SuperAdminDashboard() {
               <p className="text-gray-600 text-sm mb-4">{section.description}</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {section.items.map((item, itemIndex) => (
-                  <Link
-                    key={itemIndex}
-                    href={item.href}
-                    className="group flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all"
-                  >
-                    <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center text-white text-xl mb-2 group-hover:scale-110 transition-transform`}>
-                      {item.icon}
+                  item.active ? (
+                    <Link
+                      key={itemIndex}
+                      href={item.href}
+                      className="group flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all"
+                    >
+                      <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center text-white text-xl mb-2 group-hover:scale-110 transition-transform`}>
+                        {item.icon}
+                      </div>
+                      <span className="text-sm text-gray-700 text-center font-medium">{item.name}</span>
+                    </Link>
+                  ) : (
+                    <div
+                      key={itemIndex}
+                      className="flex flex-col items-center p-4 border border-gray-100 rounded-lg bg-gray-50 opacity-60 cursor-not-allowed"
+                    >
+                      <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center text-white text-xl mb-2 opacity-50`}>
+                        {item.icon}
+                      </div>
+                      <span className="text-sm text-gray-400 text-center font-medium">{item.name}</span>
+                      <span className="text-xs text-gray-400 mt-1">Coming Soon</span>
                     </div>
-                    <span className="text-sm text-gray-700 text-center font-medium">{item.name}</span>
-                  </Link>
+                  )
                 ))}
               </div>
             </div>

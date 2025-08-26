@@ -46,21 +46,58 @@ export default function WebhookMonitor() {
   const sendTestWebhook = async (tagName: string) => {
     setTestStatus('Sending test webhook...')
     try {
+      // Create the payload exactly as System.io sends it
+      const payload = {
+        contact: {
+          id: Date.now(),
+          email: `test-${Date.now()}@example.com`,
+          registeredAt: new Date().toISOString(),
+          locale: "en",
+          sourceURL: null,
+          unsubscribed: false,
+          bounced: false,
+          needsConfirmation: false,
+          fields: [
+            {
+              fieldName: "First name",
+              slug: "first_name",
+              value: "Test"
+            },
+            {
+              fieldName: "Surname",
+              slug: "surname",
+              value: "User"
+            }
+          ],
+          tags: [
+            {
+              id: 991808,
+              name: tagName
+            }
+          ]
+        },
+        tag: {
+          id: 991808,
+          name: tagName
+        }
+      }
+      
+      // Generate the correct HMAC-SHA256 signature for this payload
+      const payloadString = JSON.stringify(payload)
+      const crypto = (await import('crypto')).default
+      const signature = crypto
+        .createHmac('sha256', 'staging-secret-2025-secure')
+        .update(payloadString)
+        .digest('hex')
+      
       const response = await fetch('/api/webhooks/systemio', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Webhook-Secret': 'staging-secret-2025-secure'
+          'X-Webhook-Signature': signature,
+          'X-Webhook-Event': 'CONTACT_TAG_ADDED'
         },
-        body: JSON.stringify({
-          event_type: 'TAG_ADDED',
-          contact: {
-            email: `test-${Date.now()}@example.com`,
-            firstName: 'Test',
-            lastName: 'User',
-            tags: [tagName]
-          }
-        })
+        body: payloadString
       })
       
       const result = await response.json()
