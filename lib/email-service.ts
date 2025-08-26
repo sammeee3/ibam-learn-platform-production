@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend with API key (handle missing key gracefully)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 // Email configuration
 const FROM_EMAIL = process.env.EMAIL_FROM || 'IBAM Learning Platform <noreply@ibam-learn.com>'
@@ -16,6 +16,11 @@ interface SendEmailOptions {
 }
 
 export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions) {
+  if (!resend) {
+    console.warn('⚠️ Resend API key not configured - email not sent')
+    return { success: false, error: 'Email service not configured' }
+  }
+  
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
