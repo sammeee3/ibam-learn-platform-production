@@ -268,10 +268,10 @@ async function handleWebhook(request: NextRequest) {
     const body = await request.text()
     const headers = Object.fromEntries(request.headers.entries())
     
-    // Verify webhook signature
-    const signature = request.headers.get('x-signature') || 
-                      request.headers.get('x-hub-signature-256') || 
-                      request.headers.get('x-systemio-signature')
+    // Verify webhook signature - System.io uses X-Webhook-Signature header
+    const signature = request.headers.get('x-webhook-signature') || 
+                      request.headers.get('x-signature') || 
+                      request.headers.get('x-hub-signature-256')
     
     const webhookSecret = process.env.IBAM_SYSTEME_SECRET
     if (!webhookSecret) {
@@ -286,19 +286,15 @@ async function handleWebhook(request: NextRequest) {
     console.log(`🔐 WEBHOOK SECURITY: Verifying signature from ${clientIP}`)
     console.log(`📝 Received signature: ${signature ? 'Present' : 'Missing'}`)
     
-    // TEMPORARILY DISABLED FOR TESTING - ENABLE IN PRODUCTION
-    const skipSignatureCheck = true // Set to false for production
-    
-    if (!skipSignatureCheck && !verifyWebhookSignature(body, signature, webhookSecret)) {
+    // Verify webhook signature - System.io uses HMAC-SHA256 hex format
+    if (!verifyWebhookSignature(body, signature, webhookSecret)) {
       console.log(`🚫 WEBHOOK BLOCKED: Invalid signature from ${clientIP}`)
+      console.log(`Expected header: X-Webhook-Signature`)
+      console.log(`Received headers:`, Object.keys(headers).filter(h => h.toLowerCase().includes('signature')))
       return NextResponse.json(
         { error: 'Invalid webhook signature' }, 
         { status: 401 }
       )
-    }
-    
-    if (skipSignatureCheck) {
-      console.log(`⚠️ WEBHOOK SECURITY: Signature check SKIPPED for testing`)
     }
     
     console.log(`🔐 WEBHOOK SECURITY: Verified request from ${clientIP}`)
