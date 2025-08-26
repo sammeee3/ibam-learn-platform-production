@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
 import { MEMBERSHIP_CONFIG, MembershipUtils } from '@/lib/membership-config'
+import { logWebhook } from '@/app/api/admin/webhook-logs/route'
 import crypto from 'crypto'
 
 const webhookLogs: any[] = []
@@ -370,20 +371,31 @@ async function handleWebhook(request: NextRequest) {
       }
     }
     
-    // Log the event
+    // Log the event to webhook monitor
+    const membershipDetected = courseAssignment?.membershipTier?.name || null
+    const userCreated = !!courseAssignment
+    
     const logEntry = {
       timestamp,
-      eventType,
+      event_type: eventType || webhookData.event_type || 'UNKNOWN',
       contact: {
         email: contact?.email,
         name: `${contact?.fields?.find((f: any) => f.slug === 'first_name')?.value || ''} ${contact?.fields?.find((f: any) => f.slug === 'surname')?.value || ''}`.trim(),
         tags: contact?.tags?.map((t: any) => t.name) || []
       },
       tag: tag?.name,
+      tags: contact?.tags?.map((t: any) => t.name) || [],
+      membership_detected: membershipDetected,
+      user_created: userCreated,
       courseAssignment,
-      processed: true
+      processed: true,
+      raw_data: webhookData
     }
     
+    // Log to webhook monitor
+    await logWebhook(logEntry)
+    
+    // Also keep local log
     webhookLogs.push(logEntry)
     
     // Keep only last 100 entries
@@ -406,6 +418,19 @@ async function handleWebhook(request: NextRequest) {
     
   } catch (error) {
     console.error('❌ Webhook Processing Error:', error)
+    
+    // Log error to webhook monitor
+    await logWebhook({
+      timestamp,
+      event_type: 'ERROR',
+      email: 'N/A',
+      tags: [],
+      membership_detected: null,
+      user_created: false,
+      error: String(error),
+      success: false,
+      raw_data: { error: String(error) }
+    })
     
     webhookLogs.push({
       timestamp,
