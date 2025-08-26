@@ -74,7 +74,7 @@ import EnhancedLookingBack from '../../../../components/sections/LookingBack/Enh
 import BeautifulLookingUpSection from '../../../../components/sections/LookingUp/BeautifulLookingUpSection';
 import LookingForwardSection from '../../../../components/sections/LookingForward/LookingForwardSection';
 import BeautifulCaseStudyComponent from '../../../../components/case-study/BeautifulCaseStudyComponent';
-import SessionProgressOverview from '../../../../components/progress/SessionProgressOverview';
+import SessionProgressOverviewModern from '../../../../components/progress/SessionProgressOverviewModern';
 // Real Supabase client
 const supabase = createClientComponentClient();
 
@@ -632,70 +632,93 @@ const navigateTo = (path: string) => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Success Status Banner */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 text-center text-sm">
-        🎯 <strong>✅ INITIAL USER FEEDBACK:</strong> Testing LOG IN and test user feedback.| tell Jeff email: jsamuelson@ibam.org
-      </div>
-
-      {/* Header */}
-      <div className="bg-white shadow-lg border-b-4 border-blue-500">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="mb-4">
-            <div className="text-sm text-gray-600 mb-2">
-              Faith-Driven Business Mastery → Module {sessionData.module_id} → Session {sessionData.session_number}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Streamlined Header - Clean and Professional */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                Module {sessionData.module_id} • Session {sessionData.session_number}
+              </span>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{sessionData.title}</h1>
+                <p className="text-sm text-gray-500">{sessionData.subtitle}</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">{sessionData.title}</h1>
-            <p className="text-gray-600 mt-2">{sessionData.subtitle}</p>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500 flex items-center">
+                <Clock className="w-4 h-4 mr-1" />
+                ~45 min
+              </span>
+              <button className="text-gray-500 hover:text-gray-700">
+                <BookOpen className="w-5 h-5" />
+              </button>
+              <button className="text-gray-500 hover:text-gray-700">
+                <User className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-6">
 
-        {/* Navigation Controls */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h3 className="font-bold text-lg mb-4 text-gray-800">🧭 Session Navigation</h3>
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+        {/* Modern Floating Navigation Bar */}
+        <div className="bg-white/80 backdrop-blur-md rounded-full shadow-lg p-2 mb-8 sticky top-4 z-40">
+          <div className="flex items-center justify-between">
             <button 
               onClick={() => navigateToSession('prev')}
               disabled={sessionData.session_number <= 1 && sessionData.module_id <= 1}
-              className="flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous Session
+              <span className="hidden sm:inline">Back</span>
             </button>
             
-            <div className="flex gap-2">
+            <div className="flex items-center space-x-1">
               <button 
                 onClick={() => navigateTo(`/modules/${moduleId}`)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-all flex items-center"
               >
-                📋 Module Overview
+                <BookOpen className="w-4 h-4 mr-2" />
+                <span className="hidden md:inline">Modules</span>
               </button>
+              
+              <button 
+                onClick={() => navigateTo('/business-planner')}
+                className="px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-full transition-all flex items-center"
+              >
+                <Briefcase className="w-4 h-4 mr-2" />
+                <span className="hidden md:inline">Planner</span>
+              </button>
+              
               <button 
                 onClick={() => navigateTo('/dashboard')}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                className="px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-full transition-all flex items-center"
               >
-                🏠 Dashboard
+                <User className="w-4 h-4 mr-2" />
+                <span className="hidden md:inline">Dashboard</span>
               </button>
             </div>
             
             <button 
               onClick={handleNextSession}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105"
             >
-              {sessionData.module_id === 1 && sessionData.session_number === 4 ? 'Module 2 →' :
-               sessionData.module_id === 2 && sessionData.session_number === 4 ? 'Module 3 →' :
-               'Next Session'}
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <span className="hidden sm:inline mr-2">
+                {sessionData.module_id === 1 && sessionData.session_number === 4 ? 'Module 2' :
+                 sessionData.module_id === 2 && sessionData.session_number === 4 ? 'Module 3' :
+                 'Next'}
+              </span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Session Progress Overview */}
-        <SessionProgressOverview 
+        {/* Modern Session Progress Overview */}
+        <SessionProgressOverviewModern 
           completedSections={completedSections}
           sectionProgress={sectionProgress}
           sessionProgressPercent={sessionProgressPercent}
