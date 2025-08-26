@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     
     // Check if user exists
     const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
-    const existingUser = authUsers?.users?.find(user => user.email === email)
+    const existingUser = authUsers?.users?.find((user: any) => user.email === email)
     
     if (existingUser) {
       // User exists - just update their membership

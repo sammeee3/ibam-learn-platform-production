@@ -23,7 +23,7 @@ export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailO
       subject,
       html,
       text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML if no text provided
-      reply_to: replyTo || REPLY_TO,
+      replyTo: replyTo || REPLY_TO,
     })
 
     if (error) {
