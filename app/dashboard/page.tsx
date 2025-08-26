@@ -619,11 +619,11 @@ const handleLogout = async () => {
              {/* Admin Analytics Dashboard Link - Only for super admins */}
              {isSuperAdmin && (
                <a 
-                 href="/admin/analytics" 
-                 className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-bold transition-colors"
-                 title="Super Admin Analytics Dashboard"
+                 href="/admin" 
+                 className="text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-bold transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                 title="Super Admin Command Center"
                >
-                 📊 Analytics
+                 🛡️ Admin Dashboard
                </a>
              )}
 
@@ -666,10 +666,10 @@ const handleLogout = async () => {
                        </a>
                        {userProfile.email === 'sammeee@yahoo.com' && (
                          <a
-                           href="/admin/analytics"
+                           href="/admin"
                            className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"
                          >
-                           📊 Analytics Dashboard
+                           🛡️ Admin Command Center
                          </a>
                        )}
                        <button
