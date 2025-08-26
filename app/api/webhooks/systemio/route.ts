@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
+import { MEMBERSHIP_CONFIG, MembershipUtils } from '@/lib/membership-config'
 import crypto from 'crypto'
 
 const webhookLogs: any[] = []
@@ -113,9 +114,9 @@ function generateMagicToken(): string {
   return crypto.randomBytes(32).toString('hex')
 }
 
-// Create secure user account with magic token
+// Enhanced user account creation with membership tier support
 async function createSecureUserAccount(courseAssignment: any) {
-  const { email, name, assignedCourse } = courseAssignment
+  const { email, name, assignedCourse, membershipTier, tagName } = courseAssignment
   
   try {
     console.log(`🔐 Creating secure account for: ${email}`)
@@ -161,7 +162,7 @@ async function createSecureUserAccount(courseAssignment: any) {
     if (!existingProfile && authUser) {
       console.log(`📋 Creating user profile for: ${email}`)
       
-      // Create profile with fields that exist in staging database
+      // Create profile with membership tier information
       const profileData = {
         auth_user_id: authUser.id,
         email: email,
@@ -172,7 +173,13 @@ async function createSecureUserAccount(courseAssignment: any) {
         created_via_webhook: true,
         login_source: 'systemio',
         magic_token: magicToken,
-        magic_token_expires_at: tokenExpiry.toISOString()
+        magic_token_expires_at: tokenExpiry.toISOString(),
+        // Add membership information
+        membership_level: membershipTier?.key || 'trial',
+        membership_features: membershipTier?.features || {},
+        trial_ends_at: membershipTier ? MembershipUtils.getTrialEndDate(membershipTier.key).toISOString() : null,
+        auto_renew: true, // Default to auto-renewal
+        subscription_status: 'trial' // Start as trial, System.io will update when paid
       }
       
       // Add optional fields if they exist in the table
@@ -300,21 +307,66 @@ async function handleWebhook(request: NextRequest) {
     
     let courseAssignment: any = null
     
-    // Handle tag added events
+    // Handle tag added events with membership tier support
     if (eventType === 'CONTACT_TAG_ADDED' && tag?.name) {
-      const courseConfig = TAG_TO_COURSE_MAP[tag.name as keyof typeof TAG_TO_COURSE_MAP]
+      // First check if this is a membership tag
+      const membershipTier = MembershipUtils.getTierByTag(tag.name)
       
-      if (courseConfig) {
+      if (membershipTier) {
+        // This is a membership tag - process membership
         courseAssignment = {
           email: contact.email,
           name: `${contact.fields?.find((f: any) => f.slug === 'first_name')?.value || ''} ${contact.fields?.find((f: any) => f.slug === 'surname')?.value || ''}`.trim(),
           tag: tag.name,
-          assignedCourse: courseConfig,
+          tagName: tag.name,
+          membershipTier: membershipTier,
+          assignedCourse: {
+            courseId: 'ibam-course',
+            courseName: 'IBAM Business Course',
+            modules: ['all'] // Access controlled by membership features
+          },
           assignedAt: timestamp,
           status: 'enrolled'
         }
         
-        console.log(`📚 Course Assigned: ${courseConfig.courseName} to ${contact.email}`)
+        console.log(`💎 Membership Assigned: ${membershipTier.name} to ${contact.email}`)
+        console.log(`💰 Pricing: $${membershipTier.monthlyPrice}/mo or $${membershipTier.annualPrice}/yr`)
+        console.log(`⏰ Trial Period: ${membershipTier.trialDays} days`)
+      } else {
+        // Check legacy course mapping for backward compatibility
+        const courseConfig = TAG_TO_COURSE_MAP[tag.name as keyof typeof TAG_TO_COURSE_MAP]
+        
+        if (courseConfig) {
+          courseAssignment = {
+            email: contact.email,
+            name: `${contact.fields?.find((f: any) => f.slug === 'first_name')?.value || ''} ${contact.fields?.find((f: any) => f.slug === 'surname')?.value || ''}`.trim(),
+            tag: tag.name,
+            assignedCourse: courseConfig,
+            assignedAt: timestamp,
+            status: 'enrolled'
+          }
+          
+          console.log(`📚 Course Assigned: ${courseConfig.courseName} to ${contact.email}`)
+        }
+      }
+    }
+    
+    // Handle tag removed events (for membership cancellations)
+    if (eventType === 'CONTACT_TAG_REMOVED' && tag?.name) {
+      const membershipTier = MembershipUtils.getTierByTag(tag.name)
+      
+      if (membershipTier) {
+        console.log(`🚫 Membership Removed: ${membershipTier.name} from ${contact?.email}`)
+        
+        // Update user profile to reflect cancellation
+        await supabase
+          .from('user_profiles')
+          .update({
+            auto_renew: false,
+            subscription_status: 'cancelled',
+            cancelled_at: new Date().toISOString()
+          })
+          .eq('email', contact.email)
       }
     }
     
