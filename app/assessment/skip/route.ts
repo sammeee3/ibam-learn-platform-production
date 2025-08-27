@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+export async function GET() {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Get current user from auth
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.redirect('/auth/login');
+    }
+
+    // Mark pre-assessment as completed for this user
+    // First, check if assessment_responses table exists
+    const { error: insertError } = await supabase
+      .from('assessment_responses')
+      .upsert({
+        user_id: user.id,
+        assessment_id: 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7', // Pre-assessment ID
+        responses: [{ question_id: 1, answer_index: 0, answer_text: 'SKIPPED' }],
+        total_score: 999, // Special score to indicate skip
+        completed_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,assessment_id'
+      });
+
+    if (insertError) {
+      console.error('Skip assessment error:', insertError);
+      // Try alternative: update user profile directly
+      await supabase
+        .from('user_profiles')
+        .update({ pre_assessment_completed: true })
+        .eq('id', user.id);
+    }
+
+    // Redirect to modules
+    return NextResponse.redirect('/modules/1');
+    
+  } catch (error) {
+    console.error('Skip assessment error:', error);
+    return NextResponse.redirect('/dashboard');
+  }
+}
