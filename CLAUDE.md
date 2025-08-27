@@ -79,10 +79,10 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 **Latest Deployment**: Vibrant UI updates with session color theming
 
 ### 🌐 PERMANENT URLs (USE THESE FOR CONFIGURATIONS):
-- ✅ **Production URL (Primary)**: https://ibam-learn-platform-production-v3.vercel.app
-- ✅ **Production URL (Deployment)**: https://ibam-learn-platform-production-v3-qvh1exnnp.vercel.app
-- ✅ **Staging URL (Primary)**: https://ibam-learn-platform-staging-v2.vercel.app  
-- ✅ **Staging URL (Deployment)**: https://ibam-learn-platform-staging-v2-om0npwraj-ibam-projects.vercel.app
+- ✅ **Production URL (Primary)**: https://ibam-learn-platform-v3.vercel.app
+- ✅ **Production Webhook**: https://ibam-learn-platform-v3.vercel.app/api/webhooks/systemio
+- ✅ **Staging URL (Primary)**: https://ibam-learn-platform-staging.vercel.app  
+- ✅ **Staging Webhook**: https://ibam-learn-platform-staging.vercel.app/api/webhooks/systemio
 
 ### 📊 ANALYTICS & TRACKING:
 - **Hotjar Installation**: Use PRODUCTION PRIMARY URL (ibam-learn-platform-production-v3.vercel.app)
