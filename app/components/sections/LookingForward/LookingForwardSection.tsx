@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Lightbulb, ChevronDown, ChevronRight } from 'lucide-react';
 import type { ActionCommitment, PathwayMode } from '../../../lib/types';
 import ActionBuilderComponent from '../../actions/ActionBuilderComponent';
-import AnonymousSessionSurvey from '../../feedback/AnonymousSessionSurvey';
 
 interface LookingForwardSectionProps {
   savedActions: ActionCommitment[];
@@ -59,22 +58,6 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
       
       {isExpanded && (
         <div className="p-6 bg-orange-50 space-y-8">
-          {/* IBAM Business Planner Integration */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xl font-bold mb-2">💼 IBAM Business Planner Integration</h4>
-                <p className="text-purple-100">Apply today's learning directly to your business plan</p>
-              </div>
-              <button 
-                onClick={() => onNavigateTo('/business-planner')}
-                className="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition-colors"
-              >
-                Open Business Planner →
-              </button>
-            </div>
-          </div>
-
           {/* Action Builder Component - Now handles display of saved actions too */}
           <ActionBuilderComponent 
             savedActions={savedActions} 
@@ -107,9 +90,6 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
               </p>
             </div>
           </div>
-
-          {/* Anonymous Session Feedback Survey */}
-          <AnonymousSessionSurvey />
 
           {/* Complete Button - Only show when there's at least one action */}
           {savedActions.length > 0 && (

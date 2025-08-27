@@ -565,69 +565,8 @@ How do these apply to your life?"
           
           {activeSections.has('looking-forward') && (
             <div className="bg-white border-2 border-purple-200 border-t-0 rounded-b-lg p-6">
-              {/* Business Planner */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-6">
-                <h3 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                  🚀 Faith-Driven Business Planner
-                </h3>
-                
-                <p className="text-indigo-700 mb-6">
-                  Begin developing your business concept using biblical principles. Your answers will build 
-                  into a complete Faith-Driven Business Plan as you progress through all sessions.
-                </p>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Business Vision */}
-                  <div className="bg-white border border-indigo-200 rounded-lg p-5">
-                    <h4 className="text-lg font-bold text-indigo-600 mb-3 flex items-center gap-2">
-                      🎯 Your Faith-Driven Business Vision
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-3">
-                      How will your business honor God and serve others? What's your "why" beyond profit?
-                    </p>
-                    <textarea
-                      className="w-full min-h-24 p-3 border border-gray-300 rounded-lg text-sm resize-y"
-                      placeholder="Example: 'To create a house cleaning service that serves busy families with excellence while creating opportunities to build authentic relationships and demonstrate Christ's love through exceptional service.'"
-                      value={answers['business-vision'] || ''}
-                      onChange={(e) => updateAnswer('business-vision', e.target.value)}
-                    />
-                  </div>
-
-                  {/* Problem to Solve */}
-                  <div className="bg-white border border-indigo-200 rounded-lg p-5">
-                    <h4 className="text-lg font-bold text-indigo-600 mb-3 flex items-center gap-2">
-                      💡 Problem You Want to Solve
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-3">
-                      What specific problem or need do you see in your community? How can business solve it?
-                    </p>
-                    <textarea
-                      className="w-full min-h-24 p-3 border border-gray-300 rounded-lg text-sm resize-y"
-                      placeholder="Example: 'Busy working parents struggle to maintain clean homes and feel overwhelmed by household tasks, leading to family stress and reduced quality time together.'"
-                      value={answers['problem-to-solve'] || ''}
-                      onChange={(e) => updateAnswer('problem-to-solve', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Save Business Planner */}
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => {
-                      saveAnswer('business-vision');
-                      saveAnswer('problem-to-solve');
-                      alert('Business planner saved! ✓');
-                    }}
-                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium mx-auto"
-                  >
-                    <Save className="w-5 h-5" />
-                    Save My Business Planner
-                  </button>
-                  <p className="mt-3 text-sm text-indigo-600">
-                    💡 Your business planner will expand as you complete more sessions!
-                  </p>
-                </div>
-              </div>
+              {/* Action Steps and Commitments content will go here */}
+              <p className="text-gray-600">Action steps and commitments section content.</p>
             </div>
           )}
         </div>

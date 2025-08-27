@@ -47,8 +47,8 @@ export default function SuperAdminDashboard() {
       description: 'View metrics, conversion funnels, engagement',
       items: [
         { name: 'Analytics Dashboard', href: '/admin/analytics', icon: '📊', color: 'bg-indigo-500', active: true },
+        { name: 'Session Feedback', href: '/admin/session-feedback', icon: '⭐', color: 'bg-purple-500', active: true },
         { name: 'Conversion Funnel', href: '#', icon: '📉', color: 'bg-pink-500', active: false },
-        { name: 'Revenue Report', href: '#', icon: '💰', color: 'bg-yellow-500', active: false },
       ]
     },
     {
