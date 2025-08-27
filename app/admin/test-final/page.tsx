@@ -38,16 +38,13 @@ export default function FinalTestDashboard() {
 
   const loadUsers = useCallback(async () => {
     try {
-      // Get REAL users from user_profiles table with actual IDs
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('id, email, first_name, last_name')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // Use API route that has service role access
+      const response = await fetch('/api/admin/test-users');
+      const data = await response.json();
       
-      if (profiles && profiles.length > 0) {
-        console.log('Found users:', profiles);
-        const formattedUsers = profiles.map((p: {
+      if (data.users && data.users.length > 0) {
+        console.log('Found users:', data.users);
+        const formattedUsers = data.users.map((p: {
           id: string;
           email: string;
           first_name?: string;
@@ -80,7 +77,7 @@ export default function FinalTestDashboard() {
       console.error('Error loading users:', error);
       // Keep the pre-initialized test users
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     loadUsers();
@@ -143,55 +140,29 @@ export default function FinalTestDashboard() {
 
       console.log('Upserting progress data:', progressData);
 
-      // Direct database update with better error handling
-      const { data, error } = await supabase
-        .from('session_progress')
-        .upsert(progressData, {
-          onConflict: 'user_id,session_id',
-          ignoreDuplicates: false
+      // Use API route with service role access
+      const response = await fetch('/api/admin/test-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: selectedUserId,
+          sessionId: sessionId,
+          moduleId: parseInt(selectedModule),
+          progress: actualProgress
         })
-        .select();
+      });
 
-      if (error) {
-        console.error('Database error details:', error);
-        showMessage(`❌ Database error: ${error.message}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('API error:', result);
+        showMessage(`❌ Error: ${result.error || 'Failed to update progress'}`);
         return;
       }
 
-      console.log('Progress saved successfully:', data);
-
-      // Also mark pre-assessment as completed
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({ 
-          pre_assessment_completed: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedUserId);
-
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-      }
-
-      // Create fake assessment response
-      const { error: assessmentError } = await supabase
-        .from('assessment_responses')
-        .upsert({
-          user_id: selectedUserId,
-          assessment_id: 'b77f4b69-8ad4-41aa-8656-6fd1c9e809c7',
-          responses: [{ question_id: 1, answer_index: 0, answer_text: 'ADMIN_TEST' }],
-          total_score: 999,
-          completed_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,assessment_id',
-          ignoreDuplicates: false
-        });
-
-      if (assessmentError) {
-        console.error('Assessment error:', assessmentError);
-      }
-
+      console.log('Progress saved successfully via API');
       showMessage(`✅ Progress set to ${percent}% for Module ${selectedModule}, Session ${selectedSession}`);
     } catch (error) {
       console.error('Unexpected error:', error);
