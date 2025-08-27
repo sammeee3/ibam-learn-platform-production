@@ -46,65 +46,20 @@ export default function WebhookMonitor() {
   const sendTestWebhook = async (tagName: string) => {
     setTestStatus('Sending test webhook...')
     try {
-      // Create the payload exactly as System.io sends it
-      const payload = {
-        contact: {
-          id: Date.now(),
-          email: `test-${Date.now()}@example.com`,
-          registeredAt: new Date().toISOString(),
-          locale: "en",
-          sourceURL: null,
-          unsubscribed: false,
-          bounced: false,
-          needsConfirmation: false,
-          fields: [
-            {
-              fieldName: "First name",
-              slug: "first_name",
-              value: "Test"
-            },
-            {
-              fieldName: "Surname",
-              slug: "surname",
-              value: "User"
-            }
-          ],
-          tags: [
-            {
-              id: 991808,
-              name: tagName
-            }
-          ]
-        },
-        tag: {
-          id: 991808,
-          name: tagName
-        }
-      }
-      
-      // Generate the correct HMAC-SHA256 signature for this payload
-      const payloadString = JSON.stringify(payload)
-      const crypto = (await import('crypto')).default
-      const signature = crypto
-        .createHmac('sha256', 'staging-secret-2025-secure')
-        .update(payloadString)
-        .digest('hex')
-      
-      const response = await fetch('/api/webhooks/systemio', {
+      // Use server-side test endpoint for proper signature generation
+      const response = await fetch('/api/admin/test-webhook', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Webhook-Signature': signature,
-          'X-Webhook-Event': 'CONTACT_TAG_ADDED'
         },
-        body: payloadString
+        body: JSON.stringify({ tagName })
       })
       
       const result = await response.json()
-      if (response.ok) {
-        setTestStatus(`✅ Test successful! Check logs above.`)
+      if (result.success) {
+        setTestStatus(`✅ Test successful! Check logs above. Test email: ${result.testDetails?.email}`)
       } else {
-        setTestStatus(`❌ Test failed: ${result.error}`)
+        setTestStatus(`❌ Test failed: ${result.error || result.result?.error || 'Unknown error'}`)
       }
       
       // Refresh logs after test
@@ -199,13 +154,13 @@ export default function WebhookMonitor() {
               Test IBAM Member
             </button>
             <button
-              onClick={() => sendTestWebhook('Entrepreneur')}
+              onClick={() => sendTestWebhook('Entrepreneur Member')}
               className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
             >
               Test Entrepreneur
             </button>
             <button
-              onClick={() => sendTestWebhook('Church Partnership Small')}
+              onClick={() => sendTestWebhook('Church Partner Small')}
               className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
             >
               Test Church Small
