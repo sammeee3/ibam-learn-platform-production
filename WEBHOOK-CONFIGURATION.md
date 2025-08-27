@@ -20,8 +20,7 @@
 - **Database:** Staging (yhfxxouswctucxvfetcq)
 - **Purpose:** Testing and development
 - **Tags:**
-  - Test tags only
-  - Staging Test Member
+  - Staging Work Only ✅ (Configured in System.io)
 
 ## ⚠️ CRITICAL CONFIGURATION
 

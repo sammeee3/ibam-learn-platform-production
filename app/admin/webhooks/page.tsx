@@ -119,13 +119,19 @@ export default function WebhookMonitor() {
             <div>
               <p className="text-sm text-gray-600 mb-2">Webhook URL:</p>
               <code className="block bg-white p-3 rounded text-xs border border-gray-300">
-                https://ibam-learn-platform-staging.vercel.app/api/webhooks/systemio
+                {typeof window !== 'undefined' 
+                  ? `${window.location.origin}/api/webhooks/systemio`
+                  : `${process.env.NEXT_PUBLIC_APP_URL || 'https://ibam-learn-platform-staging.vercel.app'}/api/webhooks/systemio`
+                }
               </code>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-2">Secret Key:</p>
               <code className="block bg-white p-3 rounded text-xs border border-gray-300">
-                staging-secret-2025-secure
+                {typeof window !== 'undefined' && window.location.hostname.includes('staging')
+                  ? 'staging-secret-2025-secure'
+                  : 'ibam-systeme-secret-2025'
+                }
               </code>
             </div>
           </div>
