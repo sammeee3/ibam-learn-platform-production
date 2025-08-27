@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-config';
+import crypto from 'crypto';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -63,7 +64,6 @@ export async function GET(request: NextRequest) {
       console.log('❌ No magic token found, creating new one...');
       
       // Generate new magic token
-      const crypto = require('crypto');
       const magicToken = crypto.randomBytes(32).toString('hex');
       const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
       
@@ -89,7 +89,6 @@ export async function GET(request: NextRequest) {
       console.log('❌ Magic token expired, creating new one...');
       
       // Generate new magic token
-      const crypto = require('crypto');
       const magicToken = crypto.randomBytes(32).toString('hex');
       const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
       

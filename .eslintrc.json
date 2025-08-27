@@ -3,7 +3,15 @@
   "rules": {
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-require-imports": "warn",
+    "@typescript-eslint/no-empty-object-type": "warn",
     "react/no-unescaped-entities": "off",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/rules-of-hooks": "warn",
+    "react/jsx-no-undef": "warn",
+    "prefer-const": "warn",
+    "prefer-rest-params": "warn",
+    "@next/next/no-sync-scripts": "warn",
+    "@next/next/no-html-link-for-pages": "warn"
   }
 }
