@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,9 +15,15 @@ const MODULES = [
   { id: '5', name: 'Module 5: Business Planning', sessions: 5 }, // 5 sessions!
 ];
 
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 export default function FinalTestDashboard() {
   // Initialize with test users immediately
-  const [users, setUsers] = useState<any[]>([
+  const [users, setUsers] = useState<User[]>([
     { id: '24f9c7e2-1a2b-4c5d-8e9f-0123456789ab', email: 'sammeee@yahoo.com', name: 'Jeff Samuelson' },
     { id: '34f9c7e2-1a2b-4c5d-8e9f-0123456789ac', email: 'test@example.com', name: 'Test User' },
     { id: '44f9c7e2-1a2b-4c5d-8e9f-0123456789ad', email: 'admin@ibam.org', name: 'Admin User' }
@@ -30,14 +36,10 @@ export default function FinalTestDashboard() {
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       // Get REAL users from user_profiles table with actual IDs
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles } = await supabase
         .from('user_profiles')
         .select('id, email, first_name, last_name')
         .order('created_at', { ascending: false })
@@ -45,7 +47,12 @@ export default function FinalTestDashboard() {
       
       if (profiles && profiles.length > 0) {
         console.log('Found users:', profiles);
-        const formattedUsers = profiles.map((p: any) => ({
+        const formattedUsers = profiles.map((p: {
+          id: string;
+          email: string;
+          first_name?: string;
+          last_name?: string;
+        }) => ({
           id: p.id,
           email: p.email || 'No email',
           name: p.first_name && p.last_name ? `${p.first_name} ${p.last_name}` : p.email
@@ -53,7 +60,7 @@ export default function FinalTestDashboard() {
         setUsers(formattedUsers);
         
         // Find and select test user
-        const testUser = formattedUsers.find((u: any) => 
+        const testUser = formattedUsers.find((u) => 
           u.email === 'sammeee@yahoo.com' || 
           u.email === 'test@example.com' ||
           u.email === 'jeff@ibamonline.org'
@@ -73,7 +80,11 @@ export default function FinalTestDashboard() {
       console.error('Error loading users:', error);
       // Keep the pre-initialized test users
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleSetProgress = async (percent: number) => {
     if (!selectedUserId) {

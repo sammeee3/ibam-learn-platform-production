@@ -12,7 +12,7 @@ import {
   TrophyIcon,
   LightBulbIcon,
   HeartIcon,
-  TargetIcon,
+  FlagIcon,
   FireIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
@@ -301,7 +301,7 @@ export default function CommitmentFlowDemo() {
               <div className="p-6">
                 <ul className="text-left space-y-2 text-gray-700">
                   <li className="flex items-center gap-2">
-                    <TargetIcon className="w-4 h-4 text-teal-500" />
+                    <FlagIcon className="w-4 h-4 text-teal-500" />
                     <span>Build SMART business actions</span>
                   </li>
                   <li className="flex items-center gap-2">
@@ -410,7 +410,7 @@ export default function CommitmentFlowDemo() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             {action.action_type === 'business' ? (
-                              <TargetIcon className="w-6 h-6 text-teal-600" />
+                              <FlagIcon className="w-6 h-6 text-teal-600" />
                             ) : (
                               <HeartIcon className="w-6 h-6 text-pink-600" />
                             )}
@@ -641,7 +641,7 @@ export default function CommitmentFlowDemo() {
                     )}
                     className="p-4 bg-teal-50 hover:bg-teal-100 rounded-lg border-2 border-teal-300 text-left transition-all"
                   >
-                    <TargetIcon className="w-6 h-6 text-teal-600 mb-2" />
+                    <FlagIcon className="w-6 h-6 text-teal-600 mb-2" />
                     <p className="font-medium text-teal-800">Sample Business Action</p>
                     <p className="text-xs text-teal-600">Review financials for cost savings</p>
                   </button>
@@ -678,7 +678,7 @@ export default function CommitmentFlowDemo() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {action.action_type === 'business' ? (
-                          <TargetIcon className="w-5 h-5 text-teal-600" />
+                          <FlagIcon className="w-5 h-5 text-teal-600" />
                         ) : (
                           <HeartIcon className="w-5 h-5 text-pink-600" />
                         )}
