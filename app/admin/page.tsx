@@ -79,6 +79,15 @@ export default function SuperAdminDashboard() {
       ]
     },
     {
+      title: '🧪 Testing & QA',
+      description: 'Testing tools, quick scenarios, debugging',
+      items: [
+        { name: 'Testing Dashboard', href: '/admin/testing', icon: '🧪', color: 'bg-gradient-to-r from-purple-600 to-pink-600', active: true },
+        { name: 'Quick Scenarios', href: '/admin/testing', icon: '🚀', color: 'bg-gradient-to-r from-blue-600 to-cyan-600', active: true },
+        { name: 'Debug Console', href: '#', icon: '🐛', color: 'bg-red-600', active: false },
+      ]
+    },
+    {
       title: '📧 Communications',
       description: 'Email campaigns, notifications, announcements',
       items: [
