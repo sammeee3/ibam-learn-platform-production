@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
@@ -12,7 +12,8 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      return NextResponse.redirect('/auth/login');
+      const url = new URL('/auth/login', request.url);
+      return NextResponse.redirect(url);
     }
 
     // Mark pre-assessment as completed for this user
@@ -38,11 +39,13 @@ export async function GET() {
         .eq('id', user.id);
     }
 
-    // Redirect to modules
-    return NextResponse.redirect('/modules/1');
+    // Redirect to modules with absolute URL
+    const url = new URL('/modules/1', request.url);
+    return NextResponse.redirect(url);
     
   } catch (error) {
     console.error('Skip assessment error:', error);
-    return NextResponse.redirect('/dashboard');
+    const url = new URL('/dashboard', request.url);
+    return NextResponse.redirect(url);
   }
 }
