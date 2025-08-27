@@ -89,7 +89,7 @@ export default function FinalTestDashboard() {
       console.log('Setting progress for:', { userId: selectedUserId, sessionId, percent });
       
       // Calculate sections based on percentage
-      let completedSections = [];
+      let completedSections: string[] = [];
       let lookbackCompleted = false;
       let lookupCompleted = false;  
       let lookforwardCompleted = false;
