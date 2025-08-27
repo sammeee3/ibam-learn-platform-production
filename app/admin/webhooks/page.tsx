@@ -164,7 +164,7 @@ export default function WebhookMonitor() {
             <div>
               <p className="text-sm text-gray-600 mb-2">Webhook URL:</p>
               <code className="block bg-white p-3 rounded text-xs border border-gray-300">
-                https://ibam-learn-platform-staging-v2.vercel.app/api/webhooks/systemio
+                https://ibam-learn-platform-staging.vercel.app/api/webhooks/systemio
               </code>
             </div>
             <div>
