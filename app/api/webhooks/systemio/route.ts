@@ -239,7 +239,10 @@ async function createSecureUserAccount(courseAssignment: any) {
     console.log(`⏰ Token expires: ${tokenExpiry.toISOString()}`)
     
     // Send welcome email with magic link
-    const magicLinkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://ibam-learn-platform-staging-v2.vercel.app'}/auth/magic-login?token=${magicToken}&email=${encodeURIComponent(email)}`
+    // Determine the correct base URL based on environment
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://ibam-learn-platform-staging.vercel.app')
+    const magicLinkUrl = `${baseUrl}/auth/magic-login?token=${magicToken}&email=${encodeURIComponent(email)}`
     
     try {
       const emailResult = await sendWelcomeEmail(email, name, magicLinkUrl)
