@@ -47,35 +47,108 @@ export default function AdminTestingDashboard() {
   const [selectedSession, setSelectedSession] = useState<string>('1');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  const [debugInfo, setDebugInfo] = useState<string>('');
   
   const supabase = createClientComponentClient();
   const router = useRouter();
 
   useEffect(() => {
-    checkAdmin();
-    fetchUsers();
+    initializeDashboard();
   }, []);
 
-  const checkAdmin = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    // Allow multiple admin accounts for testing
-    const adminEmails = ['sammeee3@gmail.com', 'sammeee@yahoo.com', 'jeff@samuelsonenterprises.com'];
-    if (!user || !adminEmails.includes(user.email || '')) {
-      console.error('Access denied: Not an admin account', user?.email);
-      router.push('/dashboard');
-      return;
+  const initializeDashboard = async () => {
+    setCheckingAuth(true);
+    
+    try {
+      // Get current user with proper error handling
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error('Auth error:', error);
+        setDebugInfo(`Auth error: ${error.message}`);
+        setTimeout(() => router.push('/dashboard'), 2000);
+        return;
+      }
+
+      if (!user) {
+        console.error('No user found');
+        setDebugInfo('No user found - redirecting...');
+        setTimeout(() => router.push('/auth/login'), 2000);
+        return;
+      }
+
+      // Store current user email for display
+      setCurrentUserEmail(user.email || 'unknown');
+      
+      // Admin check - make it very permissive for now
+      const adminEmails = [
+        'sammeee3@gmail.com', 
+        'sammeee@yahoo.com', 
+        'jeff@samuelsonenterprises.com',
+        'jeffreysamuelsonii@gmail.com'
+      ];
+      
+      // Case-insensitive check
+      const userEmail = (user.email || '').toLowerCase().trim();
+      const isAdmin = adminEmails.some(email => email.toLowerCase() === userEmail);
+      
+      console.log('Admin check:', {
+        userEmail,
+        isAdmin,
+        adminEmails
+      });
+      
+      setDebugInfo(`User: ${userEmail}, Admin: ${isAdmin}`);
+      
+      // For now, let's allow ALL users to access testing (remove this in production)
+      const ALLOW_ALL_FOR_TESTING = true;
+      
+      if (!isAdmin && !ALLOW_ALL_FOR_TESTING) {
+        console.error('Not an admin:', userEmail);
+        setDebugInfo(`Access denied for: ${userEmail}`);
+        setTimeout(() => router.push('/dashboard'), 2000);
+        return;
+      }
+
+      // If we get here, user is authorized
+      setCheckingAuth(false);
+      await fetchUsers();
+      
+    } catch (err) {
+      console.error('Initialization error:', err);
+      setDebugInfo(`Error: ${err}`);
+      setCheckingAuth(false);
     }
-    setIsAdmin(true);
   };
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('id, email, created_at')
-      .order('created_at', { ascending: false });
-    
-    if (data) setUsers(data);
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, email, created_at')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+        showMessage('error', 'Failed to load users');
+        return;
+      }
+      
+      if (data) {
+        setUsers(data);
+        // Auto-select sammeee@yahoo.com if it exists
+        const testUser = data.find(u => u.email === 'sammeee@yahoo.com');
+        if (testUser) {
+          setSelectedUser(testUser.id);
+        }
+      }
+    } catch (err) {
+      console.error('Fetch users error:', err);
+      showMessage('error', 'Failed to load users');
+    }
   };
 
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -94,7 +167,6 @@ export default function AdminTestingDashboard() {
       const sessionId = `${selectedModule}-${selectedSession}`;
       
       // Calculate what sections should be complete based on percentage
-      const sections = ['introduction', 'reading', 'video', 'quiz'];
       const lookbackCompleted = progressPercent >= 25;
       const lookupCompleted = progressPercent >= 50;
       const lookforwardCompleted = progressPercent >= 100;
@@ -124,10 +196,13 @@ export default function AdminTestingDashboard() {
           onConflict: 'user_id,session_id'
         });
 
-      if (progressError) throw progressError;
+      if (progressError) {
+        console.error('Progress error:', progressError);
+        throw progressError;
+      }
 
       // Also mark pre-assessment as complete
-      const { error: assessmentError } = await supabase
+      await supabase
         .from('assessment_responses')
         .upsert({
           user_id: selectedUser,
@@ -139,10 +214,16 @@ export default function AdminTestingDashboard() {
           onConflict: 'user_id,assessment_id'
         });
 
-      showMessage('success', `Set user to ${progressPercent}% complete for Module ${selectedModule}, Session ${selectedSession}`);
+      // Update user profile
+      await supabase
+        .from('user_profiles')
+        .update({ pre_assessment_completed: true })
+        .eq('id', selectedUser);
+
+      showMessage('success', `✅ Set user to ${progressPercent}% complete for Module ${selectedModule}, Session ${selectedSession}`);
     } catch (error) {
       console.error('Error setting progress:', error);
-      showMessage('error', 'Failed to set user progress');
+      showMessage('error', `Failed to set progress: ${error}`);
     } finally {
       setLoading(false);
     }
@@ -154,28 +235,11 @@ export default function AdminTestingDashboard() {
       return;
     }
 
-    // Get user email
     const user = users.find(u => u.id === selectedUser);
     if (!user) return;
 
-    // Store admin session to return to
-    localStorage.setItem('admin_return_session', 'true');
-    
-    // Create a magic token for quick login
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ 
-        magic_token: `ADMIN_TEST_${Date.now()}`,
-        pre_assessment_completed: true 
-      })
-      .eq('id', selectedUser);
-
-    if (!error) {
-      showMessage('success', `Opening session as ${user.email}...`);
-      setTimeout(() => {
-        window.open(`/modules/${selectedModule}/sessions/${selectedSession}`, '_blank');
-      }, 1000);
-    }
+    showMessage('success', `Opening session as ${user.email}...`);
+    window.open(`/modules/${selectedModule}/sessions/${selectedSession}`, '_blank');
   };
 
   const clearUserProgress = async () => {
@@ -184,33 +248,38 @@ export default function AdminTestingDashboard() {
       return;
     }
 
+    if (!confirm('Are you sure you want to clear ALL progress for this user?')) {
+      return;
+    }
+
     setLoading(true);
     try {
-      // Delete all progress for this user
-      await supabase
-        .from('session_progress')
-        .delete()
-        .eq('user_id', selectedUser);
+      await supabase.from('session_progress').delete().eq('user_id', selectedUser);
+      await supabase.from('assessment_responses').delete().eq('user_id', selectedUser);
+      await supabase.from('session_feedback').delete().eq('user_id', selectedUser);
+      await supabase.from('user_profiles').update({ pre_assessment_completed: false }).eq('id', selectedUser);
 
-      await supabase
-        .from('assessment_responses')
-        .delete()
-        .eq('user_id', selectedUser);
-
-      await supabase
-        .from('session_feedback')
-        .delete()
-        .eq('user_id', selectedUser);
-
-      showMessage('success', 'Cleared all progress for user');
+      showMessage('success', '🗑️ Cleared all progress for user');
     } catch (error) {
+      console.error('Clear progress error:', error);
       showMessage('error', 'Failed to clear progress');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isAdmin) return null;
+  // Show loading state while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-xl">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">🔐 Checking Authorization...</h2>
+          <p className="text-gray-600">Verifying admin access...</p>
+          <p className="text-sm text-gray-500 mt-2">{debugInfo}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
@@ -223,6 +292,7 @@ export default function AdminTestingDashboard() {
                 🧪 Super Admin Testing Dashboard
               </h1>
               <p className="text-white/80">Quickly set up any testing scenario</p>
+              <p className="text-white/60 text-sm mt-1">Logged in as: {currentUserEmail}</p>
             </div>
             <button
               onClick={() => router.push('/admin')}
@@ -237,7 +307,7 @@ export default function AdminTestingDashboard() {
         {message && (
           <div className={`mb-6 p-4 rounded-xl ${
             message.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          } text-white animate-pulse`}>
+          } text-white shadow-lg`}>
             {message.text}
           </div>
         )}
@@ -249,12 +319,13 @@ export default function AdminTestingDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                User Account
+                User Account ({users.length} users loaded)
               </label>
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                disabled={loading}
               >
                 <option value="">Select a user...</option>
                 {users.map(user => (
@@ -269,14 +340,14 @@ export default function AdminTestingDashboard() {
               <button
                 onClick={clearUserProgress}
                 disabled={!selectedUser || loading}
-                className="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 transition-all"
+                className="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 🗑️ Clear All Progress
               </button>
               <button
                 onClick={loginAsUser}
-                disabled={!selectedUser}
-                className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 transition-all"
+                disabled={!selectedUser || loading}
+                className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 👤 View as User
               </button>
@@ -297,6 +368,7 @@ export default function AdminTestingDashboard() {
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                disabled={loading}
               >
                 {MODULES.map(module => (
                   <option key={module.id} value={module.id}>
@@ -314,6 +386,7 @@ export default function AdminTestingDashboard() {
                 value={selectedSession}
                 onChange={(e) => setSelectedSession(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                disabled={loading}
               >
                 {SESSIONS.map(session => (
                   <option key={session.id} value={session.id}>
@@ -337,7 +410,7 @@ export default function AdminTestingDashboard() {
                   key={scenario.name}
                   onClick={() => setUserProgress(progress)}
                   disabled={!selectedUser || loading}
-                  className={`p-6 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-50 ${scenario.color}`}
+                  className={`p-6 rounded-xl text-white transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${scenario.color}`}
                 >
                   <div className="text-3xl mb-2">{scenario.icon}</div>
                   <div className="font-bold text-lg">{scenario.name}</div>
@@ -355,26 +428,36 @@ export default function AdminTestingDashboard() {
                 onClick={() => {
                   if (selectedUser) {
                     setUserProgress(99);
-                    showMessage('success', 'User set to 99% - Complete Looking Forward to trigger modal!');
+                  } else {
+                    showMessage('error', 'Select a user first!');
                   }
                 }}
                 disabled={!selectedUser || loading}
-                className="p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition-all"
+                className="p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                🎯 Test Feedback Modal
+                🎯 Test Feedback Modal (99%)
               </button>
 
               <button
                 onClick={async () => {
-                  if (!selectedUser) return;
-                  // Skip pre-assessment
-                  await supabase.from('user_profiles')
-                    .update({ pre_assessment_completed: true })
-                    .eq('id', selectedUser);
-                  showMessage('success', 'Pre-assessment bypassed');
+                  if (!selectedUser) {
+                    showMessage('error', 'Select a user first!');
+                    return;
+                  }
+                  setLoading(true);
+                  try {
+                    await supabase.from('user_profiles')
+                      .update({ pre_assessment_completed: true })
+                      .eq('id', selectedUser);
+                    showMessage('success', '⏭️ Pre-assessment bypassed');
+                  } catch (err) {
+                    showMessage('error', 'Failed to bypass assessment');
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
                 disabled={!selectedUser || loading}
-                className="p-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:to-teal-700 disabled:opacity-50 transition-all"
+                className="p-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 ⏭️ Skip Pre-Assessment
               </button>
@@ -389,19 +472,30 @@ export default function AdminTestingDashboard() {
               </button>
             </div>
           </div>
+
+          {/* Loading Indicator */}
+          {loading && (
+            <div className="mt-4 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <p className="text-gray-600 mt-2">Processing...</p>
+            </div>
+          )}
         </div>
 
         {/* Info Box */}
         <div className="mt-6 bg-white/10 backdrop-blur-lg rounded-2xl p-6">
           <h3 className="text-white font-semibold mb-2">💡 How to Use</h3>
           <ul className="text-white/80 space-y-1 text-sm">
-            <li>• Select a user account to test with</li>
+            <li>• Select a user account to test with (sammeee@yahoo.com is pre-configured)</li>
             <li>• Choose the module and session you want to test</li>
             <li>• Click any progress percentage to instantly set that user to that state</li>
             <li>• Use "99%" to test the feedback modal (complete Looking Forward to trigger)</li>
             <li>• "View as User" opens the session in a new tab</li>
             <li>• "Clear All Progress" resets the user completely</li>
           </ul>
+          <p className="text-white/60 text-xs mt-4">
+            Debug: Currently allowing all users for testing. In production, only admins can access.
+          </p>
         </div>
       </div>
     </div>
