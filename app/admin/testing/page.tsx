@@ -59,7 +59,10 @@ export default function AdminTestingDashboard() {
 
   const checkAdmin = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.email !== 'sammeee3@gmail.com') {
+    // Allow multiple admin accounts for testing
+    const adminEmails = ['sammeee3@gmail.com', 'sammeee@yahoo.com', 'jeff@samuelsonenterprises.com'];
+    if (!user || !adminEmails.includes(user.email || '')) {
+      console.error('Access denied: Not an admin account', user?.email);
       router.push('/dashboard');
       return;
     }

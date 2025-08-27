@@ -8,7 +8,8 @@ export async function POST(request: Request) {
     
     // Check if user is super admin
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.email !== 'sammeee3@gmail.com') {
+    const adminEmails = ['sammeee3@gmail.com', 'sammeee@yahoo.com', 'jeff@samuelsonenterprises.com'];
+    if (!user || !adminEmails.includes(user.email || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -122,7 +123,8 @@ export async function GET(request: Request) {
     
     // Check if user is super admin
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.email !== 'sammeee3@gmail.com') {
+    const adminEmails = ['sammeee3@gmail.com', 'sammeee@yahoo.com', 'jeff@samuelsonenterprises.com'];
+    if (!user || !adminEmails.includes(user.email || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
