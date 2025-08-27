@@ -5,6 +5,7 @@
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-require-imports": "warn",
     "@typescript-eslint/no-empty-object-type": "warn",
+    "@typescript-eslint/no-unsafe-function-type": "warn",
     "react/no-unescaped-entities": "off",
     "react-hooks/exhaustive-deps": "warn",
     "react-hooks/rules-of-hooks": "warn",
@@ -12,6 +13,7 @@
     "prefer-const": "warn",
     "prefer-rest-params": "warn",
     "@next/next/no-sync-scripts": "warn",
-    "@next/next/no-html-link-for-pages": "warn"
+    "@next/next/no-html-link-for-pages": "warn",
+    "@next/next/no-assign-module-variable": "warn"
   }
 }
