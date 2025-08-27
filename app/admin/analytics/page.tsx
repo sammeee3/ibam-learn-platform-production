@@ -145,13 +145,13 @@ export default function SuperAdminDashboard() {
       .order('module_id');
     
     const grouped = data?.reduce((acc: any, curr) => {
-      const module = `Module ${curr.module_id}`;
-      if (!acc[module]) {
-        acc[module] = { name: module, completed: 0, inProgress: 0, notStarted: 0 };
+      const moduleName = `Module ${curr.module_id}`;
+      if (!acc[moduleName]) {
+        acc[moduleName] = { name: moduleName, completed: 0, inProgress: 0, notStarted: 0 };
       }
-      if (curr.completion_percentage === 100) acc[module].completed++;
-      else if (curr.completion_percentage > 0) acc[module].inProgress++;
-      else acc[module].notStarted++;
+      if (curr.completion_percentage === 100) acc[moduleName].completed++;
+      else if (curr.completion_percentage > 0) acc[moduleName].inProgress++;
+      else acc[moduleName].notStarted++;
       return acc;
     }, {});
 

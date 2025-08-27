@@ -520,28 +520,52 @@ const handleLearningPathSelect = async (learningPath: 'depth' | 'overview', lear
 // Logout handler
 const handleLogout = async () => {
   try {
-    // Clear localStorage
-    localStorage.removeItem('ibam-auth-email');
-    localStorage.removeItem('ibam_session');
-    localStorage.removeItem('ibam_profile');
-    localStorage.removeItem('ibam-learning-path-onboarding');
+    console.log('🚪 Starting logout process');
     
-    // Clear all cookies
-    document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    // Clear all localStorage items
+    const localStorageKeys = [
+      'ibam-auth-email',
+      'ibam_session',
+      'ibam_profile',
+      'ibam-learning-path-onboarding',
+      'ibam-user-data',
+      'ibam-auth-token'
+    ];
+    
+    localStorageKeys.forEach(key => {
+      localStorage.removeItem(key);
     });
     
-    // Call logout API to clear server-side session
-    await fetch('/api/auth/logout', { method: 'POST' });
+    // Clear all session storage
+    sessionStorage.clear();
     
-    // Redirect to login
-    window.location.href = '/auth/login';
+    // Call logout API to clear server-side session and Supabase auth
+    const response = await fetch('/api/auth/logout', { 
+      method: 'POST',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      console.error('Logout API failed:', response.status);
+    }
+    
+    // Clear all cookies on client side as backup
+    document.cookie.split(";").forEach((c) => {
+      const eqPos = c.indexOf("=");
+      const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+      document.cookie = `${name}=;expires=${new Date(0).toUTCString()};path=/;`;
+      document.cookie = `${name}=;expires=${new Date(0).toUTCString()};path=/;domain=${window.location.hostname};`;
+      document.cookie = `${name}=;expires=${new Date(0).toUTCString()};path=/;domain=.${window.location.hostname};`;
+    });
+    
+    console.log('✅ Logout complete - redirecting to login');
+    
+    // Force redirect to login
+    window.location.replace('/auth/login');
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('❌ Logout error:', error);
     // Force redirect even if API call fails
-    window.location.href = '/auth/login';
+    window.location.replace('/auth/login');
   }
 };
 

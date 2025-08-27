@@ -8,9 +8,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [resetLoading, setResetLoading] = useState(false)
-  const [resetMessage, setResetMessage] = useState('')
-  const [showResetForm, setShowResetForm] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,46 +75,6 @@ export default function LoginPage() {
     }
   }
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setResetLoading(true)
-    setError('')
-    setResetMessage('')
-
-    if (!email) {
-      setError('Please enter your email address first')
-      setResetLoading(false)
-      return
-    }
-
-    try {
-      console.log('📧 Sending password reset to:', email)
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email.trim().toLowerCase(),
-        {
-          redirectTo: `${window.location.origin}/auth/reset-password`
-        }
-      )
-
-      if (error) {
-        console.error('Reset error:', error)
-        if (error.message.includes('rate limit')) {
-          setError('Too many reset attempts. Please wait a few minutes.')
-        } else {
-          setError(`Password reset failed: ${error.message}`)
-        }
-      } else {
-        setResetMessage('✅ Password reset email sent! Check your inbox.')
-        setShowResetForm(false)
-      }
-    } catch (error: any) {
-      console.error('Reset error:', error)
-      setError(`Reset failed: ${error.message}`)
-    } finally {
-      setResetLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -133,13 +90,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {resetMessage && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
-            {resetMessage}
-          </div>
-        )}
-
-        {!showResetForm ? (
+        (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -177,31 +128,7 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
-        ) : (
-          <form onSubmit={handlePasswordReset} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={resetLoading}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {resetLoading ? 'Sending...' : 'Send Reset Email'}
-            </button>
-          </form>
-        )}
+        )
 
         <div className="mt-6 space-y-3 text-center">
           <div>
@@ -211,16 +138,9 @@ export default function LoginPage() {
           </div>
           
           <div>
-            <button
-              onClick={() => {
-                setShowResetForm(!showResetForm)
-                setError('')
-                setResetMessage('')
-              }}
-              className="text-blue-600 hover:text-blue-700 text-sm underline"
-            >
-              {showResetForm ? 'Back to Sign In' : 'Forgot your password?'}
-            </button>
+            <a href="/auth/forgot-password" className="text-blue-600 hover:text-blue-700 text-sm underline">
+              Forgot your password?
+            </a>
           </div>
         </div>
 
