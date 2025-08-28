@@ -15,7 +15,24 @@ const supabaseAdmin = createClient(
 
 export async function GET(request: NextRequest) {
   try {
-    // Get users from user_profiles table
+    // First try to get real auth users
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 50
+    });
+
+    if (authData && authData.users && authData.users.length > 0) {
+      console.log('Found auth users:', authData.users.length);
+      const users = authData.users.map(user => ({
+        id: user.id, // This should be a proper UUID
+        email: user.email || 'No email',
+        first_name: user.user_metadata?.first_name || '',
+        last_name: user.user_metadata?.last_name || ''
+      }));
+      return NextResponse.json({ users });
+    }
+
+    // Fallback to user_profiles table
     const { data: profiles, error } = await supabaseAdmin
       .from('user_profiles')
       .select('id, email, first_name, last_name')
@@ -26,6 +43,8 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching users:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    console.log('User profiles found:', profiles?.length || 0);
 
     // If no profiles exist, create a test user
     if (!profiles || profiles.length === 0) {
@@ -86,15 +105,57 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, sessionId, moduleId, progress } = body;
 
+    // Check if userId is a valid UUID or needs conversion
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let actualUserId = userId;
+    
+    // If it's not a UUID, try to find the actual user
+    if (!uuidRegex.test(userId)) {
+      console.log('Non-UUID user ID received:', userId);
+      
+      // Try to find user by the numeric ID in user_profiles
+      const { data: profile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      
+      if (profile) {
+        actualUserId = profile.id;
+        console.log('Found user profile with ID:', actualUserId);
+      } else {
+        // Create a new user if not found
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: `test-user-${userId}@example.com`,
+          email_confirm: true
+        });
+        
+        if (authError) {
+          console.error('Error creating user:', authError);
+          return NextResponse.json({ error: 'Could not find or create user' }, { status: 400 });
+        }
+        
+        actualUserId = authUser.user.id;
+        console.log('Created new user with UUID:', actualUserId);
+      }
+    }
+
+    // Calculate sections based on progress
+    let completedSections: string[] = [];
+    if (progress >= 25) completedSections.push('lookback');
+    if (progress >= 50) completedSections.push('lookup');
+    if (progress >= 75) completedSections.push('quiz');
+    if (progress === 100) completedSections.push('lookforward');
+
     // Update session progress
     const { error } = await supabaseAdmin
       .from('session_progress')
       .upsert({
-        user_id: userId,
+        user_id: actualUserId,
         session_id: sessionId,
         module_id: moduleId,
         overall_progress: progress,
-        completed_sections: progress >= 25 ? ['lookback'] : [],
+        completed_sections: completedSections,
         lookback_completed: progress >= 25,
         lookup_completed: progress >= 50,
         lookforward_completed: progress === 100,
@@ -118,7 +179,7 @@ export async function POST(request: NextRequest) {
         pre_assessment_completed: true,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId);
+      .eq('id', actualUserId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
