@@ -27,6 +27,8 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [currentSwipeIndex, setCurrentSwipeIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -350,12 +352,31 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
       case 'practice':
         return (
           <div className="space-y-6">
-            <EnhancedQuizSection sessionData={sessionData} />
+            <EnhancedQuizSection 
+              sessionData={sessionData} 
+              onCompletion={(completed) => {
+                setQuizCompleted(completed);
+                if (completed) {
+                  onMarkComplete('practice');
+                }
+              }}
+            />
             <button 
-              onClick={() => onMarkComplete('practice')}
-              className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 transition-colors"
+              onClick={() => {
+                if (!quizCompleted) {
+                  setShowValidationPopup(true);
+                  return;
+                }
+                onMarkComplete('practice');
+              }}
+              className={`px-6 py-2 rounded font-semibold transition-all transform hover:scale-105 ${
+                quizCompleted 
+                  ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                  : 'bg-pink-600 text-white hover:bg-pink-700'
+              }`}
+              disabled={quizCompleted}
             >
-              ✅ Complete Memory Practice
+              {quizCompleted ? '✅ COMPLETED' : '🎯 Complete Memory Practice'}
             </button>
           </div>
         );
@@ -475,6 +496,25 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
       <div className="p-6 bg-green-50">
         {isMobile ? <MobileSwipeCarousel /> : <DesktopAccordion />}
       </div>
+      
+      {/* Quiz Validation Popup */}
+      {showValidationPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+            <div className="text-6xl mb-4">📚</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Complete Quiz First!</h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Please finish the entire Memory Practice quiz to unlock this section. Every question builds your understanding of biblical business principles!
+            </p>
+            <button
+              onClick={() => setShowValidationPopup(false)}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+            >
+              Continue Learning
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

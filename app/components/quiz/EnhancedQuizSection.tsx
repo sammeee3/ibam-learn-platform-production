@@ -1,21 +1,26 @@
 // app/components/quiz/EnhancedQuizSection.tsx
 'use client';
 
-import { useState } from 'react';
-import { AlertCircle, CheckCircle, Lightbulb, Loader2, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { AlertCircle, CheckCircle, Lightbulb, X, ChevronRight } from 'lucide-react';
 import type { SessionData } from '../../lib/types';
 
 interface EnhancedQuizSectionProps {
   sessionData: SessionData;
+  onCompletion?: (completed: boolean) => void;
 }
 
-const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData }) => {
+const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, onCompletion }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showResult, setShowResult] = useState<Record<number, boolean>>({});
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showRetry, setShowRetry] = useState(false);
+  const [showContinueButton, setShowContinueButton] = useState(false);
+  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
+  const [celebrationActive, setCelebrationActive] = useState(false);
 
   // Extract quiz questions from content JSONB or FAQ questions
   const getQuizQuestions = () => {
@@ -108,16 +113,24 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData }
     const isCorrect = answerIndex === questions[questionIndex].correct;
     if (isCorrect) {
       setScore(prev => prev + 1);
+      setCelebrationActive(true);
+      // Stop celebration animation after 3 seconds
+      setTimeout(() => setCelebrationActive(false), 3000);
     }
     
-    // Auto-advance after showing result (with celebration delay)
+    // Show continue button after brief delay for reading
     setTimeout(() => {
-      if (questionIndex < questions.length - 1) {
-        setCurrentQuestion(questionIndex + 1);
-      } else {
-        setIsCompleted(true);
-      }
-    }, 2000);
+      setShowContinueButton(true);
+    }, 1000);
+  };
+  
+  const handleContinue = () => {
+    setShowContinueButton(false);
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setIsCompleted(true);
+    }
   };
 
   const resetQuiz = () => {
@@ -127,7 +140,30 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData }
     setScore(0);
     setIsCompleted(false);
     setShowRetry(false);
+    setShowContinueButton(false);
+    setIsQuizCompleted(false);
+    setCelebrationActive(false);
   };
+  
+  const handleCompleteQuiz = () => {
+    if (!isCompleted) {
+      setShowValidationPopup(true);
+      return;
+    }
+    setIsQuizCompleted(true);
+    onCompletion?.(true);
+  };
+  
+  // Auto-complete when quiz is finished
+  useEffect(() => {
+    if (isCompleted && score === questions.length) {
+      // Perfect score - auto complete after celebration
+      setTimeout(() => {
+        setIsQuizCompleted(true);
+        onCompletion?.(true);
+      }, 2000);
+    }
+  }, [isCompleted, score, questions.length, onCompletion]);
 
   if (questions.length === 0) {
     return (
@@ -184,9 +220,21 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData }
               setCurrentQuestion(0);
               setShowResult({});
             }}
-            className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+            className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors mr-4"
           >
             📖 Review Questions
+          </button>
+          
+          <button
+            onClick={handleCompleteQuiz}
+            className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+              isQuizCompleted 
+                ? 'bg-green-600 text-white cursor-default' 
+                : 'bg-pink-600 text-white hover:bg-pink-700'
+            }`}
+            disabled={isQuizCompleted}
+          >
+            {isQuizCompleted ? '✅ COMPLETED' : '🎯 Complete Memory Practice'}
           </button>
         </div>
       </div>
@@ -236,7 +284,7 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData }
             
             if (hasAnswered) {
               if (index === question.correct) {
-                buttonStyle = "border-2 border-green-500 bg-green-50 text-green-800";
+                buttonStyle = `border-2 border-green-500 bg-green-50 text-green-800 ${celebrationActive ? 'animate-pulse shadow-lg' : ''}`;
               } else if (index === selectedAnswer && index !== question.correct) {
                 buttonStyle = "border-2 border-red-500 bg-red-50 text-red-800";
               } else {
@@ -270,51 +318,92 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData }
           })}
         </div>
 
-        {/* Instant Feedback */}
+        {/* Enhanced Feedback with User Control */}
         {hasAnswered && (
-          <div className={`p-6 rounded-lg border-l-4 ${
+          <div className={`p-6 rounded-lg border-l-4 transition-all ${
             isCorrect 
-              ? 'bg-green-50 border-green-400' 
+              ? `bg-green-50 border-green-400 ${celebrationActive ? 'shadow-xl ring-2 ring-green-200' : ''}` 
               : 'bg-blue-50 border-blue-400'
           }`}>
             <div className="flex items-center mb-3">
               {isCorrect ? (
-                <CheckCircle className="w-6 h-6 text-green-600 mr-3" />
+                <CheckCircle className={`w-6 h-6 text-green-600 mr-3 ${celebrationActive ? 'animate-bounce' : ''}`} />
               ) : (
                 <Lightbulb className="w-6 h-6 text-blue-600 mr-3" />
               )}
               <h4 className={`text-lg font-bold ${
                 isCorrect ? 'text-green-800' : 'text-blue-800'
               }`}>
-                {isCorrect ? '🎉 Excellent!' : '💡 Learning Moment!'}
+                {isCorrect ? '🎉 Excellent Work!' : '💡 Great Learning Moment!'}
               </h4>
+              {isCorrect && celebrationActive && (
+                <div className="ml-3 text-2xl animate-bounce">🎊</div>
+              )}
             </div>
-            <p className={`text-base md:text-lg leading-relaxed ${
+            <p className={`text-base md:text-lg leading-relaxed mb-4 ${
               isCorrect ? 'text-green-700' : 'text-blue-700'
             }`}>
               {question.explanation}
             </p>
             
             {!isCorrect && (
-              <div className="mt-4 bg-white p-4 rounded border">
-                <p className="text-gray-700 font-medium">
-                  <strong>Remember:</strong> Learning is winning! Every question teaches valuable lessons about faith-driven business.
+              <div className="mt-4 bg-white p-4 rounded border border-blue-200">
+                <p className="text-blue-800 font-medium">
+                  <strong>Keep Growing:</strong> Every question builds your wisdom as a faith-driven entrepreneur. You're learning valuable biblical business principles!
                 </p>
+              </div>
+            )}
+            
+            {showContinueButton && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handleContinue}
+                  className="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all transform hover:scale-105 flex items-center mx-auto"
+                >
+                  {currentQuestion < questions.length - 1 ? 'Continue to Next Question' : 'Complete Quiz'}
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </button>
               </div>
             )}
           </div>
         )}
 
-        {/* Next Question Hint */}
-        {hasAnswered && currentQuestion < questions.length - 1 && (
-          <div className="text-center mt-6 text-gray-600">
-            <div className="flex items-center justify-center">
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              <span>Next question loading...</span>
-            </div>
+        {/* Completion Button */}
+        {!hasAnswered && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleCompleteQuiz}
+              className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                isQuizCompleted 
+                  ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                  : 'bg-pink-600 text-white hover:bg-pink-700'
+              }`}
+              disabled={isQuizCompleted}
+            >
+              {isQuizCompleted ? '✅ COMPLETED' : '🎯 Complete Memory Practice'}
+            </button>
           </div>
         )}
       </div>
+      
+      {/* Validation Popup */}
+      {showValidationPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+            <div className="text-6xl mb-4">📚</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Not Quite Ready Yet!</h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Please complete the entire quiz by answering all questions first. This ensures you've absorbed all the valuable biblical business principles!
+            </p>
+            <button
+              onClick={() => setShowValidationPopup(false)}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+            >
+              Continue Learning
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
