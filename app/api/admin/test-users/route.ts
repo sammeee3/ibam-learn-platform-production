@@ -172,24 +172,26 @@ export async function POST(request: NextRequest) {
       });
 
     // NOW update the CORRECT user_session_progress table that the session page actually reads!
+    // Remove completed_at field as it doesn't exist in the database
+    const progressData: any = {
+      user_id: actualUserId,
+      module_id: actualModuleId,
+      session_id: actualSessionId,
+      lookback_completed: lookbackCompleted,
+      lookup_completed: lookupCompleted,
+      lookforward_completed: lookforwardCompleted,
+      assessment_completed: assessmentCompleted,
+      completion_percentage: progress,
+      last_accessed: new Date().toISOString(),
+      time_spent_seconds: progress * 10, // Fake time spent
+      video_watch_percentage: progress >= 50 ? 100 : 0,
+      quiz_score: assessmentCompleted ? 100 : null,
+      quiz_attempts: assessmentCompleted ? 1 : 0
+    };
+
     const { error } = await supabaseAdmin
       .from('user_session_progress')
-      .upsert({
-        user_id: actualUserId,
-        module_id: actualModuleId,
-        session_id: actualSessionId,
-        lookback_completed: lookbackCompleted,
-        lookup_completed: lookupCompleted,
-        lookforward_completed: lookforwardCompleted,
-        assessment_completed: assessmentCompleted,
-        completion_percentage: progress,
-        last_accessed: new Date().toISOString(),
-        completed_at: progress === 100 ? new Date().toISOString() : null,
-        time_spent_seconds: progress * 10, // Fake time spent
-        video_watch_percentage: progress >= 50 ? 100 : 0,
-        quiz_score: assessmentCompleted ? 100 : null,
-        quiz_attempts: assessmentCompleted ? 1 : 0
-      }, {
+      .upsert(progressData, {
         onConflict: 'user_id,module_id,session_id'
       });
 
