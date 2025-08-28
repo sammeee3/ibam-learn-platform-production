@@ -22,13 +22,9 @@ interface User {
 }
 
 export default function FinalTestDashboard() {
-  // Initialize with test users immediately
-  const [users, setUsers] = useState<User[]>([
-    { id: '24f9c7e2-1a2b-4c5d-8e9f-0123456789ab', email: 'sammeee@yahoo.com', name: 'Jeff Samuelson' },
-    { id: '34f9c7e2-1a2b-4c5d-8e9f-0123456789ac', email: 'test@example.com', name: 'Test User' },
-    { id: '44f9c7e2-1a2b-4c5d-8e9f-0123456789ad', email: 'admin@ibam.org', name: 'Admin User' }
-  ]);
-  const [selectedUserId, setSelectedUserId] = useState('24f9c7e2-1a2b-4c5d-8e9f-0123456789ab');
+  // Initialize with empty users - will be loaded from database
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedModule, setSelectedModule] = useState('1');
   const [selectedSession, setSelectedSession] = useState('1');
   const [message, setMessage] = useState('');

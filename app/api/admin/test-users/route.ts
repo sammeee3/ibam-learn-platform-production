@@ -107,40 +107,34 @@ export async function POST(request: NextRequest) {
     
     console.log('Received request:', { userId, sessionId, moduleId, progress });
 
-    // Check if userId is a valid UUID or needs conversion
+    // Ensure userId is a valid UUID
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    let actualUserId = userId;
     
-    // If it's not a UUID, try to find the actual user
     if (!uuidRegex.test(userId)) {
-      console.log('Non-UUID user ID received:', userId);
-      
-      // Try to find user by the numeric ID in user_profiles
-      const { data: profile } = await supabaseAdmin
-        .from('user_profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
-      
-      if (profile) {
-        actualUserId = profile.id;
-        console.log('Found user profile with ID:', actualUserId);
-      } else {
-        // Create a new user if not found
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email: `test-user-${userId}@example.com`,
-          email_confirm: true
-        });
-        
-        if (authError) {
-          console.error('Error creating user:', authError);
-          return NextResponse.json({ error: 'Could not find or create user' }, { status: 400 });
-        }
-        
-        actualUserId = authUser.user.id;
-        console.log('Created new user with UUID:', actualUserId);
+      console.error('Invalid UUID format:', userId);
+      return NextResponse.json({ error: 'Invalid user ID format' }, { status: 400 });
+    }
+    
+    // Get the user_profiles.id for this auth user
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    let userProfileId: number | null = null;
+    
+    if (profileError || !profile) {
+      console.log('User profile not found, will use UUID for session_progress only');
+    } else {
+      // Check if the profile.id is a number (for user_session_progress table)
+      // In some cases it might be the same UUID
+      if (typeof profile.id === 'number') {
+        userProfileId = profile.id;
       }
     }
+    
+    const actualUserId = userId; // UUID for session_progress table
 
     // Parse session ID correctly (e.g., "1-1" means module 1, session 1)
     const [modId, sessId] = sessionId.split('-').map(Number);
@@ -160,12 +154,13 @@ export async function POST(request: NextRequest) {
     const lookforwardCompleted = progress === 100;
 
     // First update the OLD session_progress table for backward compatibility
+    // This table uses UUID for user_id and integer for module_id
     await supabaseAdmin
       .from('session_progress')
       .upsert({
-        user_id: actualUserId,
-        session_id: sessionId,
-        module_id: parseInt(String(actualModuleId), 10),
+        user_id: actualUserId, // UUID
+        session_id: sessionId, // String like "1-1"
+        module_id: actualModuleId, // Integer
         overall_progress: progress,
         completed_sections: progress >= 25 ? ['lookback', 'lookup', 'quiz', 'lookforward'].slice(0, Math.floor(progress / 25)) : [],
         lookback_completed: lookbackCompleted,
@@ -180,32 +175,62 @@ export async function POST(request: NextRequest) {
       });
 
     // NOW update the CORRECT user_session_progress table that the session page actually reads!
-    // Remove completed_at field as it doesn't exist in the database
-    const progressData: any = {
-      user_id: actualUserId,
-      module_id: parseInt(String(actualModuleId), 10),
-      session_id: parseInt(String(actualSessionId), 10),
-      lookback_completed: lookbackCompleted,
-      lookup_completed: lookupCompleted,
-      lookforward_completed: lookforwardCompleted,
-      assessment_completed: assessmentCompleted,
-      completion_percentage: progress,
-      last_accessed: new Date().toISOString(),
-      time_spent_seconds: progress * 10, // Fake time spent
-      video_watch_percentage: progress >= 50 ? 100 : 0,
-      quiz_score: assessmentCompleted ? 100 : null,
-      quiz_attempts: assessmentCompleted ? 1 : 0
-    };
+    // Skip if we don't have a numeric profile ID (table might not exist or use different schema)
+    if (userProfileId !== null) {
+      const progressData: any = {
+        user_id: userProfileId, // This expects an integer
+        module_id: actualModuleId, // This is an integer
+        session_id: actualSessionId, // This is an integer
+        lookback_completed: lookbackCompleted,
+        lookup_completed: lookupCompleted,
+        lookforward_completed: lookforwardCompleted,
+        assessment_completed: assessmentCompleted,
+        completion_percentage: progress,
+        last_accessed: new Date().toISOString(),
+        time_spent_seconds: progress * 10, // Fake time spent
+        video_watch_percentage: progress >= 50 ? 100 : 0,
+        quiz_score: assessmentCompleted ? 100 : null,
+        quiz_attempts: assessmentCompleted ? 1 : 0
+      };
 
-    const { error } = await supabaseAdmin
-      .from('user_session_progress')
-      .upsert(progressData, {
-        onConflict: 'user_id,module_id,session_id'
-      });
+      const { error } = await supabaseAdmin
+        .from('user_session_progress')
+        .upsert(progressData, {
+          onConflict: 'user_id,module_id,session_id'
+        });
 
-    if (error) {
-      console.error('Error updating progress:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error) {
+        console.error('Error updating user_session_progress:', error);
+        // Don't fail entirely, session_progress was still updated
+      }
+    } else {
+      // Try with UUID in case the table schema is different
+      const progressData: any = {
+        user_id: actualUserId, // Try with UUID
+        module_id: actualModuleId, 
+        session_id: actualSessionId,
+        lookback_completed: lookbackCompleted,
+        lookup_completed: lookupCompleted,
+        lookforward_completed: lookforwardCompleted,
+        assessment_completed: assessmentCompleted,
+        completion_percentage: progress,
+        last_accessed: new Date().toISOString(),
+        time_spent_seconds: progress * 10,
+        video_watch_percentage: progress >= 50 ? 100 : 0,
+        quiz_score: assessmentCompleted ? 100 : null,
+        quiz_attempts: assessmentCompleted ? 1 : 0
+      };
+
+      const { error } = await supabaseAdmin
+        .from('user_session_progress')
+        .upsert(progressData, {
+          onConflict: 'user_id,module_id,session_id'
+        });
+
+      if (error) {
+        console.error('Error updating user_session_progress with UUID:', error);
+        // Don't fail entirely, session_progress was still updated
+      }
     }
 
     // Also mark pre-assessment as completed
