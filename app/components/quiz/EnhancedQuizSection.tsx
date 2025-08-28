@@ -11,11 +11,61 @@ interface EnhancedQuizSectionProps {
 }
 
 const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, onCompletion }) => {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
-  const [showResult, setShowResult] = useState<Record<number, boolean>>({});
-  const [score, setScore] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
+  // Storage key for this specific session
+  const STORAGE_KEY = `quiz_progress_${sessionData.id}`;
+  
+  // Initialize state from localStorage if available
+  const getInitialState = () => {
+    if (typeof window === 'undefined') {
+      return {
+        currentQuestion: 0,
+        selectedAnswers: {},
+        showResult: {},
+        score: 0,
+        isCompleted: false
+      };
+    }
+    
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const progress = JSON.parse(saved);
+        // Only restore if saved within last 24 hours
+        if (Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) {
+          console.log('🔄 Restoring quiz progress:', progress);
+          return {
+            currentQuestion: progress.currentQuestion || 0,
+            selectedAnswers: progress.selectedAnswers || {},
+            showResult: progress.showResult || {},
+            score: progress.score || 0,
+            isCompleted: progress.isCompleted || false
+          };
+        } else {
+          // Expired progress
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load quiz progress:', error);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    
+    return {
+      currentQuestion: 0,
+      selectedAnswers: {},
+      showResult: {},
+      score: 0,
+      isCompleted: false
+    };
+  };
+  
+  const initialState = getInitialState();
+  
+  const [currentQuestion, setCurrentQuestion] = useState(initialState.currentQuestion);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>(initialState.selectedAnswers);
+  const [showResult, setShowResult] = useState<Record<number, boolean>>(initialState.showResult);
+  const [score, setScore] = useState(initialState.score);
+  const [isCompleted, setIsCompleted] = useState(initialState.isCompleted);
   const [showRetry, setShowRetry] = useState(false);
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [celebrationActive, setCelebrationActive] = useState(false);
@@ -131,11 +181,8 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     }
   };
 
-  // Quiz progress persistence
-  const STORAGE_KEY = `quiz_progress_${sessionData.id}`;
-  
-  // Save progress to localStorage
-  const saveProgress = () => {
+  // Save progress to localStorage whenever state changes
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const progress = {
         currentQuestion,
@@ -146,55 +193,20 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
         timestamp: Date.now()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      console.log('💾 Saved quiz progress:', progress);
     }
-  };
-  
-  // Load progress from localStorage
-  const loadProgress = () => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const progress = JSON.parse(saved);
-          // Only restore if saved within last 24 hours
-          if (Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) {
-            setCurrentQuestion(progress.currentQuestion || 0);
-            setSelectedAnswers(progress.selectedAnswers || {});
-            setShowResult(progress.showResult || {});
-            setScore(progress.score || 0);
-            setIsCompleted(progress.isCompleted || false);
-          }
-        } catch (error) {
-          console.warn('Failed to load quiz progress:', error);
-        }
-      }
-    }
-  };
-  
-  // Clear progress from localStorage
-  const clearProgress = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  };
-  
-  // Load progress on mount
-  useEffect(() => {
-    loadProgress();
-  }, []);
-  
-  // Save progress whenever state changes
-  useEffect(() => {
-    saveProgress();
-  }, [currentQuestion, selectedAnswers, showResult, score, isCompleted]);
+  }, [currentQuestion, selectedAnswers, showResult, score, isCompleted, STORAGE_KEY]);
   
   // Clear progress and trigger completion when quiz is finished
   useEffect(() => {
     if (isCompleted) {
-      clearProgress();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('🧹 Cleared quiz progress - quiz completed');
+      }
       onCompletion?.(true);
     }
-  }, [isCompleted, onCompletion]);
+  }, [isCompleted, onCompletion, STORAGE_KEY]);
   
   const resetQuiz = () => {
     setCurrentQuestion(0);
@@ -205,7 +217,10 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     setShowRetry(false);
     setShowContinueButton(false);
     setCelebrationActive(false);
-    clearProgress();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+      console.log('🔄 Reset quiz progress');
+    }
   };
 
   if (questions.length === 0) {
