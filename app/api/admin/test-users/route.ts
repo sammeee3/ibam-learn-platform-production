@@ -140,31 +140,57 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate sections based on progress
-    let completedSections: string[] = [];
-    if (progress >= 25) completedSections.push('lookback');
-    if (progress >= 50) completedSections.push('lookup');
-    if (progress >= 75) completedSections.push('quiz');
-    if (progress === 100) completedSections.push('lookforward');
+    // Parse session ID correctly (e.g., "1-1" means module 1, session 1)
+    const [modId, sessId] = sessionId.split('-').map(Number);
+    const actualModuleId = modId || moduleId;
+    const actualSessionId = sessId || 1;
 
-    // Update session progress
-    const { error } = await supabaseAdmin
+    // Calculate which sections are completed based on progress percentage
+    const lookbackCompleted = progress >= 25;
+    const lookupCompleted = progress >= 50;
+    const assessmentCompleted = progress >= 75;
+    const lookforwardCompleted = progress === 100;
+
+    // First update the OLD session_progress table for backward compatibility
+    await supabaseAdmin
       .from('session_progress')
       .upsert({
         user_id: actualUserId,
         session_id: sessionId,
-        module_id: moduleId,
+        module_id: actualModuleId,
         overall_progress: progress,
-        completed_sections: completedSections,
-        lookback_completed: progress >= 25,
-        lookup_completed: progress >= 50,
-        lookforward_completed: progress === 100,
-        quiz_completed: progress >= 75,
+        completed_sections: progress >= 25 ? ['lookback', 'lookup', 'quiz', 'lookforward'].slice(0, Math.floor(progress / 25)) : [],
+        lookback_completed: lookbackCompleted,
+        lookup_completed: lookupCompleted,
+        lookforward_completed: lookforwardCompleted,
+        quiz_completed: assessmentCompleted,
         last_activity: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'user_id,session_id'
+      });
+
+    // NOW update the CORRECT user_session_progress table that the session page actually reads!
+    const { error } = await supabaseAdmin
+      .from('user_session_progress')
+      .upsert({
+        user_id: actualUserId,
+        module_id: actualModuleId,
+        session_id: actualSessionId,
+        lookback_completed: lookbackCompleted,
+        lookup_completed: lookupCompleted,
+        lookforward_completed: lookforwardCompleted,
+        assessment_completed: assessmentCompleted,
+        completion_percentage: progress,
+        last_accessed: new Date().toISOString(),
+        completed_at: progress === 100 ? new Date().toISOString() : null,
+        time_spent_seconds: progress * 10, // Fake time spent
+        video_watch_percentage: progress >= 50 ? 100 : 0,
+        quiz_score: assessmentCompleted ? 100 : null,
+        quiz_attempts: assessmentCompleted ? 1 : 0
+      }, {
+        onConflict: 'user_id,module_id,session_id'
       });
 
     if (error) {
