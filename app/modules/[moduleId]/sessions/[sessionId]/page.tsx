@@ -822,7 +822,9 @@ const navigateTo = (path: string) => {
 </div>
 
 {/* Resources Section - Moved to Bottom */}
-<SessionResourcesSection sessionData={sessionData} />
+<div className="mt-6">
+  <SessionResourcesSection sessionData={sessionData} />
+</div>
 
 {/* Feedback Widget */}
 <SafeFeedbackWidget />
