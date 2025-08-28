@@ -96,14 +96,6 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
       gradient: 'from-pink-400 to-rose-500',
       hoverGradient: 'from-pink-500 to-rose-600'
     },
-    {
-      id: 'resources',
-      title: 'Resources',
-      icon: '📚',
-      description: 'Further Learning',
-      gradient: 'from-emerald-400 to-green-500',
-      hoverGradient: 'from-emerald-500 to-green-600'
-    }
   ];
 
   // Smart Video URL Detection
@@ -368,56 +360,6 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
           </div>
         );
 
-      case 'resources':
-        return (
-          <div className="space-y-6">
-            <div className="bg-emerald-50 p-6 rounded-lg border-l-4 border-emerald-400">
-              <h4 className="font-bold text-emerald-800 mb-3">📚 Additional Resources & Further Reading</h4>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white p-4 rounded">
-                  <h5 className="font-semibold mb-3 flex items-center">
-                    <Book className="w-5 h-5 mr-2" />
-                    📖 Recommended Books
-                  </h5>
-                  <div className="space-y-3">
-                    {(sessionData.resources?.books || [
-                      { title: "Business for the Glory of God", author: "Wayne Grudem", url: "https://example.com/book1" },
-                      { title: "The Purpose Driven Life", author: "Rick Warren", url: "https://example.com/book2" }
-                    ]).map((book, index) => (
-                      <div key={index} className="border-l-4 border-blue-400 pl-3 py-2">
-                        <div className="font-medium">{book.title}</div>
-                        <div className="text-sm text-gray-600">by {book.author}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="bg-white p-4 rounded">
-                  <h5 className="font-semibold mb-3 flex items-center">
-                    <Star className="w-5 h-5 mr-2" />
-                    🌐 Helpful Websites
-                  </h5>
-                  <div className="space-y-3">
-                    {(sessionData.resources?.websites || [
-                      { title: "IBAM Resource Center", url: "https://ibam.org/resources" },
-                      { title: "Faith-Driven Business Network", url: "https://faithdrivenbusiness.org" }
-                    ]).map((site, index) => (
-                      <div key={index} className="border-l-4 border-green-400 pl-3 py-2">
-                        <div className="font-medium">{site.title}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button 
-              onClick={() => onMarkComplete('resources')}
-              className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 transition-colors"
-            >
-              ✅ Complete Resources Review
-            </button>
-          </div>
-        );
 
       default:
         return <div>Content loading...</div>;

@@ -75,6 +75,7 @@ import BeautifulLookingUpSection from '../../../../components/sections/LookingUp
 import LookingForwardSection from '../../../../components/sections/LookingForward/LookingForwardSection';
 import BeautifulCaseStudyComponent from '../../../../components/case-study/BeautifulCaseStudyComponent';
 import SessionProgressOverviewModern from '../../../../components/progress/SessionProgressOverviewModern';
+import SessionResourcesSection from '../../../../components/resources/SessionResourcesSection';
 // Real Supabase client
 const supabase = createClientComponentClient();
 
@@ -203,8 +204,7 @@ export default function SessionPage({ params }: SessionPageProps) {
     case: false,
     integrate: false,
     coaching: false,
-    practice: false,
-    resources: false
+    practice: false
   });
   const handleNextSession = () => {
     // FIXED: Correct session counts from production database
@@ -820,6 +820,9 @@ const navigateTo = (path: string) => {
   <h3 className="text-xl font-bold mb-3">✨ Your Transformation Promise</h3>
   <p className="text-lg">{sessionData.transformation_promise}</p>
 </div>
+
+{/* Resources Section - Moved to Bottom */}
+<SessionResourcesSection sessionData={sessionData} />
 
 {/* Feedback Widget */}
 <SafeFeedbackWidget />
