@@ -61,9 +61,11 @@ export interface SessionData {
   faq_questions?: string[];
   transformation_promise?: string;
   resources?: {
-    books?: { title: string; author: string; url: string; }[];
-    websites?: { title: string; url: string; }[];
-    articles?: { title: string; url: string; }[];
+    books?: { title: string; author: string; url: string; description?: string; }[];
+    websites?: { title: string; url: string; description?: string; }[];
+    articles?: { title: string; url: string; description?: string; }[];
+    videos?: { title: string; url: string; description?: string; }[];
+    downloads?: { title: string; url: string; description?: string; }[];
   };
   created_at: string;
   updated_at: string;

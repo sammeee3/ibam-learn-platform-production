@@ -84,8 +84,8 @@ const SessionResourcesSection: React.FC<SessionResourcesSectionProps> = ({ sessi
                       <div key={index} className="border-l-4 border-blue-400 pl-3 py-2">
                         <div className="font-medium">{book.title}</div>
                         <div className="text-sm text-gray-600">by {book.author}</div>
-                        {(book as any).description && (
-                          <div className="text-xs text-gray-500 mt-1">{(book as any).description}</div>
+                        {book.description && (
+                          <div className="text-xs text-gray-500 mt-1">{book.description}</div>
                         )}
                       </div>
                     ))}
@@ -103,8 +103,8 @@ const SessionResourcesSection: React.FC<SessionResourcesSectionProps> = ({ sessi
                     {sessionData.resources.websites.map((site, index) => (
                       <div key={index} className="border-l-4 border-green-400 pl-3 py-2">
                         <div className="font-medium">{site.title}</div>
-                        {(site as any).description && (
-                          <div className="text-xs text-gray-500 mt-1">{(site as any).description}</div>
+                        {site.description && (
+                          <div className="text-xs text-gray-500 mt-1">{site.description}</div>
                         )}
                       </div>
                     ))}
@@ -122,8 +122,8 @@ const SessionResourcesSection: React.FC<SessionResourcesSectionProps> = ({ sessi
                     {sessionData.resources.videos.map((video, index) => (
                       <div key={index} className="border-l-4 border-purple-400 pl-3 py-2">
                         <div className="font-medium">{video.title}</div>
-                        {(video as any).description && (
-                          <div className="text-xs text-gray-500 mt-1">{(video as any).description}</div>
+                        {video.description && (
+                          <div className="text-xs text-gray-500 mt-1">{video.description}</div>
                         )}
                       </div>
                     ))}
@@ -141,8 +141,8 @@ const SessionResourcesSection: React.FC<SessionResourcesSectionProps> = ({ sessi
                     {sessionData.resources.downloads.map((download, index) => (
                       <div key={index} className="border-l-4 border-orange-400 pl-3 py-2">
                         <div className="font-medium">{download.title}</div>
-                        {(download as any).description && (
-                          <div className="text-xs text-gray-500 mt-1">{(download as any).description}</div>
+                        {download.description && (
+                          <div className="text-xs text-gray-500 mt-1">{download.description}</div>
                         )}
                       </div>
                     ))}
