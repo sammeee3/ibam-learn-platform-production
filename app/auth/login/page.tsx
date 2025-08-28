@@ -90,8 +90,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        (
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
@@ -128,7 +127,6 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
-        )
 
         <div className="mt-6 space-y-3 text-center">
           <div>
