@@ -175,62 +175,40 @@ export async function POST(request: NextRequest) {
       });
 
     // NOW update the CORRECT user_session_progress table that the session page actually reads!
-    // Skip if we don't have a numeric profile ID (table might not exist or use different schema)
-    if (userProfileId !== null) {
-      const progressData: any = {
-        user_id: userProfileId, // This expects an integer
-        module_id: actualModuleId, // This is an integer
-        session_id: actualSessionId, // This is an integer
-        lookback_completed: lookbackCompleted,
-        lookup_completed: lookupCompleted,
-        lookforward_completed: lookforwardCompleted,
-        assessment_completed: assessmentCompleted,
-        completion_percentage: progress,
-        last_accessed: new Date().toISOString(),
-        time_spent_seconds: progress * 10, // Fake time spent
-        video_watch_percentage: progress >= 50 ? 100 : 0,
-        quiz_score: assessmentCompleted ? 100 : null,
-        quiz_attempts: assessmentCompleted ? 1 : 0
-      };
+    // The progressTracker service expects the user_id to be the auth UUID
+    const progressData: any = {
+      user_id: actualUserId, // Use the auth UUID - this is what progressTracker expects!
+      module_id: actualModuleId, 
+      session_id: actualSessionId,
+      lookback_completed: lookbackCompleted,
+      lookup_completed: lookupCompleted,
+      lookforward_completed: lookforwardCompleted,
+      assessment_completed: assessmentCompleted,
+      completion_percentage: progress,
+      last_accessed: new Date().toISOString(),
+      time_spent_seconds: progress * 10,
+      video_watch_percentage: progress >= 50 ? 100 : 0,
+      quiz_score: assessmentCompleted ? 100 : null,
+      quiz_attempts: assessmentCompleted ? 1 : 0
+    };
 
-      const { error } = await supabaseAdmin
-        .from('user_session_progress')
-        .upsert(progressData, {
-          onConflict: 'user_id,module_id,session_id'
-        });
+    console.log('Updating user_session_progress with:', progressData);
 
-      if (error) {
-        console.error('Error updating user_session_progress:', error);
-        // Don't fail entirely, session_progress was still updated
+    const { error: sessionProgressError } = await supabaseAdmin
+      .from('user_session_progress')
+      .upsert(progressData, {
+        onConflict: 'user_id,module_id,session_id'
+      });
+
+    if (sessionProgressError) {
+      console.error('Error updating user_session_progress:', sessionProgressError);
+      // Try to understand the error better
+      if (sessionProgressError.message.includes('violates foreign key')) {
+        console.error('Foreign key issue - user may not exist in user_profiles table');
       }
+      // Don't fail entirely, session_progress was still updated
     } else {
-      // Try with UUID in case the table schema is different
-      const progressData: any = {
-        user_id: actualUserId, // Try with UUID
-        module_id: actualModuleId, 
-        session_id: actualSessionId,
-        lookback_completed: lookbackCompleted,
-        lookup_completed: lookupCompleted,
-        lookforward_completed: lookforwardCompleted,
-        assessment_completed: assessmentCompleted,
-        completion_percentage: progress,
-        last_accessed: new Date().toISOString(),
-        time_spent_seconds: progress * 10,
-        video_watch_percentage: progress >= 50 ? 100 : 0,
-        quiz_score: assessmentCompleted ? 100 : null,
-        quiz_attempts: assessmentCompleted ? 1 : 0
-      };
-
-      const { error } = await supabaseAdmin
-        .from('user_session_progress')
-        .upsert(progressData, {
-          onConflict: 'user_id,module_id,session_id'
-        });
-
-      if (error) {
-        console.error('Error updating user_session_progress with UUID:', error);
-        // Don't fail entirely, session_progress was still updated
-      }
+      console.log('Successfully updated user_session_progress table');
     }
 
     // Also mark pre-assessment as completed

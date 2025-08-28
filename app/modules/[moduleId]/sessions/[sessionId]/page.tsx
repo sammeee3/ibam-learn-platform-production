@@ -399,36 +399,53 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
         // Load saved progress from database
         try {
           const { data: { user } } = await supabase.auth.getUser();
+          console.log('🔍 Loading progress for user:', user?.id);
+          
           if (user) {
             // Get user's overall progress
             const progressData = await progressTracker.getUserProgress(user.id);
+            console.log('📊 Progress data loaded:', progressData);
             
             // Find progress for this specific session
             const progress = progressData?.sessions?.find(
               (s: any) => s.module_id === parseInt(moduleId) && s.session_id === parseInt(sessionId)
             );
+            console.log('📈 Session progress found:', progress);
             
             if (progress) {
-              // Restore completed sections
-              const completed = progress.sections_completed || {};
-              setCompletedSections(prev => ({
-                ...prev,
-                ...completed
-              }));
+              // Restore completed sections based on individual completion flags
+              const restoredSections = {
+                lookback: progress.lookback_completed || false,
+                lookup: progress.lookup_completed || false,
+                content: progress.lookup_completed || false, // Map to content section
+                quiz: progress.assessment_completed || false,
+                lookforward: progress.lookforward_completed || false
+              };
+              console.log('✅ Restored sections:', restoredSections);
+              setCompletedSections(restoredSections);
               
-              // Restore section progress  
-              const sectionProg = progress.section_progress || {};
-              setSectionProgress(prev => ({
-                ...prev,
-                ...sectionProg
-              }));
+              // Calculate section progress percentages
+              const sectionProg = {
+                lookback: progress.lookback_completed ? 100 : 0,
+                lookup: progress.lookup_completed ? 100 : 0,
+                content: progress.lookup_completed ? 100 : 0,
+                quiz: progress.assessment_completed ? 100 : 0,
+                lookforward: progress.lookforward_completed ? 100 : 0
+              };
+              setSectionProgress(sectionProg);
               
               // Restore overall progress
-              setSessionProgressPercent(progress.completion_percentage || 0);
+              const overallProgress = progress.completion_percentage || 0;
+              console.log('📊 Setting overall progress to:', overallProgress);
+              setSessionProgressPercent(overallProgress);
+            } else {
+              console.log('⚠️ No progress found for this session');
             }
+          } else {
+            console.log('⚠️ No authenticated user - progress will show as 0%');
           }
         } catch (error) {
-          console.error('Error loading progress:', error);
+          console.error('❌ Error loading progress:', error);
         }
       } catch (err) {
         console.error('Fetch error:', err);
