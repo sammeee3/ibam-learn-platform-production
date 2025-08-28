@@ -18,8 +18,6 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
   const [isCompleted, setIsCompleted] = useState(false);
   const [showRetry, setShowRetry] = useState(false);
   const [showContinueButton, setShowContinueButton] = useState(false);
-  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
-  const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [celebrationActive, setCelebrationActive] = useState(false);
 
   // Extract quiz questions from content JSONB or FAQ questions
@@ -133,6 +131,71 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     }
   };
 
+  // Quiz progress persistence
+  const STORAGE_KEY = `quiz_progress_${sessionData.id}`;
+  
+  // Save progress to localStorage
+  const saveProgress = () => {
+    if (typeof window !== 'undefined') {
+      const progress = {
+        currentQuestion,
+        selectedAnswers,
+        showResult,
+        score,
+        isCompleted,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    }
+  };
+  
+  // Load progress from localStorage
+  const loadProgress = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const progress = JSON.parse(saved);
+          // Only restore if saved within last 24 hours
+          if (Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) {
+            setCurrentQuestion(progress.currentQuestion || 0);
+            setSelectedAnswers(progress.selectedAnswers || {});
+            setShowResult(progress.showResult || {});
+            setScore(progress.score || 0);
+            setIsCompleted(progress.isCompleted || false);
+          }
+        } catch (error) {
+          console.warn('Failed to load quiz progress:', error);
+        }
+      }
+    }
+  };
+  
+  // Clear progress from localStorage
+  const clearProgress = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+  
+  // Load progress on mount
+  useEffect(() => {
+    loadProgress();
+  }, []);
+  
+  // Save progress whenever state changes
+  useEffect(() => {
+    saveProgress();
+  }, [currentQuestion, selectedAnswers, showResult, score, isCompleted]);
+  
+  // Clear progress and trigger completion when quiz is finished
+  useEffect(() => {
+    if (isCompleted) {
+      clearProgress();
+      onCompletion?.(true);
+    }
+  }, [isCompleted, onCompletion]);
+  
   const resetQuiz = () => {
     setCurrentQuestion(0);
     setSelectedAnswers({});
@@ -141,29 +204,9 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     setIsCompleted(false);
     setShowRetry(false);
     setShowContinueButton(false);
-    setIsQuizCompleted(false);
     setCelebrationActive(false);
+    clearProgress();
   };
-  
-  const handleCompleteQuiz = () => {
-    if (!isCompleted) {
-      setShowValidationPopup(true);
-      return;
-    }
-    setIsQuizCompleted(true);
-    onCompletion?.(true);
-  };
-  
-  // Auto-complete when quiz is finished
-  useEffect(() => {
-    if (isCompleted && score === questions.length) {
-      // Perfect score - auto complete after celebration
-      setTimeout(() => {
-        setIsQuizCompleted(true);
-        onCompletion?.(true);
-      }, 2000);
-    }
-  }, [isCompleted, score, questions.length, onCompletion]);
 
   if (questions.length === 0) {
     return (
@@ -225,17 +268,6 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
             📖 Review Questions
           </button>
           
-          <button
-            onClick={handleCompleteQuiz}
-            className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
-              isQuizCompleted 
-                ? 'bg-green-600 text-white cursor-default' 
-                : 'bg-pink-600 text-white hover:bg-pink-700'
-            }`}
-            disabled={isQuizCompleted}
-          >
-            {isQuizCompleted ? '✅ COMPLETED' : '🎯 Complete Memory Practice'}
-          </button>
         </div>
       </div>
     );
@@ -368,42 +400,8 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
           </div>
         )}
 
-        {/* Completion Button */}
-        {!hasAnswered && (
-          <div className="mt-8 text-center">
-            <button
-              onClick={handleCompleteQuiz}
-              className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
-                isQuizCompleted 
-                  ? 'bg-green-600 text-white cursor-default shadow-lg' 
-                  : 'bg-pink-600 text-white hover:bg-pink-700'
-              }`}
-              disabled={isQuizCompleted}
-            >
-              {isQuizCompleted ? '✅ COMPLETED' : '🎯 Complete Memory Practice'}
-            </button>
-          </div>
-        )}
       </div>
       
-      {/* Validation Popup */}
-      {showValidationPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
-            <div className="text-6xl mb-4">📚</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Not Quite Ready Yet!</h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Please complete the entire quiz by answering all questions first. This ensures you've absorbed all the valuable biblical business principles!
-            </p>
-            <button
-              onClick={() => setShowValidationPopup(false)}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-            >
-              Continue Learning
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
