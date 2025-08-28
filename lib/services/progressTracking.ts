@@ -82,7 +82,7 @@ export class ProgressTracker {
         last_accessed: new Date().toISOString()
       };
 
-      // Calculate completion percentage
+      // Calculate completion percentage (excluding coaching - it's now a floating feature)
       const completedSections = [
         updatedProgress.lookback_completed,
         updatedProgress.lookup_completed,
@@ -90,6 +90,7 @@ export class ProgressTracker {
         updatedProgress.assessment_completed
       ].filter(Boolean).length;
       
+      // Total sections excludes coaching (removed from Looking Up)
       const totalSections = updatedProgress.assessment_completed !== null ? 4 : 3;
       updatedProgress.completion_percentage = Math.round((completedSections / totalSections) * 100);
 

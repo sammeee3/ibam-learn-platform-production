@@ -6,10 +6,31 @@ import { Bot, Send } from 'lucide-react';
 import { aiCoachingResponses } from '../../lib/constants';
 import type { AIMessage } from '../../lib/types';
 
-const AIChatInterface: React.FC = () => {
-  const [messages, setMessages] = useState<AIMessage[]>([
-    { type: 'ai', content: "Hi! I'm your faith-driven business coach. I'm here to help you apply today's session to your specific business situation. What questions do you have?" }
-  ]);
+interface AIChatInterfaceProps {
+  moduleId?: number;
+  sessionId?: number;
+  sessionTitle?: string;
+  currentSection?: string;
+  isMobile?: boolean;
+}
+
+const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ 
+  moduleId, 
+  sessionId, 
+  sessionTitle = "Current Session",
+  currentSection = "session",
+  isMobile = false 
+}) => {
+  const [messages, setMessages] = useState<AIMessage[]>([]);
+
+  // Initialize with context-aware greeting
+  useEffect(() => {
+    const contextGreeting = sessionTitle 
+      ? `Hi! I'm your faith-driven business coach for "${sessionTitle}". I'm here to help you discover how to apply today's biblical business principles to your specific situation. What's on your mind?`
+      : "Hi! I'm your faith-driven business coach. I'm here to help you apply today's session to your specific business situation. What questions do you have?";
+    
+    setMessages([{ type: 'ai', content: contextGreeting }]);
+  }, [sessionTitle]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -34,12 +55,9 @@ const AIChatInterface: React.FC = () => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate AI response delay
+    // Enhanced context-aware discovery coaching response
     setTimeout(() => {
-      const response = aiCoachingResponses[message] || {
-        response: `Thanks for your question: "${message}". Based on today's session about Faith-Driven business foundations, remember that God has called you to create value through your work. Every business challenge is an opportunity to demonstrate His character. Consider how this situation might be an opportunity to show integrity, excellence, or servant leadership. What specific step could you take this week to apply biblical principles to this challenge?`,
-        followUp: "Would you like me to elaborate on any specific aspect?"
-      };
+      const response = generateDiscoveryResponse(message, sessionTitle, moduleId, sessionId);
 
       setMessages(prev => [...prev, { 
         type: 'ai', 
@@ -50,17 +68,61 @@ const AIChatInterface: React.FC = () => {
     }, 1500);
   };
 
-  return (
-    <div className="bg-white rounded-lg border shadow-sm">
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-t-lg">
-        <h5 className="font-semibold flex items-center">
-          <Bot className="w-5 h-5 mr-2" />
-          🤖 AI Faith-Business Coach
-        </h5>
-        <p className="text-sm text-blue-100">Context-aware coaching for today's session</p>
-      </div>
+  // Discovery-based coaching response generator
+  const generateDiscoveryResponse = (userMessage: string, sessionTitle: string, moduleId?: number, sessionId?: number) => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    // Context-aware session references
+    const sessionContext = sessionTitle !== "Current Session" ? `today's lesson on "${sessionTitle}"` : "today's session";
+    
+    // Discovery coaching patterns for common topics
+    if (lowerMessage.includes('pricing') || lowerMessage.includes('price')) {
+      return {
+        response: `Great question about pricing! Let's explore this together. What does "fair pricing" mean to you personally? How does ${sessionContext} connect to your pricing concerns? What would pricing with complete integrity look like in your business?`,
+        followUp: "What's one small pricing experiment you could try this week based on these insights?"
+      };
+    }
+    
+    if (lowerMessage.includes('funding') || lowerMessage.includes('investment') || lowerMessage.includes('capital')) {
+      return {
+        response: `I can see you're thinking about funding - that shows great entrepreneurial vision! But let's first focus on ${sessionContext}. What does biblical stewardship look like with your current resources? How might mastering what you have now prepare you for greater opportunities later?`,
+        followUp: "What's one way you could be more faithful with what God has already given you?"
+      };
+    }
+    
+    if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('market')) {
+      return {
+        response: `Finding customers is exciting! Let's dig deeper here. Who are you specifically called to serve? How does ${sessionContext} shape your understanding of your ideal customer? What problems are you uniquely positioned to solve?`,
+        followUp: "What would it look like to serve your customers as an act of worship?"
+      };
+    }
+    
+    if (lowerMessage.includes('profit') || lowerMessage.includes('money') || lowerMessage.includes('income')) {
+      return {
+        response: `Profit and ministry - such an important balance! What does ${sessionContext} teach you about God's view of wealth? How do you see profit serving your deeper mission? What fears or excitement do you have about making money through your business?`,
+        followUp: "How could your profit become a tool for Kingdom impact?"
+      };
+    }
+    
+    if (lowerMessage.includes('fear') || lowerMessage.includes('scared') || lowerMessage.includes('worried')) {
+      return {
+        response: `I hear the vulnerability in your question - that takes courage to share. What specifically are you afraid of? How does ${sessionContext} speak to your fears? What would you do if you knew you couldn't fail?`,
+        followUp: "What's one small, brave step you could take this week?"
+      };
+    }
+    
+    // Default discovery response
+    return {
+      response: `That's a thoughtful question! Let's explore this together. How does this connect to your deeper purpose in business? What insights from ${sessionContext} come to mind as you think about this? What would success look like if you approached this with complete faith?`,
+      followUp: "What's one specific step you could take this week to move forward?"
+    };
+  };
 
-      <div className="h-64 overflow-y-auto p-4 space-y-3">
+  const chatHeight = isMobile ? "h-80" : "h-96";
+
+  return (
+    <div className="bg-white">
+      <div className={`${chatHeight} overflow-y-auto p-4 space-y-3`}>
         {messages.map((message, index) => (
           <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${

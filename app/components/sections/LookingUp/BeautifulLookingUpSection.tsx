@@ -8,7 +8,6 @@ import { VimeoVideo } from '../../video/VimeoVideo';
 import EnhancedReadingChunks from '../../reading/EnhancedReadingChunks';
 import BeautifulCaseStudyComponent from '../../case-study/BeautifulCaseStudyComponent';
 import EnhancedScriptureReference from '../../scripture/EnhancedScriptureReference';
-import AIChatInterface from '../../coaching/AIChatInterface';
 import EnhancedQuizSection from '../../quiz/EnhancedQuizSection';
 import UniversalReadingWithToggle from '../../reading/UniversalReadingWithToggle';
 import { parseMainContentIntoChunks } from '../../../lib/utils';
@@ -81,14 +80,6 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
       description: 'Faith-Business Blend',
       gradient: 'from-teal-400 to-cyan-500',
       hoverGradient: 'from-teal-500 to-cyan-600'
-    },
-    {
-      id: 'coaching',
-      title: 'Session Coaching',
-      icon: '🎯',
-      description: 'AI + Human Support',
-      gradient: 'from-indigo-400 to-purple-500',
-      hoverGradient: 'from-indigo-500 to-purple-600'
     },
     {
       id: 'practice',
@@ -330,24 +321,6 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
           </div>
         );
 
-      case 'coaching':
-        return (
-          <div className="space-y-6">
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-bold text-gray-800 mb-3">🎯 Session-Specific Coaching</h4>
-              <div className="mb-6">
-                <h5 className="font-semibold mb-3">🤖 AI Coaching (Available Now)</h5>
-                <AIChatInterface />
-              </div>
-            </div>
-            <button 
-              onClick={() => onMarkComplete('coaching')}
-              className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700 transition-colors"
-            >
-              ✅ Complete Coaching Section
-            </button>
-          </div>
-        );
 
       case 'practice':
         return (

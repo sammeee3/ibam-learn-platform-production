@@ -64,6 +64,7 @@ import AIChatInterface from '../../../../components/coaching/AIChatInterface';
 import { calculateReadingTime, parseMainContentIntoChunks, extractKeyPoints } from '../../../../lib/utils';
 import AnonymousSessionSurvey from '../../../../components/feedback/AnonymousSessionSurvey';
 import SafeFeedbackWidget from '../../../../components/feedback/SafeFeedbackWidget';
+import FloatingCoachButton from '../../../../components/coaching/FloatingCoachButton';
 import { progressTracker } from '../../../../../lib/services/progressTracking';
 import ActionBuilderComponent from '../../../../components/actions/ActionBuilderComponent';
 import EnhancedScriptureReference from '../../../../components/scripture/EnhancedScriptureReference';
@@ -834,6 +835,14 @@ const navigateTo = (path: string) => {
 
 {/* Feedback Widget */}
 <SafeFeedbackWidget />
+
+{/* Floating Coach Button */}
+<FloatingCoachButton 
+  moduleId={parseInt(params.moduleId)}
+  sessionId={parseInt(params.sessionId)}
+  sessionTitle={sessionData?.title}
+  currentSection={expandedSection || undefined}
+/>
 
       </div>
     </div>
