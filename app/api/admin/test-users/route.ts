@@ -104,6 +104,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { userId, sessionId, moduleId, progress } = body;
+    
+    console.log('Received request:', { userId, sessionId, moduleId, progress });
 
     // Check if userId is a valid UUID or needs conversion
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -142,8 +144,14 @@ export async function POST(request: NextRequest) {
 
     // Parse session ID correctly (e.g., "1-1" means module 1, session 1)
     const [modId, sessId] = sessionId.split('-').map(Number);
-    const actualModuleId = modId || moduleId;
-    const actualSessionId = sessId || 1;
+    const actualModuleId = Number(modId || moduleId || 1);
+    const actualSessionId = Number(sessId || 1);
+    
+    // Validate that we have valid numbers
+    if (isNaN(actualModuleId) || isNaN(actualSessionId)) {
+      console.error('Invalid module or session ID:', { moduleId: actualModuleId, sessionId: actualSessionId });
+      return NextResponse.json({ error: 'Invalid module or session ID' }, { status: 400 });
+    }
 
     // Calculate which sections are completed based on progress percentage
     const lookbackCompleted = progress >= 25;
@@ -157,7 +165,7 @@ export async function POST(request: NextRequest) {
       .upsert({
         user_id: actualUserId,
         session_id: sessionId,
-        module_id: actualModuleId,
+        module_id: parseInt(String(actualModuleId), 10),
         overall_progress: progress,
         completed_sections: progress >= 25 ? ['lookback', 'lookup', 'quiz', 'lookforward'].slice(0, Math.floor(progress / 25)) : [],
         lookback_completed: lookbackCompleted,
@@ -175,8 +183,8 @@ export async function POST(request: NextRequest) {
     // Remove completed_at field as it doesn't exist in the database
     const progressData: any = {
       user_id: actualUserId,
-      module_id: actualModuleId,
-      session_id: actualSessionId,
+      module_id: parseInt(String(actualModuleId), 10),
+      session_id: parseInt(String(actualSessionId), 10),
       lookback_completed: lookbackCompleted,
       lookup_completed: lookupCompleted,
       lookforward_completed: lookforwardCompleted,
