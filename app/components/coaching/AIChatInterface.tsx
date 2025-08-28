@@ -41,12 +41,26 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
 
   useEffect(scrollToBottom, [messages]);
 
-  const quickPrompts = [
-    "How do I apply this to my business?",
-    "What if I'm just starting out?",
-    "How do I balance profit and ministry?",
-    "How can I share my faith without being pushy?"
-  ];
+  // Context-aware quick prompts based on session
+  const getQuickPrompts = (sessionTitle: string) => {
+    if (sessionTitle.includes("Good Gift from God")) {
+      return [
+        "What are the learning objectives for this session?",
+        "How does business being a good gift affect me?",
+        "What if I'm just starting out?",
+        "How do I price my services fairly?"
+      ];
+    }
+    
+    return [
+      "What should I learn from this session?",
+      "How do I apply this to my business?",
+      "What if I'm just starting out?",
+      "How do I find my first customers?"
+    ];
+  };
+
+  const quickPrompts = getQuickPrompts(sessionTitle);
 
   const sendMessage = async (message: string) => {
     if (!message.trim()) return;
@@ -68,54 +82,139 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     }, 1500);
   };
 
-  // Discovery-based coaching response generator
+  // Track conversation history to avoid repetition
+  const [askedQuestions, setAskedQuestions] = useState<Set<string>>(new Set());
+  const [conversationTurn, setConversationTurn] = useState(0);
+
+  // Session-specific knowledge base
+  const getSessionKnowledge = (sessionTitle: string, moduleId?: number) => {
+    const sessionKnowledge: { [key: string]: any } = {
+      "Business is a Good Gift from God": {
+        keyPoints: ["God created work as good", "Business can glorify God", "Stewardship of talents", "Creating value for others"],
+        scripture: "Genesis 1:28 - God blessed them and said 'Be fruitful and increase in number; fill the earth and subdue it'",
+        objectives: ["Understand business as God's design", "Recognize your role as a steward", "See how work can worship God"]
+      },
+      "Finding Your Why": {
+        keyPoints: ["Your unique calling", "Purpose drives profit", "Mission-driven entrepreneurship", "Kingdom impact through business"],
+        scripture: "Jeremiah 29:11 - 'For I know the plans I have for you,' declares the Lord",
+        objectives: ["Discover your unique business calling", "Align purpose with profit", "Create a mission statement"]
+      }
+      // Add more sessions as needed
+    };
+    
+    return sessionKnowledge[sessionTitle] || {
+      keyPoints: ["Biblical business principles", "Faith-driven entrepreneurship", "Serving others through business"],
+      objectives: ["Apply biblical principles to business", "Integrate faith with entrepreneurship"]
+    };
+  };
+
+  // Enhanced discovery-based coaching response generator
   const generateDiscoveryResponse = (userMessage: string, sessionTitle: string, moduleId?: number, sessionId?: number) => {
     const lowerMessage = userMessage.toLowerCase();
+    const sessionKnowledge = getSessionKnowledge(sessionTitle, moduleId);
+    const sessionContext = sessionTitle !== "Current Session" ? sessionTitle : "this session";
     
-    // Context-aware session references
-    const sessionContext = sessionTitle !== "Current Session" ? `today's lesson on "${sessionTitle}"` : "today's session";
+    // Increment conversation turn
+    setConversationTurn(prev => prev + 1);
+    
+    // Handle meta-questions about the coaching itself
+    if (lowerMessage.includes("didn't answer") || lowerMessage.includes("didnt answer") || lowerMessage.includes("try again")) {
+      return {
+        response: `I hear you - let me be more direct. What specifically would be most helpful for you right now? I can share insights about ${sessionContext}, help you apply the concepts to your situation, or discuss how "${sessionTitle}" connects to your business journey.`,
+        followUp: "What's the real challenge you're facing today?"
+      };
+    }
+    
+    // Learning objectives question  
+    if (lowerMessage.includes('objective') || lowerMessage.includes('goal') || lowerMessage.includes('learn')) {
+      return {
+        response: `Great question! The key objectives for "${sessionTitle}" are: ${sessionKnowledge.objectives?.join(', ')}. Which of these resonates most with where you are in your business journey right now?`,
+        followUp: "What specific area would you like to dive deeper into?"
+      };
+    }
+    
+    // Starting out questions
+    if (lowerMessage.includes('starting out') || lowerMessage.includes('just starting') || lowerMessage.includes('beginner')) {
+      return {
+        response: `Starting out is both exciting and overwhelming! Based on "${sessionTitle}", the first step is understanding that ${sessionKnowledge.keyPoints?.[0] || "God has equipped you for this"}. What's the biggest uncertainty you're facing as you begin?`,
+        followUp: "What's one small step you could take this week to move forward with confidence?"
+      };
+    }
+
+    // Session content questions
+    if (lowerMessage.includes('affect me') || lowerMessage.includes('apply') || lowerMessage.includes('how does')) {
+      if (sessionTitle.includes("Good Gift from God")) {
+        return {
+          response: `"Business is a Good Gift from God" means you're not just making money - you're stewarding God's gifts to serve others! This affects you by: 1) Removing guilt about profit when it serves others, 2) Giving you confidence that God wants you to succeed, 3) Showing that excellence in business can be worship. What part of your business feels most aligned with serving others right now?`,
+          followUp: "How could you see your daily work as an act of worship this week?"
+        };
+      }
+      return {
+        response: `Great question about application! The core insight from "${sessionTitle}" is that ${sessionKnowledge.keyPoints?.[0] || "faith and business can work together"}. This affects your business by changing your motivation, methods, and ultimate goals. What's one business decision you're facing where this perspective could help?`,
+        followUp: "How might approaching this with biblical principles change your decision?"
+      };
+    }
     
     // Discovery coaching patterns for common topics
     if (lowerMessage.includes('pricing') || lowerMessage.includes('price')) {
+      if (askedQuestions.has('pricing')) {
+        return {
+          response: `Since we've talked about pricing, let me be more specific: Fair pricing means covering your costs + reasonable profit + excellent service. From "${sessionTitle}", this means pricing that honors God by: 1) Not cheating customers, 2) Not undervaluing your work, 3) Allowing you to serve others well. What's your current pricing challenge?`,
+          followUp: "What would confident, God-honoring pricing look like for your specific situation?"
+        };
+      }
+      setAskedQuestions(prev => new Set([...prev, 'pricing']));
       return {
-        response: `Great question about pricing! Let's explore this together. What does "fair pricing" mean to you personally? How does ${sessionContext} connect to your pricing concerns? What would pricing with complete integrity look like in your business?`,
-        followUp: "What's one small pricing experiment you could try this week based on these insights?"
+        response: `Pricing is tough! Let's think through this biblically. What does "fair" mean to you? From "${sessionContext}", we learn that God wants us to be honest and excellent in our work. What fears do you have about your pricing?`,
+        followUp: "What would pricing with complete integrity look like in your business?"
       };
     }
     
     if (lowerMessage.includes('funding') || lowerMessage.includes('investment') || lowerMessage.includes('capital')) {
       return {
-        response: `I can see you're thinking about funding - that shows great entrepreneurial vision! But let's first focus on ${sessionContext}. What does biblical stewardship look like with your current resources? How might mastering what you have now prepare you for greater opportunities later?`,
-        followUp: "What's one way you could be more faithful with what God has already given you?"
+        response: `Funding questions show great vision! But here's what I've learned: Most successful faith-driven businesses start with stewarding what they have first. From "${sessionContext}", what resources has God already given you that you could maximize? Sometimes the best funding is proving the concept small first.`,
+        followUp: "What's one way you could test your business idea with the resources you have now?"
       };
     }
     
     if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('market')) {
       return {
-        response: `Finding customers is exciting! Let's dig deeper here. Who are you specifically called to serve? How does ${sessionContext} shape your understanding of your ideal customer? What problems are you uniquely positioned to solve?`,
-        followUp: "What would it look like to serve your customers as an act of worship?"
+        response: `Finding customers is exciting! From "${sessionContext}", remember that business is about serving others. Who specifically are you called to serve? What problems keep them up at night that you could solve? The best customers become raving fans when you truly serve them well.`,
+        followUp: "If you could help one specific type of person, who would it be and what's their biggest challenge?"
       };
     }
     
     if (lowerMessage.includes('profit') || lowerMessage.includes('money') || lowerMessage.includes('income')) {
       return {
-        response: `Profit and ministry - such an important balance! What does ${sessionContext} teach you about God's view of wealth? How do you see profit serving your deeper mission? What fears or excitement do you have about making money through your business?`,
+        response: `Money and ministry - I get the tension! From "${sessionContext}", profit isn't evil when it serves God's purposes. Profit allows you to: 1) Serve customers better, 2) Provide for your family, 3) Give generously, 4) expand your impact. What guilt or excitement do you feel about making money?`,
         followUp: "How could your profit become a tool for Kingdom impact?"
       };
     }
     
     if (lowerMessage.includes('fear') || lowerMessage.includes('scared') || lowerMessage.includes('worried')) {
       return {
-        response: `I hear the vulnerability in your question - that takes courage to share. What specifically are you afraid of? How does ${sessionContext} speak to your fears? What would you do if you knew you couldn't fail?`,
-        followUp: "What's one small, brave step you could take this week?"
+        response: `Thank you for sharing that vulnerability. Fear is normal! From "${sessionContext}", we know God has equipped you for this work. What specifically worries you most? Often our fears point to where we need to trust God more and prepare better.`,
+        followUp: "What's one small, brave step you could take this week to face that fear?"
       };
     }
     
-    // Default discovery response
-    return {
-      response: `That's a thoughtful question! Let's explore this together. How does this connect to your deeper purpose in business? What insights from ${sessionContext} come to mind as you think about this? What would success look like if you approached this with complete faith?`,
-      followUp: "What's one specific step you could take this week to move forward?"
-    };
+    // Avoid repetitive default responses
+    const defaultResponses = [
+      {
+        response: `I want to give you a helpful answer! From "${sessionContext}", the key insight is that ${sessionKnowledge.keyPoints?.[0] || "God designed you for meaningful work"}. Can you help me understand what specific challenge you're facing?`,
+        followUp: "What would success look like in this area of your business?"
+      },
+      {
+        response: `Let me try a different approach. From "${sessionTitle}", we learn that ${sessionKnowledge.keyPoints?.[1] || "business can glorify God"}. What's the most pressing question on your mind about your business right now?`,
+        followUp: "How can I help you apply today's lesson to your specific situation?"
+      },
+      {
+        response: `I sense you're looking for practical help! Based on "${sessionContext}", think about this: ${sessionKnowledge.keyPoints?.[2] || "your work can serve others"}. What's one area where you feel stuck or uncertain?`,
+        followUp: "What would breakthrough in this area mean for you?"
+      }
+    ];
+    
+    return defaultResponses[conversationTurn % defaultResponses.length];
   };
 
   const chatHeight = isMobile ? "h-80" : "h-96";
