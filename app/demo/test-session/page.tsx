@@ -524,7 +524,7 @@ export default function TestSessionTemplate() {
                     <p className="text-sm text-gray-600 mb-2">How does this scripture apply to your business this week?</p>
                     <textarea 
                       className="w-full p-3 border border-gray-200 rounded-lg text-sm"
-                      rows="3"
+                      rows={3}
                       placeholder="Type your thoughts..."
                     />
                   </div>
