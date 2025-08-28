@@ -394,7 +394,13 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
         }
 
         console.log('✅ Session data loaded:', data);
-        setSessionData(data);
+        // Expose resources at top level for component compatibility
+        const enhancedData = {
+          ...data,
+          resources: data.content?.resources || null
+        };
+        console.log('🔧 Enhanced data with resources:', enhancedData.resources);
+        setSessionData(enhancedData);
         
         // Load saved progress from database
         try {

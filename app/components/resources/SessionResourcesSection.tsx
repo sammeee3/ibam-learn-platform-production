@@ -15,6 +15,7 @@ const SessionResourcesSection: React.FC<SessionResourcesSectionProps> = ({ sessi
   // Debug: Log resources data in development
   if (process.env.NODE_ENV === 'development') {
     console.log('SessionResourcesSection - sessionData.resources:', sessionData.resources);
+    console.log('SessionResourcesSection - Full sessionData:', sessionData);
   }
 
   // Show message if no resources available
