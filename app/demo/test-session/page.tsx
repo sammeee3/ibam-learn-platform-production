@@ -110,7 +110,7 @@ export default function TestSessionTemplate() {
     }
   ]);
   
-  const [newActions, setNewActions] = useState([]);
+  const [newActions, setNewActions] = useState<Array<{ type: string; description: string; kingdomPurpose: string }>>([]);
   const [showKingdomFilter, setShowKingdomFilter] = useState(false);
   const [actionBalance, setActionBalance] = useState({ business: 0, personal: 0 });
   const [showGraceRelease, setShowGraceRelease] = useState(false);
@@ -694,7 +694,7 @@ export default function TestSessionTemplate() {
                       </label>
                       <textarea 
                         className="w-full p-3 border border-gray-200 rounded-lg"
-                        rows="2"
+                        rows={2}
                         placeholder="Be specific and measurable..."
                         onChange={(e) => {
                           newActions[index].description = e.target.value;
@@ -859,7 +859,7 @@ export default function TestSessionTemplate() {
             <h3 className="font-bold text-gray-800 mb-4">Video Notes</h3>
             <textarea 
               className="w-full p-4 border border-gray-200 rounded-lg"
-              rows="4"
+              rows={4}
               placeholder="Take notes as you watch..."
             />
             
