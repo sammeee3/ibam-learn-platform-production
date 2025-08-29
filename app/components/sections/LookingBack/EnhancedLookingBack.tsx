@@ -223,7 +223,7 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
       {/* Part 1: Session Prayer */}
       <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
         <h4 className="font-bold text-blue-800 mb-3 flex items-center">
-          🙏 Opening Prayer
+          🙏 Opening Prayer (v2.1)
         </h4>
         <div className="bg-white p-4 rounded-lg mb-4">
           <p className="text-gray-700 italic leading-relaxed">
