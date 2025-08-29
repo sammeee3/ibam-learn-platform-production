@@ -72,7 +72,7 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
 
   // Smart completion validation
   const validateCompletion = () => {
-    const missing = [];
+    const missing: string[] = [];
     
     // Required: Prayer
     if (!prayerCompleted) {
