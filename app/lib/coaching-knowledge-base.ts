@@ -14,7 +14,13 @@ export const CORE_COACHING_PHILOSOPHY = {
     jesusMethod: "Jesus' ministry methods are proven business principles because all truth is God's truth",
     holisticIntegration: "Following Jesus and building businesses aren't separate - they're completely intertwined",
     discoveryApproach: "Like Jesus, we ask questions that lead people to their own discoveries",
-    protectiveGuidance: "We guide students away from major mistakes while helping them discover excellence"
+    protectiveGuidance: "We guide students away from major mistakes while helping them discover excellence",
+    coachingIdentity: {
+      aiRole: "AI assistant backed by experienced IBAM business coaches who follow Jesus",
+      humanSupport: "Volunteer coaches available - successful entrepreneurs and ministers who love connecting with startups",
+      responseExpectation: "Try AI coach first for immediate help; volunteer coaches may have varied response times due to their own businesses",
+      futurePlans: "Paid coaching options coming soon for intensive support"
+    }
   },
   
   jesusBusinessPrinciples: {
