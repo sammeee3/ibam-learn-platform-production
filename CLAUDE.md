@@ -192,6 +192,30 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 - **Database Integration**: Works with both production and staging environments
 - **Environment Isolation**: Staging uses staging database (yhfxxouswctucxvfetcq), production uses production database (tutrnikhomrgcpkzszvq)
 
+## 🚨 DEPLOYMENT SAFETY PROTOCOL - CRITICAL
+
+### ⛔ PRODUCTION DEPLOYMENT BAN
+**CLAUDE IS PERMANENTLY BANNED FROM PRODUCTION DEPLOYMENTS**
+
+### 🔴 FORBIDDEN COMMANDS:
+- `vercel --prod` 
+- `vercel --prod --yes`
+- ANY production deployment command
+
+### ✅ STAGING ONLY PROTOCOL:
+1. **ALWAYS ASK FIRST**: "Deploy to staging only?"
+2. **WAIT FOR APPROVAL**: Never deploy without explicit permission
+3. **USE ONLY**: `vercel --yes` (staging deployment)
+4. **CONFIRM DESTINATION**: Must verify staging environment
+5. **RUN SAFETY CHECKS**: Build + TypeScript + Database safety
+
+### 🚨 EMERGENCY CONTACT:
+If Claude accidentally deploys to production:
+- Immediately alert user
+- Assess production impact
+- Offer rollback options
+- Document incident
+
 ## 🚀 PROFESSIONAL DUAL-REPOSITORY DEPLOYMENT WORKFLOW
 
 ### Repository Architecture
@@ -199,13 +223,13 @@ This is a Next.js-based learning platform for IBAM (International Business and M
   - GitHub: https://github.com/sammeee3/ibam-learn-platform-staging
   - Vercel Project: ibam-learn-platform-staging-v2
   - Database: Staging (yhfxxouswctucxvfetcq)
-  - Purpose: Daily development workspace
+  - Purpose: Daily development workspace - **CLAUDE ACCESS ONLY**
 
 - **Production Repository**: `/Users/jeffreysamuelson/Desktop/ibam-learn-platform-production` (821.7 MB)
   - GitHub: https://github.com/sammeee3/ibam-learn-platform-production  
   - Vercel Project: ibam-learn-platform-production-v3
   - Database: Production (tutrnikhomrgcpkzszvq)
-  - Purpose: Complete project archive and production releases
+  - Purpose: Complete project archive - **HUMAN MANAGED ONLY**
 
 ### Daily Development Workflow
 

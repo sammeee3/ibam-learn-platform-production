@@ -150,6 +150,11 @@ export interface ActionStep {
   completion_notes?: string;
   learning_reflection?: string;
   created_at: string;
+  // New SMART Action Coaching fields
+  quality_score?: number;
+  coaching_level?: 'foundation' | 'refinement' | 'integration' | 'mastery';
+  sharing_commitment?: string;
+  completed_at?: string;
 }
 
 // Pathway Mode Type

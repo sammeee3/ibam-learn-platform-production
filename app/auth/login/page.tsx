@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import ExtensionConflictWarning from '../../components/auth/ExtensionConflictWarning'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
