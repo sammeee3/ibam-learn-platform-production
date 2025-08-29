@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import EnhancedLookingBack from '@/components/sessions/EnhancedLookingBack';
+import EnhancedLookingBack from '@/app/components/sections/LookingBack/EnhancedLookingBack';
 import EnhancedLookingForward from '@/components/sessions/EnhancedLookingForward';
 import { motion } from 'framer-motion';
 import { 
@@ -282,11 +282,16 @@ export default function EnhancedSectionsDemo() {
         </button>
         
         <EnhancedLookingBack
-          sessionId={sessionId}
-          userId={userId}
-          onComplete={handleLookingBackComplete}
-          spiritualLevel={spiritualLevel}
-          gamificationEnabled={gamificationEnabled}
+          sessionData={{
+            id: sessionId,
+            module_id: 1,
+            session_number: 2,
+            title: "Demo Session",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }}
+          pathwayMode="individual"
+          onComplete={() => handleLookingBackComplete([])}
         />
       </div>
     );
