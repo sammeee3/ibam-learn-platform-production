@@ -507,6 +507,30 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
 
     loadSavedActions();
   }, [sessionData]);
+
+  // Add event listener for Looking UP section expansion from Looking Back component
+  useEffect(() => {
+    const handleExpandLookingUp = () => {
+      console.log('🎯 Custom event received: expanding Looking UP section');
+      setExpandedSection('lookup');
+      
+      // Scroll to Looking UP section after state update
+      setTimeout(() => {
+        const lookingUpSection = document.querySelector('.bg-green-500');
+        if (lookingUpSection) {
+          lookingUpSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          console.log('📜 Scrolled to Looking UP section via custom event');
+        }
+      }, 100);
+    };
+
+    window.addEventListener('expandLookingUp', handleExpandLookingUp);
+    
+    return () => {
+      window.removeEventListener('expandLookingUp', handleExpandLookingUp);
+    };
+  }, []);
+
   // FIXED: Navigation functions with proper Next.js router and correct module progression
   const navigateToSession = (direction: 'prev' | 'next') => {
     const currentModuleId = sessionData?.module_id || 1;

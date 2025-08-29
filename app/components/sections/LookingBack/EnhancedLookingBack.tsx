@@ -58,22 +58,34 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
   }, [sessionData.module_id, sessionData.session_number]);
 
   const handlePrayerComplete = (checked: boolean) => {
-    setPrayerCompleted(checked);
-    const sessionKey = `prayer_${sessionData.module_id}_${sessionData.session_number}`;
-    
-    if (checked) {
-      // Save to session storage
-      if (window.sessionStorage) {
-        window.sessionStorage.setItem(sessionKey, 'true');
+    try {
+      console.log('🙏 Prayer checkbox clicked:', checked);
+      setPrayerCompleted(checked);
+      
+      const sessionKey = `prayer_${sessionData.module_id}_${sessionData.session_number}`;
+      console.log('💾 Session key:', sessionKey);
+      
+      if (checked) {
+        // Save to session storage
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.setItem(sessionKey, 'true');
+          console.log('✅ Saved prayer completion to sessionStorage');
+        }
+        // Show action accountability section after prayer
+        setShowActionAccountability(true);
+        console.log('✅ Action accountability enabled');
+      } else {
+        // Hide action accountability if prayer unchecked
+        setShowActionAccountability(false);
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.removeItem(sessionKey);
+        }
+        console.log('❌ Action accountability disabled');
       }
-      // Show action accountability section after prayer
-      setShowActionAccountability(true);
-    } else {
-      // Hide action accountability if prayer unchecked
-      setShowActionAccountability(false);
-      if (window.sessionStorage) {
-        window.sessionStorage.removeItem(sessionKey);
-      }
+    } catch (error) {
+      console.error('💥 Error in handlePrayerComplete:', error);
+      // Still try to update the prayer state even if other operations fail
+      setPrayerCompleted(checked);
     }
   };
 
@@ -118,15 +130,31 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
     
     // Scroll to Looking UP section and auto-expand it
     setTimeout(() => {
-      const lookingUpSection = document.querySelector('[style*="bg-green"], .bg-green-500');
+      console.log('🔍 Looking for Looking UP section...');
+      
+      // Try multiple selectors to find the Looking UP section
+      const lookingUpSection = document.querySelector('.bg-green-500') || 
+                              document.querySelector('[class*="bg-green"]') ||
+                              document.querySelector('div[class*="green"]:contains("LOOKING UP")') ||
+                              document.querySelector('h3:contains("LOOKING UP")');
+                              
+      console.log('🎯 Found Looking UP section:', lookingUpSection);
+      
       if (lookingUpSection) {
         lookingUpSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        console.log('📜 Scrolled to Looking UP section');
+        
         // Trigger click to expand Looking Up
         setTimeout(() => {
+          console.log('🖱️ Clicking Looking UP section to expand...');
           (lookingUpSection as HTMLElement).click();
-        }, 800);
+        }, 1000); // Increased timeout for better reliability
+      } else {
+        console.warn('⚠️ Looking UP section not found, trying parent container approach');
+        // Fallback: try to find and expand by calling parent component
+        window.dispatchEvent(new CustomEvent('expandLookingUp'));
       }
-    }, 500);
+    }, 700);
   };
 
   // Special first session experience
