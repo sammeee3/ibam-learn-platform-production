@@ -58,32 +58,111 @@ export const biblicalMotivationalMessages = {
   ]
 };
 
-// Individual vs Group Prayers
+// 22 Heart-Preparation Prayers for Each Session
+export const sessionPrayers = {
+  // Module 1: Foundations
+  "1_1": {
+    individual: "Father, open my heart to see business as Your sacred gift. Free me from worldly distractions to receive Your wisdom. Amen.",
+    group: "Lord, unite our hearts as we discover Your design for business together. Grant us clarity and bold vision. Amen."
+  },
+  "1_2": {
+    individual: "God, help me understand how church and business can work together for Your glory. Give me wisdom and courage. Amen.",
+    group: "Father, show us how to bridge church and marketplace for Your Kingdom. Strengthen our partnerships in Christ. Amen."
+  },
+  "1_3": {
+    individual: "Jesus, teach me to market with integrity and serve hearts, not just customers. Let Your love guide my words. Amen.",
+    group: "Holy Spirit, help us market with authenticity and minister through our businesses. Grant us His heart for people. Amen."
+  },
+  "1_4": {
+    individual: "Lord, reveal Your purpose for my life and business. Give me unshakeable confidence in Your calling. Amen.",
+    group: "God, clarify each person's unique calling and unite us in Your greater purpose. Strengthen our resolve. Amen."
+  },
+  
+  // Module 2: Integration  
+  "2_1": {
+    individual: "Father, show me how to weave prayer naturally into my business practices. Make me sensitive to Your Spirit. Amen.",
+    group: "Lord, teach us to be a praying business community that seeks Your guidance in all decisions. Amen."
+  },
+  "2_2": {
+    individual: "God, help me build authentic relationships that honor You and serve others genuinely. Grant me Your heart. Amen.",
+    group: "Jesus, help us build meaningful connections that reflect Your love and multiply disciples. Bless our relationships. Amen."
+  },
+  "2_3": {
+    individual: "Holy Spirit, guide me to share my faith naturally and winsomely through my business interactions. Amen.",
+    group: "Father, give us boldness to witness through our work and wisdom to share authentically. Amen."
+  },
+  "2_4": {
+    individual: "Lord, help me see every business decision as an opportunity to honor You and serve others. Amen.",
+    group: "God, align our business practices with Your character and purposes. Make us faithful stewards. Amen."
+  },
+
+  // Module 3: Excellence
+  "3_1": {
+    individual: "Father, teach me Your standard of excellence that glorifies You and blesses others richly. Amen.",
+    group: "Lord, inspire us to excellence that reflects Your character and draws others to You. Amen."
+  },
+  "3_2": {
+    individual: "God, help me lead with servant's heart, following Jesus' example of humble, powerful leadership. Amen.",
+    group: "Jesus, show us how to lead as You did - with humility, strength, and sacrificial love. Amen."
+  },
+  "3_3": {
+    individual: "Holy Spirit, grant me wisdom to solve problems creatively and serve customers with genuine care. Amen.",
+    group: "Father, give us innovative solutions and servant hearts that truly meet people's deepest needs. Amen."
+  },
+  "3_4": {
+    individual: "Lord, help me manage resources wisely as Your steward, multiplying what You've entrusted to me. Amen.",
+    group: "God, teach us faithful stewardship that honors You and creates sustainable impact. Amen."
+  },
+  "3_5": {
+    individual: "Father, show me how to scale my influence for Your Kingdom while staying rooted in You. Amen.",
+    group: "Lord, help us grow our businesses in ways that multiply disciples and expand Your Kingdom. Amen."
+  },
+
+  // Module 4: Multiplication
+  "4_1": {
+    individual: "God, give me courage to step out in faith and take bold actions for Your glory. Amen.",
+    group: "Holy Spirit, inspire us to courageous faith that attempts great things for Your Kingdom. Amen."
+  },
+  "4_2": {
+    individual: "Jesus, help me build systems and teams that multiply Kingdom impact beyond my limitations. Amen.",
+    group: "Father, show us how to create sustainable systems that continue Your work without us. Amen."
+  },
+  "4_3": {
+    individual: "Lord, prepare me to mentor others and multiply disciples through my business platform. Amen.",
+    group: "God, equip us to raise up other faith-driven entrepreneurs who will multiply Your impact. Amen."
+  },
+  "4_4": {
+    individual: "Holy Spirit, help me leave a lasting legacy that continues bearing fruit long after I'm gone. Amen.",
+    group: "Father, help us build legacies that honor You and continue multiplying disciples for generations. Amen."
+  },
+
+  // Module 5: Advanced Integration
+  "5_1": {
+    individual: "Father, deepen my integration of faith and work until they become seamlessly unified for Your glory. Amen.",
+    group: "Lord, help us achieve complete integration where our faith and work flow together naturally. Amen."
+  },
+  "5_2": {
+    individual: "God, show me advanced strategies to maximize Kingdom impact through my business influence. Amen.",
+    group: "Jesus, reveal sophisticated ways we can leverage our businesses for maximum Kingdom multiplication. Amen."
+  },
+  "5_3": {
+    individual: "Holy Spirit, help me navigate complex challenges with wisdom, integrity, and unwavering faith. Amen.",
+    group: "Father, grant us wisdom to handle difficult situations with grace while maintaining our witness. Amen."
+  },
+  "5_4": {
+    individual: "Lord, establish me as a Kingdom entrepreneur who transforms communities through business excellence. Amen.",
+    group: "God, make us catalysts for transformation in our communities through our unified business witness. Amen."
+  },
+  "5_5": {
+    individual: "Father, send me out as Your ambassador to multiply disciples throughout the marketplace. Amen.",
+    group: "Holy Spirit, commission us as Kingdom entrepreneurs to change the world through faith-driven business. Amen."
+  }
+};
+
+// Legacy pathway prayers (for backward compatibility)
 export const pathwayPrayers = {
-  individual: `
-    Heavenly Father, as I begin this time of personal reflection and learning, I thank You for creating me in Your image with the ability to create value and serve others through my work. 
-    
-    Help me to see my business not just as a means of provision, but as a platform for Your Faith-Driven purposes. Give me wisdom to integrate my faith with my work in ways that honor You and bless others.
-    
-    As I review my previous commitments and plan new steps, grant me the humility to learn from both successes and failures. Help me to be faithful in small things, knowing that You are preparing me for greater impact.
-    
-    May my business be a reflection of Your character - marked by integrity, excellence, generosity, and love. Use me to multiply disciples in the marketplace.
-    
-    In Jesus' name, Amen.
-  `,
-  group: `
-    Heavenly Father, we gather as believers called to the marketplace, united in our desire to honor You through our businesses.
-    
-    Thank You for each person in this group and the unique gifts, experiences, and challenges they bring. Help us to learn from each other, encourage one another, and hold each other accountable in love.
-    
-    As we share our victories and failures, our dreams and fears, create bonds of fellowship that strengthen our resolve and sharpen our focus. May iron sharpen iron as we discuss how to integrate our faith with our work.
-    
-    Use our businesses collectively to transform our community and extend Your Faith-Driven impact. Help us to support each other not just in business success, but in spiritual growth and disciple-making.
-    
-    May our group be a source of wisdom, encouragement, and accountability for each member.
-    
-    In Jesus' name, Amen.
-  `
+  individual: sessionPrayers["1_1"].individual,
+  group: sessionPrayers["1_1"].group
 };
 
 // Inspiring Section Titles

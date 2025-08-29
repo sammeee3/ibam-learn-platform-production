@@ -141,6 +141,63 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
     }, 3000);
   };
 
+  const deferAction = async (actionId: string) => {
+    console.log('⏸️ DEFER ACTION CLICKED:', actionId);
+    
+    // Update database to defer action (move to next session)
+    try {
+      const { error } = await supabase
+        .from('user_action_steps')
+        .update({ 
+          deferred: true, 
+          deferred_at: new Date().toISOString(),
+          // Could move to next session by updating session_id
+        })
+        .eq('id', actionId);
+        
+      if (error) {
+        console.error('Failed to defer action:', error);
+      } else {
+        console.log('⏸️ Action deferred to next session');
+        // Remove from current view
+        setPreviousActions(prev => prev.filter(action => action.id !== actionId));
+      }
+    } catch (error) {
+      console.error('Error deferring action:', error);
+    }
+  };
+
+  const cancelAction = async (actionId: string) => {
+    console.log('❌ CANCEL ACTION CLICKED:', actionId);
+    
+    // Confirm cancellation
+    if (!confirm('Are you sure you want to cancel this action? This will mark it as no longer relevant.')) {
+      return;
+    }
+    
+    // Update database to cancel action
+    try {
+      const { error } = await supabase
+        .from('user_action_steps')
+        .update({ 
+          cancelled: true, 
+          cancelled_at: new Date().toISOString(),
+          cancel_reason: 'No longer fits priorities'
+        })
+        .eq('id', actionId);
+        
+      if (error) {
+        console.error('Failed to cancel action:', error);
+      } else {
+        console.log('❌ Action cancelled');
+        // Remove from current view
+        setPreviousActions(prev => prev.filter(action => action.id !== actionId));
+      }
+    } catch (error) {
+      console.error('Error cancelling action:', error);
+    }
+  };
+
   const getDanSullivanQuestions = (actionType: 'business' | 'discipleship') => {
     return [
       "What did you discover from this experience?",
@@ -242,12 +299,26 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
                   </div>
                   
                   {!isCompleted && (
-                    <button
-                      onClick={() => markCompleted(action.id)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                      ✅ Mark Complete
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => markCompleted(action.id)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                      >
+                        ✅ Completed
+                      </button>
+                      <button
+                        onClick={() => deferAction(action.id)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm"
+                      >
+                        ⏸️ Defer
+                      </button>
+                      <button
+                        onClick={() => cancelAction(action.id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
+                      >
+                        ❌ Cancel
+                      </button>
+                    </div>
                   )}
                 </div>
 

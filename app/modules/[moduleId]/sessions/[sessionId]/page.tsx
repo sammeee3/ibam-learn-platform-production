@@ -755,7 +755,13 @@ const navigateTo = (path: string) => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div 
               className="bg-blue-500 hover:bg-blue-600 text-white p-6 cursor-pointer transition-colors"
-              onClick={() => setExpandedSection(expandedSection === 'lookback' ? null : 'lookback')}
+              onClick={(e) => {
+                console.log('🔥 Looking Back clicked! Current state:', expandedSection);
+                e.preventDefault();
+                e.stopPropagation();
+                setExpandedSection(expandedSection === 'lookback' ? null : 'lookback');
+                console.log('✅ Looking Back state should change to:', expandedSection === 'lookback' ? null : 'lookback');
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
