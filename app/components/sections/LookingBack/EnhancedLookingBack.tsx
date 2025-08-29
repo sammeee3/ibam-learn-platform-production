@@ -33,10 +33,9 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationItems, setValidationItems] = useState<string[]>([]);
 
-  // Session-specific prayer - HARDCODED TEST FOR DEPLOYMENT
+  // Session-specific prayer
   const prayerKey = `${sessionData.module_id}_${sessionData.session_number}`;
-  // TEMP: Hardcoded prayer for testing deployment
-  const currentPrayer = "God, help me understand how church and business can work together for Your glory. Give me wisdom and courage. Amen. [DEPLOYMENT TEST]";
+  const currentPrayer = sessionPrayers[prayerKey]?.[pathwayMode] || sessionPrayers["1_1"][pathwayMode];
   
   // DEBUG: Log prayer details
   console.log('🙏 PRAYER DEBUG:', {
