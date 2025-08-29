@@ -228,12 +228,6 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
           This is your first session or you haven't created action steps yet. 
           Action steps from today's session will appear here next time for accountability review.
         </p>
-        <button 
-          onClick={onComplete}
-          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          ✅ Continue to Learning
-        </button>
       </div>
     );
   }
