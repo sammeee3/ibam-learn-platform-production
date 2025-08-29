@@ -476,7 +476,7 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
           .from('user_action_steps')
           .select('*')
           .eq('user_id', '0571f8be-e6d4-4158-9301-a6cf2183e40f')
-          .eq('session_id', sessionData.id)
+          .eq('session_id', sessionData.session_number) // FIXED: Use session_number instead of session UUID
           .eq('module_id', sessionData.module_id);
         
         if (actions && actions.length > 0) {
