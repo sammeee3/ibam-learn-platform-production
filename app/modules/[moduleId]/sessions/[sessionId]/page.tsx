@@ -231,12 +231,28 @@ export default function SessionPage({ params }: SessionPageProps) {
 
   const [sharingCommitment, setSharingCommitment] = useState('');
 
+  // Toast notification state
+  const [saveNotification, setSaveNotification] = useState<{
+    show: boolean;
+    type: 'success' | 'error' | 'info';
+    message: string;
+  }>({ show: false, type: 'success', message: '' });
+
   // Real database connection
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // ADD AUTO-SAVE HOOK
 const { saveStatus, lastSaved, saveNow } = useAutoSave(sessionData, savedActions, {}, sharingCommitment);
+
+  // Toast notification helper
+  const showToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setSaveNotification({ show: true, type, message });
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setSaveNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
 
   // Add beautiful typography styles - RESTORED AND ENHANCED
   useEffect(() => {
@@ -302,64 +318,71 @@ const { saveStatus, lastSaved, saveNow } = useAutoSave(sessionData, savedActions
     };
   }, []);
 // Direct action save function
-const saveActionToDatabase = async (action: ActionCommitment) => {
+const saveActionToDatabase = async (action: ActionCommitment): Promise<{ success: boolean; message: string }> => {
   try {
-console.log('💾 Saving single action:', action);
-console.log('🔍 Action details:', {
-  id: action.id,
-  type: action.type,
-  smartData: action.smartData,
-  generatedStatement: action.generatedStatement
-});    
-const { data: { user } } = await supabase.auth.getUser();
-const testUserId = user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f'; // Test user ID
-console.log('🔑 Using user ID:', testUserId);
+    console.log('💾 Saving single action:', action);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f';
+    console.log('🔑 Using user ID:', userId);
 
     if (!sessionData) {
-      console.log('❌ No session data');
-      return;
+      return { success: false, message: 'No session data available' };
     }
+    
     // Generate complete action sentence
-const what = action.smartData?.specific || 'complete action';
-const measurable = action.smartData?.measurable || '';
-const time = action.smartData?.timed || 'soon';
-
-const completeSentence = `I will ${what} ${measurable} ${time}`.trim().replace(/\s+/g, ' ');
-console.log('🔧 GENERATED SENTENCE:', completeSentence);
+    const what = action.smartData?.specific || 'complete action';
+    const measurable = action.smartData?.measurable || '';
+    const time = action.smartData?.timed || 'soon';
+    const completeSentence = `I will ${what} ${measurable} ${time}`.trim().replace(/\s+/g, ' ');
 
     const { error } = await supabase.from('user_action_steps').upsert({
-      user_id: user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f',
+      user_id: userId,
       module_id: sessionData.module_id,
-// NEW (matches database):
-session_id: sessionData.session_number,
-action_type: action.type,
-specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
+      session_id: sessionData.session_number, // Fixed: Use session_number not UUID
+      action_type: action.type,
+      specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
       timed: action.smartData?.timed || 'No time specified',
       generated_statement: completeSentence,
-      person_to_tell: sharingCommitment,
+      person_to_tell: sharingCommitment || 'No one specified',
       completed: false,
       created_at: new Date().toISOString()
     });
 
     if (error) {
       console.error('❌ Save failed:', error);
+      return { success: false, message: `Save failed: ${error.message}` };
     } else {
       console.log('✅ Action saved to database!');
+      return { success: true, message: 'Action saved successfully!' };
     }
   } catch (error) {
     console.error('❌ Save error:', error);
+    return { success: false, message: `Unexpected error: ${error.message}` };
   }
 };
-const handleSaveAction = (action: ActionCommitment) => {
+const handleSaveAction = async (action: ActionCommitment) => {
   if (savedActions.length >= 4) {
-    alert('Maximum 4 actions allowed per session');
+    showToast('error', 'Maximum 4 actions allowed per session');
     return;
   }
+  
+  // Show saving indicator
+  showToast('info', 'Saving action...');
+  
+  // Add to UI immediately for better UX
   setSavedActions(prev => [...prev, action]);
   
-  // Save this specific action immediately
-  saveActionToDatabase(action); // NEW: Direct save function
-  alert('Action saved to database!');
+  // Save to database
+  const result = await saveActionToDatabase(action);
+  
+  if (result.success) {
+    showToast('success', '✅ Action saved successfully! It will appear in your next session.');
+  } else {
+    showToast('error', `❌ Save failed: ${result.message}`);
+    // Remove from UI if save failed
+    setSavedActions(prev => prev.filter(a => a.id !== action.id));
+  }
 };
 
   // Data fetching with real Supabase
@@ -873,6 +896,30 @@ const navigateTo = (path: string) => {
   sessionTitle={sessionData?.title}
   currentSection={expandedSection || undefined}
 />
+
+      {/* Toast Notification */}
+      {saveNotification.show && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border max-w-sm transition-all duration-300 ${
+          saveNotification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+          saveNotification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+          'bg-blue-50 border-blue-200 text-blue-800'
+        }`}>
+          <div className="flex items-center">
+            <div className="mr-3">
+              {saveNotification.type === 'success' && '✅'}
+              {saveNotification.type === 'error' && '❌'}
+              {saveNotification.type === 'info' && '💾'}
+            </div>
+            <div className="font-medium">{saveNotification.message}</div>
+            <button
+              onClick={() => setSaveNotification(prev => ({ ...prev, show: false }))}
+              className="ml-4 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       </div>
     </div>
