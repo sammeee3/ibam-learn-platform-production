@@ -22,6 +22,13 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
   const [loading, setLoading] = useState(true);
   const [celebrating, setCelebrating] = useState<string | null>(null);
 
+  // Check if all actions have been addressed
+  const allActionsAddressed = previousActions.length === 0 || previousActions.every(action => 
+    actionReviews[action.id]?.status === 'completed' ||
+    actionReviews[action.id]?.status === 'deferred' ||
+    actionReviews[action.id]?.status === 'cancelled'
+  );
+
   const supabase = createClientComponentClient();
 
   // Load previous session's action steps
@@ -135,6 +142,7 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
   const markCompleted = async (actionId: string) => {
     console.log('🔥 MARK COMPLETE CLICKED:', actionId);
     updateActionReview(actionId, 'completed', true);
+    updateActionReview(actionId, 'status', 'completed');
     setCelebrating(actionId);
     
     // Save completion to database
@@ -165,21 +173,48 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
   const deferAction = async (actionId: string) => {
     console.log('⏸️ DEFER ACTION CLICKED:', actionId);
     
-    // Update database to defer action (move to next session)
+    // Mark action as deferred in local state
+    updateActionReview(actionId, 'status', 'deferred');
+    
+    // Calculate next session for proper forwarding
+    const currentModule = sessionData.module_id;
+    const currentSession = sessionData.session_number;
+    const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 5 };
+    
+    let nextModule = currentModule;
+    let nextSession = currentSession + 1;
+    
+    // Handle module transitions
+    if (nextSession > moduleSessionCounts[currentModule]) {
+      nextModule = currentModule + 1;
+      nextSession = 1;
+    }
+    
+    // Don't defer beyond course end
+    if (nextModule > 5) {
+      console.log('⚠️ Cannot defer beyond course end - marking as no longer relevant');
+      skipAction(actionId);
+      return;
+    }
+    
+    // Update database to move action to next session
     try {
       const { error } = await supabase
         .from('user_action_steps')
         .update({ 
           deferred: true, 
           deferred_at: new Date().toISOString(),
-          // Could move to next session by updating session_id
+          deferred_from_session: currentSession,
+          deferred_from_module: currentModule,
+          session_id: nextSession, // 🚨 CRITICAL: Move to next session
+          module_id: nextModule    // 🚨 CRITICAL: Update module if needed
         })
         .eq('id', actionId);
         
       if (error) {
         console.error('Failed to defer action:', error);
       } else {
-        console.log('⏸️ Action deferred to next session');
+        console.log(`✅ Action deferred to Module ${nextModule}, Session ${nextSession}`);
         // Remove from current view
         setPreviousActions(prev => prev.filter(action => action.id !== actionId));
       }
@@ -188,34 +223,37 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
     }
   };
 
-  const cancelAction = async (actionId: string) => {
-    console.log('❌ CANCEL ACTION CLICKED:', actionId);
+  const skipAction = async (actionId: string) => {
+    console.log('⏸️ SKIP ACTION CLICKED:', actionId);
     
-    // Confirm cancellation
-    if (!confirm('Are you sure you want to cancel this action? This will mark it as no longer relevant.')) {
+    // Friendly confirmation for skipping
+    if (!confirm('Mark this action as no longer relevant? Sometimes priorities change, and that\'s perfectly okay!')) {
       return;
     }
     
-    // Update database to cancel action
+    // Mark action as cancelled in local state
+    updateActionReview(actionId, 'status', 'cancelled');
+    
+    // Update database to skip action
     try {
       const { error } = await supabase
         .from('user_action_steps')
         .update({ 
           cancelled: true, 
           cancelled_at: new Date().toISOString(),
-          cancel_reason: 'No longer fits priorities'
+          cancel_reason: 'Priorities shifted - no longer relevant'
         })
         .eq('id', actionId);
         
       if (error) {
-        console.error('Failed to cancel action:', error);
+        console.error('Failed to skip action:', error);
       } else {
-        console.log('❌ Action cancelled');
+        console.log('✅ Action marked as no longer relevant');
         // Remove from current view
         setPreviousActions(prev => prev.filter(action => action.id !== actionId));
       }
     } catch (error) {
-      console.error('Error cancelling action:', error);
+      console.error('Error skipping action:', error);
     }
   };
 
@@ -270,9 +308,12 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
           <Target className="w-6 h-6 mr-3 text-blue-600" />
           📊 Action Step Accountability Review
         </h4>
-        <p className="text-gray-600 mb-6">
-          Let's review the action steps you committed to in your last session. Remember: Learning is winning!
-        </p>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-800 font-medium mb-2">🎯 Your Growth Journey Continues!</p>
+          <p className="text-blue-700 text-sm">
+            Every action you review builds character and wisdom. Whether completed or not, each step teaches valuable lessons about business excellence and faithful discipleship. You're becoming the entrepreneur God created you to be!
+          </p>
+        </div>
 
         <div className="space-y-6">
           {previousActions.map((action, index) => {
@@ -325,13 +366,13 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
                         onClick={() => deferAction(action.id)}
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm"
                       >
-                        ⏸️ Defer
+                        ⏭️ Try Next Session
                       </button>
                       <button
-                        onClick={() => cancelAction(action.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
+                        onClick={() => skipAction(action.id)}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
                       >
-                        ❌ Cancel
+                        🔄 No Longer Relevant
                       </button>
                     </div>
                   )}
@@ -342,8 +383,14 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
                   <div className="bg-green-100 border border-green-300 rounded-lg p-4">
                     <h6 className="font-semibold text-green-800 mb-3 flex items-center">
                       <CheckCircle className="w-5 h-5 mr-2" />
-                      🎉 Excellent Work! Share Your Win
+                      🌟 Outstanding! You're Building Momentum!
                     </h6>
+                    <div className="bg-green-200 border border-green-400 rounded-lg p-3 mb-4">
+                      <p className="text-green-800 text-sm font-medium mb-1">🎯 Growth Mindset Victory!</p>
+                      <p className="text-green-700 text-sm">
+                        Each completed action is evidence of your character development. You're becoming the person God created you to be through faithful execution!
+                      </p>
+                    </div>
                     <div className="space-y-3">
                       <div>
                         <label className="block font-medium text-green-700 mb-1">
@@ -394,9 +441,12 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
                       <Lightbulb className="w-5 h-5 mr-2" />
                       💡 Learning from Your Experience
                     </h6>
-                    <p className="text-blue-700 text-sm mb-4">
-                      <strong>Remember:</strong> Not completing an action is still learning! Every experience teaches valuable lessons.
-                    </p>
+                    <div className="bg-blue-100 border border-blue-400 rounded-lg p-3 mb-4">
+                      <p className="text-blue-800 text-sm font-medium mb-1">💪 Learning Mindset - You're Still Winning!</p>
+                      <p className="text-blue-700 text-sm">
+                        Every attempt teaches valuable lessons. Success in business and discipleship comes through iteration and growth. You're building wisdom with each experience!
+                      </p>
+                    </div>
                     <div className="space-y-4">
                       <div>
                         <label className="block font-medium text-blue-700 mb-1">
@@ -461,9 +511,36 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
 
         {/* Completion Button */}
         <div className="mt-8 text-center">
+          {!allActionsAddressed && previousActions.length > 0 ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <p className="text-yellow-800 font-medium mb-2">⚠️ Action Review Required</p>
+              <p className="text-yellow-700 text-sm">
+                Please address all {previousActions.length} action(s) from your previous session by selecting 
+                "Completed", "Try Next Session", or "No Longer Relevant" for each one.
+              </p>
+              <p className="text-yellow-600 text-xs mt-2">
+                Remaining: {previousActions.filter(action => !actionReviews[action.id]?.status).length} action(s)
+              </p>
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <p className="text-green-800 font-medium">
+                ✅ {previousActions.length === 0 
+                  ? 'No previous actions to review' 
+                  : 'All actions addressed!'
+                }
+              </p>
+            </div>
+          )}
+          
           <button 
             onClick={onComplete}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            disabled={!allActionsAddressed && previousActions.length > 0}
+            className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+              allActionsAddressed || previousActions.length === 0
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+            }`}
           >
             ✅ Complete Accountability Review
           </button>
