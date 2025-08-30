@@ -11,7 +11,7 @@ export async function GET() {
     
     // Also check admin view
     const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers()
-    const sammeeUser = allUsers?.users?.find(u => u.email === 'sammeee@yahoo.com')
+    const sammeeUser = allUsers?.users?.find((u: any) => u.email === 'sammeee@yahoo.com')
     
     return NextResponse.json({
       timestamp: new Date().toISOString(),

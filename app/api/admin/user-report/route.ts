@@ -28,8 +28,9 @@ export async function GET(request: Request) {
       }, { status: 404 })
     }
 
-    // 2. Get user auth data
-    const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(email)
+    // 2. Get user auth data - First get the user ID from auth.users table
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
+    const authUser = authUsers?.users?.find((user: any) => user.email === email)
     
     // 3. Get session progress
     const { data: sessionProgress, error: progressError } = await supabase
@@ -91,7 +92,7 @@ export async function GET(request: Request) {
         daysInSystem,
         lastActivity,
         daysSinceLastActivity,
-        authProvider: authUser?.user?.app_metadata?.provider || 'email'
+        authProvider: (authUser as any)?.app_metadata?.provider || 'email'
       },
       
       progressSummary: {
@@ -153,13 +154,13 @@ export async function GET(request: Request) {
       },
       
       errors: {
-        profileError: profileError?.message,
-        authError: authError?.message,
-        progressError: progressError?.message,
-        assessmentError: assessmentError?.message,
-        planError: planError?.message,
-        actionsError: actionsError?.message,
-        feedbackError: feedbackError?.message
+        profileError: (profileError as any)?.message,
+        authError: (authError as any)?.message,
+        progressError: (progressError as any)?.message,
+        assessmentError: (assessmentError as any)?.message,
+        planError: (planError as any)?.message,
+        actionsError: (actionsError as any)?.message,
+        feedbackError: (feedbackError as any)?.message
       }
     }
 
