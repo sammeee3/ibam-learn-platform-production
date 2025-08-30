@@ -50,40 +50,41 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
 
         // Get real previous actions from database
         console.log('🔧 ABOUT TO QUERY DATABASE');
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get user email from custom auth system (same as main session page)
+        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
         
-        if (!user) {
-          console.error('❌ No authenticated user found');
+        if (!userEmail) {
+          console.error('❌ No authenticated user - Looking Back needs login');
           setLoading(false);
           return;
         }
 
-        // Get the correct user profile ID (integer) instead of auth UUID
-        const { data: userProfile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('auth_user_id', user.id)
-          .single();
-
-        if (profileError || !userProfile) {
-          console.error('❌ Could not find user profile:', profileError);
+        // Get profile ID using API endpoint (consistent with session page)
+        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        if (!response.ok) {
+          console.error('❌ Profile API failed in Looking Back');
           setLoading(false);
           return;
         }
-
-        const userId = userProfile.id; // Use integer ID from user_profiles
-        console.log('🔍 USER CHECK: auth_user_id =', user.id, 'profile_id =', userId);
         
-        // Single database query - no duplicates
-        const { data: realActions, error } = await supabase
-          .from('user_action_steps')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('module_id', prevModule)
-          .eq('session_id', prevSession);
+        const profile = await response.json();
+        const userId = profile.id; // Integer profile ID for actions table
+        console.log('🔍 USER CHECK: email =', userEmail, 'profile_id =', userId);
+        
+        // Use API endpoint instead of direct database query
+        const actionsResponse = await fetch(`/api/actions/load-previous?userId=${userId}&moduleId=${prevModule}&sessionId=${prevSession}`);
+        
+        if (!actionsResponse.ok) {
+          console.error('❌ Actions API failed:', actionsResponse.status);
+          setLoading(false);
+          return;
+        }
+        
+        const actionsData = await actionsResponse.json();
+        const realActions = actionsData.actions;
 
-        console.log('🔍 DATABASE QUERY: user_id =', userId, 'module_id =', prevModule, 'session_id =', prevSession);
-        console.log('🔍 DATABASE RESULT:', realActions ? realActions.length : 'null', 'actions found');
+        console.log('🔍 API QUERY: user_id =', userId, 'module_id =', prevModule, 'session_id =', prevSession);
+        console.log('🔍 API RESULT:', realActions ? realActions.length : 'null', 'actions found');
 
         if (realActions && realActions.length > 0) {
           // Convert database format to display format
