@@ -12,14 +12,17 @@ interface EnhancedLookingBackProps {
   pathwayMode: PathwayMode;
   onComplete: () => void;
   onSubsectionComplete?: (subsection: string) => void;
+  isCompleted?: boolean; // 🔧 NEW: Pass database completion state
 }
 
 const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({ 
   sessionData, 
   pathwayMode, 
   onComplete,
-  onSubsectionComplete
+  onSubsectionComplete,
+  isCompleted = false // 🔧 NEW: Default to false if not provided
 }) => {
+  console.log('🏗️ EnhancedLookingBack component rendering with isCompleted:', isCompleted);
   const supabase = createClientComponentClient();
   
   // State for 3-part structure
@@ -48,16 +51,42 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
     session_1_2: sessionPrayers["1_2"]
   });
 
-  // Load prayer status
+  // Load prayer status - PRIORITIZE DATABASE STATE over sessionStorage  
   useEffect(() => {
-    const sessionKey = `prayer_${sessionData.module_id}_${sessionData.session_number}`;
-    const saved = typeof window !== 'undefined' && window.sessionStorage?.getItem(sessionKey) === 'true';
-    if (saved) {
+    console.log('🔄 EnhancedLookingBack: Loading completion state:', { 
+      isCompleted, 
+      moduleId: sessionData.module_id, 
+      sessionNumber: sessionData.session_number 
+    });
+    
+    if (isCompleted) {
+      // 🔧 FIX: If database shows section is completed, restore ALL states
+      console.log('✅ DATABASE RESTORATION: Looking Back completed - forcing state restore');
       setPrayerCompleted(true);
-      // If prayer was completed, show action accountability immediately
       setShowActionAccountability(true);
+      
+      // 🚨 FORCE UPDATE: Also save to sessionStorage to prevent conflicts
+      const sessionKey = `prayer_${sessionData.module_id}_${sessionData.session_number}`;
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem(sessionKey, 'true');
+        console.log('💾 Force-saved prayer completion to sessionStorage for consistency');
+      }
+    } else {
+      // Reset states when not completed
+      console.log('🔄 Database shows not completed - checking sessionStorage fallback');
+      const sessionKey = `prayer_${sessionData.module_id}_${sessionData.session_number}`;
+      const saved = typeof window !== 'undefined' && window.sessionStorage?.getItem(sessionKey) === 'true';
+      if (saved) {
+        console.log('📱 SessionStorage shows prayer completed');
+        setPrayerCompleted(true);
+        setShowActionAccountability(true);
+      } else {
+        console.log('🚫 No completion found in database or sessionStorage - resetting states');
+        setPrayerCompleted(false);
+        setShowActionAccountability(false);
+      }
     }
-  }, [sessionData.module_id, sessionData.session_number]);
+  }, [sessionData.module_id, sessionData.session_number, isCompleted]);
 
   const handlePrayerComplete = (checked: boolean) => {
     try {

@@ -159,12 +159,12 @@ const PostAssessmentInlineModal: React.FC<PostAssessmentInlineModalProps> = ({
         
         const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
         const profile = await profileResponse.json();
-        if (!profile.auth_user_id) return;
+        if (!profile.id) return; // 🔧 FIX: Use profile.id consistently
 
         const { data, error } = await supabase
           .from('assessment_responses')
           .select('id')
-          .eq('user_id', profile.auth_user_id)
+          .eq('user_id', profile.id) // 🔧 FIX: Use profile.id consistently
           .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853') // Using your original post-assessment ID
           .single();
 
@@ -224,7 +224,7 @@ const PostAssessmentInlineModal: React.FC<PostAssessmentInlineModalProps> = ({
       
       const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
       const profile = await profileResponse.json();
-      if (!profile.auth_user_id) {
+      if (!profile.id) { // 🔧 FIX: Use profile.id consistently
         throw new Error('User profile not found');
       }
 
@@ -242,7 +242,7 @@ const PostAssessmentInlineModal: React.FC<PostAssessmentInlineModalProps> = ({
       const { error } = await supabase
         .from('assessment_responses')
         .insert({
-          user_id: profile.auth_user_id,
+          user_id: profile.id, // 🔧 FIX: Use profile.id consistently
           assessment_id: '4a70a585-ae69-4b93-92d0-a03ba789d853', // Your original post-assessment ID
           responses: responses,
           total_score: totalScore,

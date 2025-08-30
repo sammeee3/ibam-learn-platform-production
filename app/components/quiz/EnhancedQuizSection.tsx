@@ -11,66 +11,17 @@ interface EnhancedQuizSectionProps {
 }
 
 const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, onCompletion }) => {
-  // Storage key for this specific session
-  const STORAGE_KEY = `quiz_progress_${sessionData.id}`;
+  // 🧠 NEW INDIVIDUAL QUESTION PERSISTENCE SYSTEM
+  const moduleId = sessionData.module_id;
+  const sessionNum = sessionData.session_number;
   
-  // Initialize state from localStorage if available
-  const getInitialState = () => {
-    if (typeof window === 'undefined') {
-      return {
-        currentQuestion: 0,
-        selectedAnswers: {},
-        showResult: {},
-        score: 0,
-        isCompleted: false
-      };
-    }
-    
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const progress = JSON.parse(saved);
-        // Only restore if saved within last 24 hours
-        if (Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) {
-          console.log('🔄 Restoring quiz progress:', progress);
-          return {
-            currentQuestion: progress.currentQuestion || 0,
-            selectedAnswers: progress.selectedAnswers || {},
-            showResult: progress.showResult || {},
-            score: progress.score || 0,
-            isCompleted: progress.isCompleted || false
-          };
-        } else {
-          // Expired progress
-          localStorage.removeItem(STORAGE_KEY);
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to load quiz progress:', error);
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    
-    return {
-      currentQuestion: 0,
-      selectedAnswers: {},
-      showResult: {},
-      score: 0,
-      isCompleted: false
-    };
-  };
-  
-  const initialState = getInitialState();
-  
-  const [currentQuestion, setCurrentQuestion] = useState(initialState.currentQuestion);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>(initialState.selectedAnswers);
-  const [showResult, setShowResult] = useState<Record<number, boolean>>(initialState.showResult);
-  const [score, setScore] = useState(initialState.score);
-  const [isCompleted, setIsCompleted] = useState(initialState.isCompleted);
-  const [showRetry, setShowRetry] = useState(false);
-  const [showContinueButton, setShowContinueButton] = useState(false);
-  const [celebrationActive, setCelebrationActive] = useState(false);
+  // 🔧 Individual question storage keys 
+  const getQuestionStorageKey = (questionIndex: number) => 
+    `quiz_question_${moduleId}_${sessionNum}_${questionIndex}`;
+  const getQuizStateStorageKey = () => 
+    `quiz_state_${moduleId}_${sessionNum}`;
 
-  // Extract quiz questions from content JSONB or FAQ questions
+  // Extract quiz questions from content JSONB or FAQ questions (moved up)
   const getQuizQuestions = () => {
     // First try to get from content JSONB structure
     let questions: any[] = [];
@@ -151,76 +102,185 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
 
     return questions;
   };
+  
+  // 🧠 Initialize individual question progress from localStorage
+  const getInitialQuestionStates = (questions: any[]) => {
+    if (typeof window === 'undefined') {
+      return {
+        questionResults: new Array(questions.length).fill(null),
+        currentQuestion: 0,
+        isCompleted: false
+      };
+    }
+    
+    try {
+      // Load individual question results (NEVER expire - permanent learning progress)
+      const questionResults = questions.map((_, index) => {
+        const saved = localStorage.getItem(getQuestionStorageKey(index));
+        return saved ? JSON.parse(saved) : null;
+      });
+      
+      // Load general quiz state
+      const quizState = localStorage.getItem(getQuizStateStorageKey());
+      const savedState = quizState ? JSON.parse(quizState) : null;
+      
+      // Calculate completion based on individual question results
+      const allQuestionsAnsweredCorrectly = questionResults.every(result => 
+        result && result.isCorrect
+      );
+      
+      console.log('🧠 Restored quiz progress:', {
+        questionResults,
+        allCorrect: allQuestionsAnsweredCorrectly,
+        savedCurrentQuestion: savedState?.currentQuestion
+      });
+      
+      return {
+        questionResults,
+        currentQuestion: allQuestionsAnsweredCorrectly ? 0 : (savedState?.currentQuestion || 0),
+        isCompleted: allQuestionsAnsweredCorrectly
+      };
+    } catch (error) {
+      console.warn('Failed to load individual question progress:', error);
+      return {
+        questionResults: new Array(questions.length).fill(null),
+        currentQuestion: 0,
+        isCompleted: false
+      };
+    }
+  };
+  
+  // Get quiz questions first to initialize state
+  const quizQuestions = getQuizQuestions();
+  const initialQuestionStates = getInitialQuestionStates(quizQuestions);
+  
+  // 🧠 NEW STATE STRUCTURE - Individual question tracking
+  const [questionResults, setQuestionResults] = useState<Array<{
+    selectedAnswer: number;
+    isCorrect: boolean;
+    showResult: boolean;
+  } | null>>(initialQuestionStates.questionResults);
+  const [currentQuestion, setCurrentQuestion] = useState(initialQuestionStates.currentQuestion);
+  const [isCompleted, setIsCompleted] = useState(initialQuestionStates.isCompleted);
+  const [celebrationActive, setCelebrationActive] = useState(false);
 
   const questions = getQuizQuestions();
 
+  // 🧠 NEW ANSWER HANDLING - Individual question persistence
   const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
-    setSelectedAnswers(prev => ({ ...prev, [questionIndex]: answerIndex }));
-    setShowResult(prev => ({ ...prev, [questionIndex]: true }));
-    
     const isCorrect = answerIndex === questions[questionIndex].correct;
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-      setCelebrationActive(true);
-      // Stop celebration animation after 3 seconds
-      setTimeout(() => setCelebrationActive(false), 3000);
+    
+    // Create question result
+    const questionResult = {
+      selectedAnswer: answerIndex,
+      isCorrect,
+      showResult: true
+    };
+    
+    // Update local state
+    setQuestionResults(prev => {
+      const newResults = [...prev];
+      newResults[questionIndex] = questionResult;
+      return newResults;
+    });
+    
+    // 💾 PERMANENT STORAGE: Save individual question result (never expires)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        getQuestionStorageKey(questionIndex), 
+        JSON.stringify(questionResult)
+      );
+      console.log(`🧠 Saved question ${questionIndex} result:`, questionResult);
     }
     
-    // Show continue button after brief delay for reading
-    setTimeout(() => {
-      setShowContinueButton(true);
-    }, 1000);
+    if (isCorrect) {
+      setCelebrationActive(true);
+      setTimeout(() => setCelebrationActive(false), 2000);
+    }
   };
   
   const handleContinue = () => {
-    setShowContinueButton(false);
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+      // Move to next unanswered question
+      let nextQuestion = currentQuestion + 1;
+      while (nextQuestion < questions.length && questionResults[nextQuestion]?.isCorrect) {
+        nextQuestion++;
+      }
+      
+      if (nextQuestion < questions.length) {
+        setCurrentQuestion(nextQuestion);
+        // Save current question position
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(getQuizStateStorageKey(), JSON.stringify({
+            currentQuestion: nextQuestion,
+            timestamp: Date.now()
+          }));
+        }
+      } else {
+        // Check if all questions are correct
+        checkQuizCompletion();
+      }
     } else {
+      checkQuizCompletion();
+    }
+  };
+  
+  // 🧠 NEW COMPLETION LOGIC - All questions must be answered correctly
+  const checkQuizCompletion = () => {
+    const allCorrect = questionResults.every((result, index) => 
+      result && result.isCorrect && index < questions.length
+    );
+    
+    if (allCorrect) {
       setIsCompleted(true);
+      onCompletion?.(true);
+      console.log('🎉 Quiz completed! All questions answered correctly.');
     }
   };
 
-  // Save progress to localStorage whenever state changes
+  // 🧠 NEW: Save quiz state (but individual questions saved separately)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const progress = {
+      const quizState = {
         currentQuestion,
-        selectedAnswers,
-        showResult,
-        score,
         isCompleted,
         timestamp: Date.now()
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-      console.log('💾 Saved quiz progress:', progress);
+      localStorage.setItem(getQuizStateStorageKey(), JSON.stringify(quizState));
+      console.log('💾 Saved quiz state:', quizState);
     }
-  }, [currentQuestion, selectedAnswers, showResult, score, isCompleted, STORAGE_KEY]);
+  }, [currentQuestion, isCompleted]);
   
-  // Clear progress and trigger completion when quiz is finished
+  // Trigger completion callback when quiz is finished
   useEffect(() => {
     if (isCompleted) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(STORAGE_KEY);
-        console.log('🧹 Cleared quiz progress - quiz completed');
-      }
       onCompletion?.(true);
+      console.log('🎉 Quiz completion callback triggered');
     }
-  }, [isCompleted, onCompletion, STORAGE_KEY]);
+  }, [isCompleted, onCompletion]);
   
+  // 🧠 NEW RESET: Clear all individual question progress (for admin/debug purposes)
   const resetQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers({});
-    setShowResult({});
-    setScore(0);
-    setIsCompleted(false);
-    setShowRetry(false);
-    setShowContinueButton(false);
-    setCelebrationActive(false);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY);
-      console.log('🔄 Reset quiz progress');
+      // Clear individual question results
+      questions.forEach((_, index) => {
+        localStorage.removeItem(getQuestionStorageKey(index));
+      });
+      // Clear quiz state
+      localStorage.removeItem(getQuizStateStorageKey());
+      console.log('🔄 Reset all quiz progress - individual questions cleared');
     }
+    
+    // Reset component state
+    setQuestionResults(new Array(questions.length).fill(null));
+    setCurrentQuestion(0);
+    setIsCompleted(false);
+    setCelebrationActive(false);
+  };
+  
+  // 🧠 Calculate current score from individual question results
+  const getCurrentScore = () => {
+    return questionResults.filter(result => result && result.isCorrect).length;
   };
 
   if (questions.length === 0) {
@@ -234,64 +294,66 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
   }
 
   if (isCompleted) {
-    const percentage = Math.round((score / questions.length) * 100);
-    const isExcellent = percentage >= 80;
-    const isGood = percentage >= 60;
+    const currentScore = getCurrentScore();
+    const percentage = Math.round((currentScore / questions.length) * 100);
+    // When all questions are correct (completion requirement), it's always excellent
+    const isExcellent = true; // Since completion requires 100% correct
     
     return (
       <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
-        <div className={`p-8 text-center ${
-          isExcellent ? 'bg-gradient-to-r from-green-400 to-blue-500' : 
-          isGood ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
-          'bg-gradient-to-r from-red-400 to-pink-500'
-        } text-white`}>
-          <div className="text-5xl mb-4">
-            {isExcellent ? '🎉' : isGood ? '👍' : '💪'}
+        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-8 text-center relative overflow-hidden">
+          {/* Celebration animation */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-4 left-4 text-3xl animate-bounce">🎉</div>
+            <div className="absolute top-8 right-8 text-2xl animate-pulse">⭐</div>
+            <div className="absolute bottom-6 left-8 text-2xl animate-bounce" style={{ animationDelay: '0.5s' }}>🏆</div>
+            <div className="absolute bottom-4 right-6 text-3xl animate-pulse" style={{ animationDelay: '1s' }}>✨</div>
           </div>
-          <h1 className="text-3xl font-bold mb-3">
-            {isExcellent ? 'Excellent Work!' : isGood ? 'Good Job!' : 'Great Learning!'}
-          </h1>
-          <p className="text-lg mb-4">
-            You scored {score} out of {questions.length} ({percentage}%)
-          </p>
-          <p className="text-lg opacity-90">
-            {isExcellent ? 
-              'You have excellent understanding of faith-driven business principles!' :
-              isGood ?
-              'You\'re building solid understanding. Keep learning!' :
-              'Every question teaches valuable lessons. Learning is winning!'
-            }
-          </p>
+          
+          <div className="relative z-10">
+            <div className="text-6xl mb-4 animate-bounce">🧠</div>
+            <h1 className="text-4xl font-bold mb-4">Memory Mastery Complete!</h1>
+            <p className="text-xl mb-4">Perfect Score: {currentScore} out of {questions.length} (100%)</p>
+            <p className="text-lg opacity-90">
+              You've mastered all the faith-driven business principles! Every question answered correctly shows your deep understanding.
+            </p>
+          </div>
         </div>
         
-        <div className="p-8 text-center space-y-4">
-          {!isExcellent && (
-            <button
-              onClick={resetQuiz}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mr-4"
-            >
-              🔄 Try Again
-            </button>
-          )}
+        {/* Individual Question Progress Display */}
+        <div className="p-6 bg-green-50">
+          <h3 className="text-xl font-bold text-green-800 mb-4 text-center">🎯 Your Perfect Progress</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {questions.map((question, index) => (
+              <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
+                <div className="flex items-center mb-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                  <span className="font-semibold text-green-800">Question {index + 1}</span>
+                </div>
+                <p className="text-sm text-gray-700 truncate">{question.question}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="p-6 bg-gray-50 text-center">
           <button
-            onClick={() => {
-              setCurrentQuestion(0);
-              setShowResult({});
-            }}
-            className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors mr-4"
+            onClick={resetQuiz}
+            className="bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
           >
-            📖 Review Questions
+            🔄 Retake Quiz (Debug)
           </button>
-          
         </div>
       </div>
     );
   }
-
+  
+  // 🧠 NEW: Main quiz interface with individual question tracking
   const question = questions[currentQuestion];
-  const hasAnswered = showResult[currentQuestion];
-  const selectedAnswer = selectedAnswers[currentQuestion];
-  const isCorrect = selectedAnswer === question.correct;
+  const currentResult = questionResults[currentQuestion];
+  const hasAnswered = currentResult !== null;
+  const isCorrect = currentResult?.isCorrect || false;
 
   return (
     <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
@@ -304,7 +366,7 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
               Question {currentQuestion + 1} of {questions.length}
             </span>
             <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-              Score: {score}/{questions.length}
+              Score: {getCurrentScore()}/{questions.length}
             </span>
           </div>
         </div>
@@ -332,7 +394,7 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
             if (hasAnswered) {
               if (index === question.correct) {
                 buttonStyle = `border-2 border-green-500 bg-green-50 text-green-800 ${celebrationActive ? 'animate-pulse shadow-lg' : ''}`;
-              } else if (index === selectedAnswer && index !== question.correct) {
+              } else if (index === currentResult?.selectedAnswer && index !== question.correct) {
                 buttonStyle = "border-2 border-red-500 bg-red-50 text-red-800";
               } else {
                 buttonStyle = "border-2 border-gray-200 bg-gray-50 text-gray-600";
@@ -356,7 +418,7 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
                   {hasAnswered && index === question.correct && (
                     <CheckCircle className="w-5 h-5 text-green-600 ml-3" />
                   )}
-                  {hasAnswered && index === selectedAnswer && index !== question.correct && (
+                  {hasAnswered && index === currentResult?.selectedAnswer && index !== question.correct && (
                     <X className="w-5 h-5 text-red-600 ml-3" />
                   )}
                 </div>
@@ -401,17 +463,15 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
               </div>
             )}
             
-            {showContinueButton && (
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleContinue}
-                  className="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all transform hover:scale-105 flex items-center mx-auto"
-                >
-                  {currentQuestion < questions.length - 1 ? 'Continue to Next Question' : 'Complete Quiz'}
-                  <ChevronRight className="w-5 h-5 ml-2" />
-                </button>
-              </div>
-            )}
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleContinue}
+                className="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all transform hover:scale-105 flex items-center mx-auto"
+              >
+                {currentQuestion < questions.length - 1 ? 'Continue to Next Question' : 'Complete Quiz'}
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </button>
+            </div>
           </div>
         )}
 

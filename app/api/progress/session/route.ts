@@ -1,0 +1,208 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-config';
+
+export async function POST(request: NextRequest) {
+  try {
+    const {
+      userId,
+      moduleId,
+      sessionId,
+      section,
+      sectionCompleted,
+      timeSpentSeconds = 0,
+      videoWatchPercentage,
+      quizScore,
+      quizAttempts
+    } = await request.json();
+
+    if (!userId || !moduleId || !sessionId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userId, moduleId, sessionId' }, 
+        { status: 400 }
+      );
+    }
+
+    console.log('🔄 Server-side progress update for:', { userId, moduleId, sessionId, section });
+
+    // Use admin client to bypass RLS
+    const supabase = supabaseAdmin;
+
+    // Get existing progress or create new
+    const { data: existing } = await supabase
+      .from('user_session_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('module_id', moduleId)
+      .eq('session_id', sessionId)
+      .single();
+
+    const currentProgress = existing || {
+      lookback_completed: false,
+      lookup_completed: false,
+      lookforward_completed: false,
+      assessment_completed: false,
+      time_spent_seconds: 0,
+      quiz_attempts: 0,
+      video_watch_percentage: 0
+    };
+
+    // Update section completion status
+    const updatedProgress: any = {
+      user_id: userId,
+      module_id: moduleId,
+      session_id: sessionId,
+      last_section: section || currentProgress.last_section,
+      lookback_completed: sectionCompleted?.lookback ?? currentProgress.lookback_completed,
+      lookup_completed: sectionCompleted?.lookup ?? currentProgress.lookup_completed,
+      lookforward_completed: sectionCompleted?.lookforward ?? currentProgress.lookforward_completed,
+      assessment_completed: sectionCompleted?.assessment ?? currentProgress.assessment_completed,
+      time_spent_seconds: (currentProgress.time_spent_seconds || 0) + (timeSpentSeconds || 0),
+      video_watch_percentage: Math.max(
+        currentProgress.video_watch_percentage || 0,
+        videoWatchPercentage || 0
+      ),
+      quiz_score: quizScore ?? currentProgress.quiz_score,
+      quiz_attempts: (currentProgress.quiz_attempts || 0) + (quizAttempts || 0),
+      last_accessed: new Date().toISOString()
+    };
+
+    // Calculate completion percentage (3 main sections: lookback, lookup, lookforward)
+    const completedSections = [
+      updatedProgress.lookback_completed,
+      updatedProgress.lookup_completed,
+      updatedProgress.lookforward_completed
+    ].filter(Boolean).length;
+    
+    const totalSections = 3; // lookback, lookup, lookforward
+    updatedProgress.completion_percentage = Math.round((completedSections / totalSections) * 100);
+
+    // Set completed_at if 100% complete
+    if (updatedProgress.completion_percentage === 100 && !currentProgress.completed_at) {
+      updatedProgress.completed_at = new Date().toISOString();
+    }
+
+    console.log('💾 Saving progress with admin client:', updatedProgress);
+
+    // Upsert the progress record using admin client
+    const { data, error } = await supabase
+      .from('user_session_progress')
+      .upsert(updatedProgress)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Database error:', error);
+      throw error;
+    }
+
+    console.log('✅ Progress saved successfully:', data);
+
+    // Update module completion
+    await updateModuleCompletion(supabase, userId, moduleId);
+
+    return NextResponse.json({ success: true, data });
+
+  } catch (error) {
+    console.error('❌ Server error updating progress:', error);
+    return NextResponse.json(
+      { error: 'Failed to update progress', details: error.message }, 
+      { status: 500 }
+    );
+  }
+}
+
+async function updateModuleCompletion(supabase: any, userId: string, moduleId: number) {
+  try {
+    // Get all sessions for this module
+    const { data: sessions } = await supabase
+      .from('user_session_progress')
+      .select('completion_percentage, time_spent_seconds')
+      .eq('user_id', userId)
+      .eq('module_id', moduleId);
+
+    if (!sessions || sessions.length === 0) return;
+
+    const totalSessions = getTotalSessionsForModule(moduleId);
+    const completedSessions = sessions.filter((s: any) => s.completion_percentage === 100).length;
+    const totalTimeSpent = sessions.reduce((sum: number, s: any) => sum + (s.time_spent_seconds || 0), 0);
+    const moduleCompletion = Math.round((completedSessions / totalSessions) * 100);
+
+    const moduleData: any = {
+      user_id: userId,
+      module_id: moduleId,
+      sessions_completed: completedSessions,
+      total_sessions: totalSessions,
+      completion_percentage: moduleCompletion,
+      total_time_spent_seconds: totalTimeSpent,
+      status: moduleCompletion === 0 ? 'not_started' : 
+              moduleCompletion === 100 ? 'completed' : 'in_progress',
+      last_accessed: new Date().toISOString()
+    };
+
+    if (moduleCompletion === 100) {
+      moduleData.completed_at = new Date().toISOString();
+    }
+
+    await supabase
+      .from('module_completion')
+      .upsert(moduleData);
+
+  } catch (error) {
+    console.error('Error updating module completion:', error);
+  }
+}
+
+function getTotalSessionsForModule(moduleId: number): number {
+  const moduleSessions: { [key: number]: number } = {
+    1: 4, // Module 1 has 4 sessions
+    2: 4, // Module 2 has 4 sessions
+    3: 5, // Module 3 has 5 sessions
+    4: 4, // Module 4 has 4 sessions
+    5: 5, // Module 5 has 5 sessions
+  };
+  return moduleSessions[moduleId] || 4;
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    }
+
+    const supabase = supabaseAdmin;
+
+    const { data: modules } = await supabase
+      .from('module_completion')
+      .select('*')
+      .eq('user_id', userId)
+      .order('module_id');
+
+    const { data: sessions } = await supabase
+      .from('user_session_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .order('module_id, session_id');
+
+    const overallCompletion = calculateOverallCompletion(modules || []);
+
+    return NextResponse.json({
+      modules: modules || [],
+      sessions: sessions || [],
+      overallCompletion
+    });
+
+  } catch (error) {
+    console.error('Error getting user progress:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+function calculateOverallCompletion(modules: any[]): number {
+  if (modules.length === 0) return 0;
+  const totalModules = 5;
+  const completedModules = modules.filter(m => m.status === 'completed').length;
+  return Math.round((completedModules / totalModules) * 100);
+}

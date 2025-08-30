@@ -16,18 +16,81 @@ interface BeautifulLookingUpSectionProps {
   sessionData: SessionData;
   pathwayMode: PathwayMode;
   onMarkComplete: (section: string) => void;
+  isCompleted?: boolean; // 🔧 NEW: Pass database completion state
+  lookingUpProgress?: {
+    wealth: boolean;
+    people: boolean;
+    reading: boolean;
+    case: boolean;
+    integrate: boolean;
+    practice: boolean;
+  }; // 🔧 NEW: Individual subsection progress
 }
 
 const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({ 
   sessionData, 
   pathwayMode = 'individual', 
-  onMarkComplete 
+  onMarkComplete,
+  isCompleted = false, // 🔧 NEW: Default to false if not provided
+  lookingUpProgress = {
+    wealth: false,
+    people: false,
+    reading: false,
+    case: false,
+    integrate: false,
+    practice: false
+  } // 🔧 NEW: Default progress state
 }) => {
+  console.log('🏗️ BeautifulLookingUpSection rendering with isCompleted:', isCompleted);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [currentSwipeIndex, setCurrentSwipeIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
+  
+  // 🔧 NEW: Integration section state
+  const [integrationGoal, setIntegrationGoal] = useState('');
+  const [integrationCompleted, setIntegrationCompleted] = useState(false);
+  
+  // 🔧 NEW: Storage key for integration section
+  const integrationStorageKey = `integration_goal_${sessionData.module_id}_${sessionData.session_number}`;
+  
+  // 🔧 NEW: Storage keys for video completions
+  const wealthVideoStorageKey = `wealth_video_completed_${sessionData.module_id}_${sessionData.session_number}`;
+  const peopleVideoStorageKey = `people_video_completed_${sessionData.module_id}_${sessionData.session_number}`;
+  
+  // 🔧 NEW: Load saved integration data and video completions on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Load integration goal
+      const saved = localStorage.getItem(integrationStorageKey);
+      if (saved) {
+        try {
+          const parsedData = JSON.parse(saved);
+          console.log('🔗 Restored integration goal from localStorage:', parsedData);
+          setIntegrationGoal(parsedData.goal || '');
+          setIntegrationCompleted(parsedData.completed || false);
+        } catch (error) {
+          console.error('Error loading saved integration goal:', error);
+        }
+      }
+    }
+  }, [integrationStorageKey]);
+  
+  // 🔧 NEW: Autosave integration goal
+  const saveIntegrationGoal = (goal: string) => {
+    if (typeof window !== 'undefined') {
+      const dataToSave = { goal, completed: goal.trim().length > 10 }; // Auto-complete if sufficient content
+      localStorage.setItem(integrationStorageKey, JSON.stringify(dataToSave));
+      console.log('💾 Auto-saved integration goal:', dataToSave);
+      
+      // Auto-complete if goal has enough content
+      if (goal.trim().length > 10 && !integrationCompleted) {
+        setIntegrationCompleted(true);
+        onMarkComplete('integrate');
+      }
+    }
+  };
 
   // Detect mobile screen size
   useEffect(() => {
@@ -147,12 +210,53 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
                 </div>
               </div>
             </div>
-            <button 
-              onClick={() => onMarkComplete('wealth')}
-              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition-colors"
-            >
-              ✅ Complete GROW Business
-            </button>
+            {wealthVideoUrl ? (
+              <button 
+                onClick={() => {
+                  // 🔧 SAVE TO LOCALSTORAGE: Mark wealth video as complete
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem(wealthVideoStorageKey, 'true');
+                    console.log('💾 Saved wealth video completion to localStorage');
+                  }
+                  onMarkComplete('wealth');
+                }}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                  lookingUpProgress.wealth 
+                    ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg'
+                }`}
+                disabled={lookingUpProgress.wealth}
+              >
+                {lookingUpProgress.wealth ? (
+                  <>✅ Video Watched - Business Complete! </>
+                ) : (
+                  <>📺 Watch Video & Complete Business </>
+                )}
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  // 🔧 SAVE TO LOCALSTORAGE: Mark wealth section as complete
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem(wealthVideoStorageKey, 'true');
+                    console.log('💾 Saved wealth business completion to localStorage');
+                  }
+                  onMarkComplete('wealth');
+                }}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                  lookingUpProgress.wealth 
+                    ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                    : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-lg'
+                }`}
+                disabled={lookingUpProgress.wealth}
+              >
+                {lookingUpProgress.wealth ? (
+                  <>✅ GROW Business Complete! </>
+                ) : (
+                  <>📚 Complete GROW Business </>
+                )}
+              </button>
+            )}
           </div>
         );
 
@@ -164,7 +268,9 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
             {chunks.length > 0 ? (
               <EnhancedReadingChunks 
                 chunks={chunks} 
-                title="Session Reading" 
+                title="Session Reading"
+                onComplete={() => onMarkComplete('reading')} // 🔧 FIX: Pass completion callback
+                sessionData={{ module_id: sessionData.module_id, session_number: sessionData.session_number }} // 🔧 NEW: For autosave
               />
             ) : (
               (() => {
@@ -174,26 +280,31 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
                   return (
                     <EnhancedReadingChunks 
                       chunks={parsedChunks} 
-                      title="Session Reading" 
+                      title="Session Reading"
+                      onComplete={() => onMarkComplete('reading')} // 🔧 FIX: Pass completion callback
+                      sessionData={{ module_id: sessionData.module_id, session_number: sessionData.session_number }} // 🔧 NEW: For autosave
                     />
                   );
                 } else {
                   return (
-                    <UniversalReadingWithToggle 
-                      sessionData={sessionData}
-                      title="Session Reading Content"
-                    />
+                    <div className="space-y-4">
+                      <UniversalReadingWithToggle 
+                        sessionData={sessionData}
+                        title="Session Reading Content"
+                      />
+                      <button 
+                        onClick={() => onMarkComplete('reading')}
+                        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
+                      >
+                        ✅ Complete Reading
+                      </button>
+                    </div>
                   );
                 }
               })()
             )}
             
-            <button 
-              onClick={() => onMarkComplete('reading')}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
-            >
-              ✅ Complete Reading
-            </button>
+            {/* 🔧 REMOVED: Duplicate Complete Reading button - now handled by EnhancedReadingChunks */}
           </div>
         );
 
@@ -237,12 +348,53 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
                 </div>
               </div>
             </div>
-            <button 
-              onClick={() => onMarkComplete('people')}
-              className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition-colors"
-            >
-              ✅ Complete GROW Impact
-            </button>
+            {peopleVideoUrl ? (
+              <button 
+                onClick={() => {
+                  // 🔧 SAVE TO LOCALSTORAGE: Mark people video as complete
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem(peopleVideoStorageKey, 'true');
+                    console.log('💾 Saved people video completion to localStorage');
+                  }
+                  onMarkComplete('people');
+                }}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                  lookingUpProgress.people 
+                    ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg'
+                }`}
+                disabled={lookingUpProgress.people}
+              >
+                {lookingUpProgress.people ? (
+                  <>✅ Video Watched - Impact Complete! </>
+                ) : (
+                  <>📺 Watch Video & Complete Impact </>
+                )}
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  // 🔧 SAVE TO LOCALSTORAGE: Mark people section as complete
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem(peopleVideoStorageKey, 'true');
+                    console.log('💾 Saved people impact completion to localStorage');
+                  }
+                  onMarkComplete('people');
+                }}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                  lookingUpProgress.people 
+                    ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                    : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg'
+                }`}
+                disabled={lookingUpProgress.people}
+              >
+                {lookingUpProgress.people ? (
+                  <>✅ GROW Impact Complete! </>
+                ) : (
+                  <>📚 Complete GROW Impact </>
+                )}
+              </button>
+            )}
           </div>
         );
 
@@ -252,74 +404,30 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
             <BeautifulCaseStudyComponent
               sessionData={sessionData}
               sessionTitle={sessionData.title}
+              onComplete={() => onMarkComplete('case')}
             />
-            <button 
-              onClick={() => onMarkComplete('case')}
-              className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition-colors"
-            >
-              ✅ Complete Case Study
-            </button>
+            {lookingUpProgress.case ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">✅</div>
+                <p className="font-semibold text-green-800">Case Study Complete!</p>
+                <p className="text-green-600 text-sm">Your insights have been saved</p>
+              </div>
+            ) : (
+              <button 
+                onClick={() => onMarkComplete('case')}
+                className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 transition-colors"
+              >
+                📊 Complete Case Study
+              </button>
+            )}
           </div>
         );
 
       case 'integrate':
-        return (
-          <div className="space-y-6">
-            <div className="bg-teal-50 p-6 rounded-lg border-l-4 border-teal-400">
-              <h4 className="font-bold text-teal-800 mb-3">🔗 Integrating Business & Impact</h4>
-              
-              {pathwayMode === 'individual' ? (
-                <div className="space-y-4">
-                  <div className="bg-white p-4 rounded">
-                    <h5 className="font-semibold mb-2">💡 Personal Integration Framework</h5>
-                    <ul className="space-y-2 mb-4">
-                      <li><strong>Profit with Purpose:</strong> Every revenue strategy includes discipleship opportunities</li>
-                      <li><strong>Excellence as Evangelism:</strong> Quality work opens doors for spiritual conversations</li>
-                      <li><strong>Generosity as Growth:</strong> Giving creates space for God's provision</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded">
-                    <h5 className="font-semibold mb-2">🎯 Personal Integration Planning</h5>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block font-medium text-gray-700 mb-1">This Week's Integration Goal:</label>
-                        <textarea 
-                          className="w-full p-3 border rounded"
-                          rows={2}
-                          placeholder="How will you integrate wealth-building and people-growing in your business this week?"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-white p-4 rounded">
-                    <h5 className="font-semibold mb-2">👥 Group Integration Workshop</h5>
-                    <div className="space-y-4">
-                      <div className="border-l-4 border-green-400 pl-4">
-                        <h6 className="font-medium text-green-800">Step 1: Pair & Share (10 minutes)</h6>
-                        <p className="text-sm text-gray-600">Form pairs. Each person shares their biggest business challenge and biggest ministry opportunity.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-blue-400 pl-4">
-                        <h6 className="font-medium text-blue-800">Step 2: Group Brainstorm (15 minutes)</h6>
-                        <p className="text-sm text-gray-600">Each pair presents one integration challenge to the group.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <button 
-              onClick={() => onMarkComplete('integrate')}
-              className="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700 transition-colors"
-            >
-              ✅ Complete Integration
-            </button>
-          </div>
-        );
+        // 🔇 HIDDEN: Integration section completely hidden from UI
+        // Backend still marks it as complete for progress calculations
+        // but doesn't show progress on dashboard per user request
+        return null;
 
 
       case 'practice':

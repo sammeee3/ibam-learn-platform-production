@@ -37,13 +37,13 @@ const SessionCompletionWrapper: React.FC<SessionCompletionWrapperProps> = ({
       
       const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
       const profile = await profileResponse.json();
-      if (!profile.auth_user_id) return;
+      if (!profile.id) return; // 🔧 FIX: Use profile.id consistently
 
       // Check if post-assessment already completed
       const { data: assessmentData, error } = await supabase
         .from('assessment_responses')
         .select('id')
-        .eq('user_id', profile.auth_user_id)
+        .eq('user_id', profile.id) // 🔧 FIX: Use profile.id consistently
         .eq('assessment_id', 'c88g5b79-9bd5-42bb-9767-7fe2d0f920c8') // Post-assessment ID
         .single();
 
@@ -118,13 +118,13 @@ const SessionCompletionWrapper: React.FC<SessionCompletionWrapperProps> = ({
         
         const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
         const profile = await profileResponse.json();
-        if (!profile.auth_user_id) return;
+        if (!profile.id) return; // 🔧 FIX: Use profile.id consistently
 
         // Check if this session is already completed
         const { data: progressData } = await supabase
           .from('user_progress')
           .select('completion_percentage, completed_at')
-          .eq('user_id', profile.auth_user_id)
+          .eq('user_id', profile.id) // 🔧 FIX: Use profile.id consistently
           .eq('module_id', moduleId)
           .eq('session_id', sessionId)
           .single();

@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Target, MessageCircle } from 'lucide-react';
 import type { SessionData } from '../../lib/types';
 
 interface BeautifulCaseStudyProps {
   sessionData: SessionData;
   sessionTitle: string;
+  onComplete?: () => void; // 🔧 NEW: Callback when case study is completed
 }
 
 const BeautifulCaseStudyComponent: React.FC<BeautifulCaseStudyProps> = ({ 
   sessionData, 
-  sessionTitle 
+  sessionTitle,
+  onComplete
 }) => {
   const [caseAnswers, setCaseAnswers] = useState<Record<string, string>>({
     discovery: '',
@@ -19,6 +21,41 @@ const BeautifulCaseStudyComponent: React.FC<BeautifulCaseStudyProps> = ({
     transformation: ''
   });
   const [answersSaved, setAnswersSaved] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  
+  // 🔧 NEW: Storage key for session-specific saves
+  const storageKey = `case_study_answers_${sessionData.module_id}_${sessionData.session_number}`;
+  
+  // 🔧 NEW: Load saved answers on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsedAnswers = JSON.parse(saved);
+          console.log('📚 Restored case study answers from localStorage:', parsedAnswers);
+          setCaseAnswers(parsedAnswers);
+          
+          // Check if case study was completed
+          const allAnswered = Object.values(parsedAnswers).every(answer => String(answer).trim().length > 0);
+          setIsCompleted(allAnswered);
+        } catch (error) {
+          console.error('Error loading saved case study answers:', error);
+        }
+      }
+    }
+  }, [storageKey]);
+  
+  // 🔧 NEW: Autosave answers with debouncing
+  const autosaveAnswers = useCallback(
+    (newAnswers: Record<string, string>) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, JSON.stringify(newAnswers));
+        console.log('💾 Auto-saved case study answers:', newAnswers);
+      }
+    },
+    [storageKey]
+  );
 
   // Add this line for debugging
   console.log('DEBUG case_study data:', sessionData.case_study);
@@ -62,8 +99,20 @@ const BeautifulCaseStudyComponent: React.FC<BeautifulCaseStudyProps> = ({
   };
 
   const handleAnswerChange = (questionId: string, value: string) => {
-    setCaseAnswers(prev => ({ ...prev, [questionId]: value }));
+    const newAnswers = { ...caseAnswers, [questionId]: value };
+    setCaseAnswers(newAnswers);
     setAnswersSaved(false);
+    
+    // 🔧 AUTO-SAVE: Save immediately on every keystroke
+    autosaveAnswers(newAnswers);
+    
+    // 🔧 CHECK COMPLETION: Auto-complete when all answers are filled
+    const allAnswered = Object.values(newAnswers).every(answer => answer.trim().length > 0);
+    if (allAnswered && !isCompleted) {
+      setIsCompleted(true);
+      console.log('📚 Case study auto-completed - calling parent onComplete callback');
+      onComplete?.();
+    }
   };
 
   const saveAnswers = () => {
@@ -179,18 +228,45 @@ const BeautifulCaseStudyComponent: React.FC<BeautifulCaseStudyProps> = ({
               </div>
             </div>
 
-            {/* Save Button */}
+            {/* Save/Complete Button */}
             <div className="mt-8 text-center">
-              <button
-                onClick={saveAnswers}
-                className="bg-purple-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-purple-700 transition-colors shadow-lg"
-              >
-                💾 Save My Insights
-              </button>
-              {answersSaved && (
-                <p className="mt-3 text-green-600 font-semibold animate-pulse">
-                  ✅ Your insights have been saved!
-                </p>
+              {isCompleted ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <div className="text-4xl mb-3">🎉</div>
+                  <h4 className="text-xl font-bold text-green-800 mb-2">Case Study Complete!</h4>
+                  <p className="text-green-700 mb-4">Your insights have been automatically saved and your progress updated.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg p-3 border border-green-200">
+                      <div className="text-lg mb-1">✅</div>
+                      <div className="font-semibold text-green-800 text-sm">Discovery</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-200">
+                      <div className="text-lg mb-1">✅</div>
+                      <div className="font-semibold text-green-800 text-sm">Application</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-200">
+                      <div className="text-lg mb-1">✅</div>
+                      <div className="font-semibold text-green-800 text-sm">Transformation</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={saveAnswers}
+                    className="bg-purple-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-purple-700 transition-colors shadow-lg"
+                  >
+                    💾 Save My Insights
+                  </button>
+                  {answersSaved && (
+                    <p className="mt-3 text-green-600 font-semibold animate-pulse">
+                      ✅ Your insights have been saved!
+                    </p>
+                  )}
+                  <p className="mt-3 text-gray-600 text-sm">
+                    💡 Your answers are automatically saved as you type
+                  </p>
+                </>
               )}
             </div>
           </div>

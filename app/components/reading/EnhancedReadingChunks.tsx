@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -22,6 +22,8 @@ import type { ReadingChunk } from '../../lib/types';
 interface EnhancedReadingChunksProps {
   chunks: ReadingChunk[];
   title: string;
+  onComplete?: () => void; // 🔧 NEW: Callback when reading is completed
+  sessionData?: { module_id: number; session_number: number }; // 🔧 NEW: For autosave
 }
 
 // Utility functions for beautiful formatting
@@ -112,11 +114,41 @@ const formatContentWithBeautifulTypography = (content: string) => {
     .replace(/<em[^>]*>/g, '<em class="italic text-gray-700">');
 };
 
-const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, title }) => {
+const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, title, onComplete, sessionData }) => {
   const [currentChunk, setCurrentChunk] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [completedChunks, setCompletedChunks] = useState<Set<number>>(new Set());
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  
+  // 🔧 NEW: Autosave and restore functionality
+  const storageKey = sessionData ? `reading_answers_${sessionData.module_id}_${sessionData.session_number}` : 'reading_answers_fallback';
+  
+  // Load saved answers on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsedAnswers = JSON.parse(saved);
+          console.log('📚 Restored reading answers from localStorage:', parsedAnswers);
+          setAnswers(parsedAnswers);
+        } catch (error) {
+          console.error('Error loading saved reading answers:', error);
+        }
+      }
+    }
+  }, [storageKey]);
+  
+  // Autosave answers with debouncing
+  const autosaveAnswers = useCallback(
+    (newAnswers: Record<string, string>) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, JSON.stringify(newAnswers));
+        console.log('💾 Auto-saved reading answers:', newAnswers);
+      }
+    },
+    [storageKey]
+  );
   const [expandedChunks, setExpandedChunks] = useState<Set<number>>(new Set());
   const [showDetailTip, setShowDetailTip] = useState(true);
 
@@ -139,6 +171,9 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
       setCurrentChunk(currentChunk + 1);
     } else {
       setIsCompleted(true);
+      // 🔧 CRITICAL FIX: Call parent completion callback to save progress
+      console.log('📚 Reading completed - calling parent onComplete callback');
+      onComplete?.();
     }
   };
 
@@ -154,7 +189,10 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
   };
 
   const updateAnswer = (questionId: string, answer: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answer }));
+    const newAnswers = { ...answers, [questionId]: answer };
+    setAnswers(newAnswers);
+    // 🔧 AUTO-SAVE: Save immediately on every keystroke
+    autosaveAnswers(newAnswers);
   };
 
   if (!chunks || chunks.length === 0) {
@@ -167,25 +205,102 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
     );
   }
 
+  // 🎉 PERMANENT COMPLETION BANNER - Always visible when completed
+  const renderCompletionBanner = () => (
+    <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-xl shadow-lg mb-6 relative overflow-hidden">
+      {/* Subtle animated background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-2 right-4 text-2xl animate-pulse">🎉</div>
+        <div className="absolute bottom-2 left-4 text-2xl animate-bounce" style={{ animationDelay: '1s' }}>✨</div>
+      </div>
+      
+      <div className="relative z-10 flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="text-3xl mr-4">📚</div>
+          <div>
+            <h3 className="text-xl font-bold mb-1">Reading Complete!</h3>
+            <p className="text-green-100">All {chunks.length} sections mastered • Reflections saved</p>
+          </div>
+        </div>
+        
+        <button
+          onClick={() => {
+            setCurrentChunk(0);
+            setIsCompleted(false);
+            // Keep completed chunks to maintain progress
+          }}
+          className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center"
+        >
+          📖 Review Reading
+        </button>
+      </div>
+    </div>
+  );
+
   if (isCompleted) {
     return (
-      <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
-        <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-8 text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h1 className="text-3xl font-bold mb-3">Reading Complete!</h1>
-          <p className="text-green-100 text-lg">You've completed all {chunks.length} reading sections. Excellent work!</p>
-        </div>
-        <div className="p-8 text-center">
-          <button 
-            onClick={() => { 
-              setCurrentChunk(0); 
-              setIsCompleted(false); 
-              setCompletedChunks(new Set());
-            }}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            📖 Review Reading Again
-          </button>
+      <div className="space-y-6">
+        {/* Always visible completion banner */}
+        {renderCompletionBanner()}
+        
+        {/* Reading content still available for review */}
+        <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-4">
+            <h4 className="text-xl font-bold">📖 {title}</h4>
+            <p className="text-blue-100">Review completed content anytime</p>
+          </div>
+          
+          <div className="p-8">
+            <div className="prose prose-xl max-w-none">
+              <div 
+                className="formatted-content"
+                dangerouslySetInnerHTML={{ 
+                  __html: formatContentWithBeautifulTypography(chunks[currentChunk].content) 
+                }} 
+              />
+            </div>
+
+            {(chunks[currentChunk] as any).questions && (
+              <div className="mt-8 space-y-6">
+                {(chunks[currentChunk] as any).questions.map((question: any, qIndex: number) => (
+                  <div key={qIndex} className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <h4 className="font-bold text-blue-800 mb-3 text-lg">
+                      {question.question}
+                    </h4>
+                    <textarea
+                      value={answers[question.id] || ''}
+                      onChange={(e) => updateAnswer(question.id, e.target.value)}
+                      placeholder="Your reflection..."
+                      className="w-full p-4 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none text-base"
+                      rows={4}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mt-8">
+              <button 
+                onClick={() => setCurrentChunk(Math.max(0, currentChunk - 1))}
+                disabled={currentChunk === 0}
+                className="flex items-center px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ← Previous
+              </button>
+              
+              <span className="text-gray-600 font-medium">
+                Section {currentChunk + 1} of {chunks.length}
+              </span>
+              
+              <button 
+                onClick={() => setCurrentChunk(Math.min(chunks.length - 1, currentChunk + 1))}
+                disabled={currentChunk === chunks.length - 1}
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -415,10 +530,21 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
 
             <button
               onClick={nextChunk}
-              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-semibold transform hover:scale-105 ${
+                currentChunk === chunks.length - 1 
+                  ? isCompleted 
+                    ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+              disabled={isCompleted}
             >
               {currentChunk === chunks.length - 1 ? (
-                <>Complete Reading <CheckCircle className="w-4 h-4 ml-2" /></>
+                isCompleted ? (
+                  <>✅ Reading Complete! <CheckCircle className="w-4 h-4 ml-2" /></>
+                ) : (
+                  <>Complete Reading <CheckCircle className="w-4 h-4 ml-2" /></>
+                )
               ) : (
                 <>Next <ArrowRight className="w-4 h-4 ml-2" /></>
               )}
