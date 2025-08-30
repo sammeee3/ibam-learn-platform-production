@@ -460,12 +460,19 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
         
         // Load saved progress from database
         try {
-          const userId = await getUserProfileId();
-          console.log('🔍 Loading progress for user:', userId);
-          
-          if (userId) {
-            // Get user's overall progress
-            const progressData = await progressTracker.getUserProgress(userId);
+          // Get both profile ID (for actions) and auth UUID (for progress)
+          const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+          if (!userEmail) {
+            console.log('⚠️ No authenticated user - progress will show as 0%');
+            setSessionProgressPercent(0);
+          } else {
+            const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+            const profile = await response.json();
+            console.log('🔍 Loading progress for user:', profile.auth_user_id);
+            
+            if (profile.auth_user_id) {
+              // Get user's overall progress using auth UUID
+              const progressData = await progressTracker.getUserProgress(profile.auth_user_id);
             console.log('📊 Progress data loaded:', progressData);
             
             // Find progress for this specific session
@@ -503,8 +510,9 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
             } else {
               console.log('⚠️ No progress found for this session');
             }
-          } else {
-            console.log('⚠️ No authenticated user - progress will show as 0%');
+            } else {
+              console.log('⚠️ No authenticated user - progress will show as 0%');
+            }
           }
         } catch (error) {
           console.error('❌ Error loading progress:', error);
@@ -659,23 +667,29 @@ const navigateTo = (path: string) => {
     
     // Save to database
     try {
-      const userId = await getUserProfileId();
-      if (userId) {
-        // Update progress using existing method
-        const sectionsCompleted: any = {};
-        sectionsCompleted[section] = true;
+      // Get auth UUID for progress tracking (progress system uses auth UUIDs, not profile IDs)
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (userEmail) {
+        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        const profile = await response.json();
+        const authUserId = profile.auth_user_id;
         
-        await progressTracker.updateSessionProgress({
-          userId: userId,
-          moduleId: parseInt(moduleId),
-          sessionId: parseInt(sessionId),
-          section: section,
-          sectionCompleted: sectionsCompleted as any
-        });
-        
-        // Track activity using existing method
-        await progressTracker.logActivity({
-          userId: userId,
+        if (authUserId) {
+          // Update progress using existing method
+          const sectionsCompleted: any = {};
+          sectionsCompleted[section] = true;
+          
+          await progressTracker.updateSessionProgress({
+            userId: authUserId,
+            moduleId: parseInt(moduleId),
+            sessionId: parseInt(sessionId),
+            section: section,
+            sectionCompleted: sectionsCompleted as any
+          });
+          
+          // Track activity using existing method
+          await progressTracker.logActivity({
+            userId: authUserId,
           activityType: 'section_completed',
           moduleId: parseInt(moduleId),
           sessionId: parseInt(sessionId),
@@ -684,6 +698,7 @@ const navigateTo = (path: string) => {
             progress: newProgress
           }
         });
+        }
       }
     } catch (error) {
       console.error('Error saving progress:', error);
