@@ -437,9 +437,7 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
               sessionData={sessionData} 
               onCompletion={(completed) => {
                 setQuizCompleted(completed);
-                if (completed) {
-                  onMarkComplete('practice');
-                }
+                // Don't call onMarkComplete here - let the button handle it to prevent double-triggers
               }}
             />
             <button 

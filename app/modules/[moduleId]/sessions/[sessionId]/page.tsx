@@ -916,11 +916,32 @@ const navigateTo = (path: string) => {
         allComplete: allVisibleComplete
       });
       
-      // If all visible subsections complete, mark main section complete
+      // Update section progress incrementally for better UX
+      const completedCount = visibleSubsections.filter(sub => newProgress[sub as keyof typeof newProgress]).length;
+      const progressPercent = Math.round((completedCount / visibleSubsections.length) * 100);
+      setSectionProgress(prev => ({ ...prev, lookup: progressPercent }));
+      console.log(`📈 Looking Up section progress: ${completedCount}/${visibleSubsections.length} = ${progressPercent}%`);
+      
+      // If all visible subsections complete, mark main section complete and update progress
       if (allVisibleComplete && !completedSections.lookup) {
         console.log('✅ All visible Looking Up subsections complete - marking section complete');
         setTimeout(() => {
-          setCompletedSections(current => ({ ...current, lookup: true }));
+          setCompletedSections(current => {
+            const updatedSections = { ...current, lookup: true };
+            
+            // Calculate updated session progress immediately
+            const dbSectionCount = [
+              updatedSections.lookback,
+              updatedSections.lookup, // Now true
+              updatedSections.lookforward
+            ].filter(Boolean).length;
+            
+            const newProgress = Math.round((dbSectionCount / 3) * 100);
+            console.log(`📊 SESSION PROGRESS UPDATE: ${dbSectionCount}/3 sections = ${newProgress}%`);
+            setSessionProgressPercent(newProgress);
+            
+            return updatedSections;
+          });
         }, 100); // Small delay to prevent state conflicts
       }
       
