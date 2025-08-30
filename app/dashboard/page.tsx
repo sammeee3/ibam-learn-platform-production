@@ -767,7 +767,69 @@ const handleLogout = async () => {
              </div>
              
              <button
-               onClick={() => router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`)}
+               onClick={async () => {
+                 try {
+                   console.log('🎯 Dashboard smart resume triggered');
+                   
+                   // Get user's session progress to determine where to resume
+                   const userEmail = localStorage.getItem('ibam-auth-email');
+                   if (userEmail) {
+                     const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+                     const profile = await profileResponse.json();
+                     
+                     if (profile.id) {
+                       // Get detailed session progress to determine resume point
+                       const progressResponse = await fetch(`/api/progress/session?userId=${profile.id}&sessionId=${continueSession.session_id}`);
+                       const progressData = await progressResponse.json();
+                       
+                       let resumeHash = '';
+                       
+                       // Smart resume logic based on completion status
+                       if (progressData?.sectionCompleted) {
+                         const { lookback, lookup, content, quiz, lookforward } = progressData.sectionCompleted;
+                         
+                         // Resume at the first incomplete section
+                         if (!lookback) {
+                           resumeHash = '#lookback';
+                         } else if (!lookup) {
+                           // For Looking Up, check subsection progress
+                           if (progressData.subsectionProgress?.lookingUp) {
+                             const lookingUpProgress = progressData.subsectionProgress.lookingUp;
+                             // Find first incomplete subsection
+                             const subsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+                             const firstIncomplete = subsections.find(sub => !lookingUpProgress[sub]);
+                             resumeHash = firstIncomplete ? `#lookup-${firstIncomplete}` : '#lookup';
+                           } else {
+                             resumeHash = '#lookup';
+                           }
+                         } else if (!content) {
+                           resumeHash = '#content';
+                         } else if (!quiz) {
+                           resumeHash = '#quiz';
+                         } else if (!lookforward) {
+                           resumeHash = '#lookforward';
+                         }
+                       }
+                       
+                       // Navigate with smart resume location
+                       const targetUrl = `/modules/${continueSession.module_id}/sessions/${continueSession.session_id}${resumeHash}`;
+                       console.log(`🚀 Dashboard smart resume: Navigating to ${targetUrl}`);
+                       router.push(targetUrl);
+                       
+                     } else {
+                       // Fallback to basic navigation
+                       router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`);
+                     }
+                   } else {
+                     // No user auth - basic navigation
+                     router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`);
+                   }
+                 } catch (error) {
+                   console.error('Dashboard resume error:', error);
+                   // Fallback to basic navigation on error
+                   router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`);
+                 }
+               }}
                className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
              >
                Continue Session
