@@ -4,6 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { colors, initialFormData, encouragementMessages, celebrationMessages } from '../config/constants';
 import { sections } from '../config/sectionsConfig';
 
@@ -20,6 +21,7 @@ import {
   Notification, 
   WinCelebration 
 } from './shared/FormComponents';
+import AutoSave from './shared/AutoSave';
 
 // Import section components
 import Dashboard from './sections/Dashboard';
@@ -40,6 +42,8 @@ import WinsTracking from './sections/WinsTracking';
 import CoachingReviews from './sections/CoachingReviews';
 
 const BusinessPlannerApp = () => {
+  const supabase = createClientComponentClient();
+  
   // Core state management
   const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState(initialFormData);
@@ -49,6 +53,33 @@ const BusinessPlannerApp = () => {
   const [notifications, setNotifications] = useState([]);
   const [challengeQuestions, setChallengeQuestions] = useState([]);
   const [showWinCelebration, setShowWinCelebration] = useState(false);
+  
+  // User and membership state
+  const [user, setUser] = useState(null);
+  const [membershipLevel, setMembershipLevel] = useState('trial');
+  
+  // Initialize user and membership
+  useEffect(() => {
+    const getUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      
+      if (user) {
+        // Get user profile with membership info
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('membership_level')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profile) {
+          setMembershipLevel(profile.membership_level || 'trial');
+        }
+      }
+    };
+    
+    getUserData();
+  }, [supabase]);
 
   // Get current section data
   const currentSectionData = sections[currentSection];
@@ -314,6 +345,19 @@ const BusinessPlannerApp = () => {
         currentSection={currentSection}
         setCurrentSection={setCurrentSection}
         completedSections={completedSections}
+      />
+
+      {/* Auto-Save Component */}
+      <AutoSave 
+        formData={formData}
+        membershipLevel={membershipLevel}
+        onSave={(saveResult) => {
+          if (saveResult.success) {
+            addNotification('success', `Plan saved ${saveResult.method === 'cloud' ? 'to cloud' : 'locally'}!`);
+          } else {
+            addNotification('error', 'Save failed - please try again');
+          }
+        }}
       />
 
       {/* IBAM Footer */}

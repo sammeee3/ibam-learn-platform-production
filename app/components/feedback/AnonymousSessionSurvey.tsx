@@ -1,21 +1,77 @@
 // app/components/feedback/AnonymousSessionSurvey.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 
 const AnonymousSessionSurvey: React.FC = () => {
-  const [surveyResponses, setSurveyResponses] = useState({
-    content_effectiveness: 0,
-    learning_format: 0,
-    recommendation: 0
-  });
-  const [comments, setComments] = useState('');
+  const STORAGE_KEY = 'ibam_anonymous_survey_draft';
+  
+  // Initialize state from localStorage if available
+  const getInitialState = () => {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsedData = JSON.parse(saved);
+        // Only restore if saved within last 2 hours
+        if (Date.now() - parsedData.timestamp < 2 * 60 * 60 * 1000) {
+          console.log('🔄 Restored survey draft from localStorage');
+          return parsedData;
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load survey draft:', error);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    return null;
+  };
+
+  const savedState = getInitialState();
+  
+  const [surveyResponses, setSurveyResponses] = useState(
+    savedState?.surveyResponses || {
+      content_effectiveness: 0,
+      learning_format: 0,
+      recommendation: 0
+    }
+  );
+  const [comments, setComments] = useState(savedState?.comments || '');
   const [submitted, setSubmitted] = useState(false);
+
+  // Auto-save draft every 3 seconds when data changes
+  useEffect(() => {
+    const hasData = Object.values(surveyResponses).some(rating => rating > 0) || comments.trim().length > 0;
+    
+    if (hasData && !submitted) {
+      const saveTimeout = setTimeout(() => {
+        try {
+          const draftData = {
+            surveyResponses,
+            comments,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(draftData));
+          console.log('💾 Survey draft auto-saved');
+        } catch (error) {
+          console.warn('Failed to save survey draft:', error);
+        }
+      }, 3000);
+
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [surveyResponses, comments, submitted, STORAGE_KEY]);
 
   const submitSurvey = () => {
     // In production, this would send to analytics/feedback system
     console.log('Anonymous Survey Submitted:', { surveyResponses, comments });
+    
+    // Clear the draft on successful submission
+    localStorage.removeItem(STORAGE_KEY);
+    
     setSubmitted(true);
     setTimeout(() => {
       alert('Thank you for your anonymous feedback! This helps us improve the training for future participants. 🙏');
@@ -26,6 +82,9 @@ const AnonymousSessionSurvey: React.FC = () => {
     setSurveyResponses({ content_effectiveness: 0, learning_format: 0, recommendation: 0 });
     setComments('');
     setSubmitted(false);
+    
+    // Clear any saved draft
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   if (submitted) {

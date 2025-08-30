@@ -14,7 +14,7 @@ export async function GET(request) {
     }
 
     const { data, error } = await supabase
-      .from('user_progress')
+      .from('user_session_progress')
       .select('*')
       .eq('user_id', user.id)
       .eq('session_id', sessionId)
@@ -40,15 +40,15 @@ export async function POST(request) {
     }
 
     const { data, error } = await supabase
-      .from('user_progress')
+      .from('user_session_progress')
       .upsert({
         user_id: user.id,
         session_id: sessionId,
-        video_watched: videoWatched,
-        quiz_completed: quizCompleted,
+        video_watch_percentage: videoWatched ? 100 : 0,
+        assessment_completed: quizCompleted,
         quiz_score: quizScore,
         completed_at: (videoWatched && quizCompleted) ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString()
+        last_accessed: new Date().toISOString()
       })
       .select()
       .single();

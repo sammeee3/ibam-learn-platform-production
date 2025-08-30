@@ -25,13 +25,76 @@ interface AssessmentState {
 }
 
 const PreAssessment: React.FC = () => {
-  const [state, setState] = useState<AssessmentState>({
-    currentQuestion: 0,
-    answers: {},
-    isSubmitting: false,
-    isCompleted: false,
-    error: null,
-  });
+  const STORAGE_KEY = 'ibam_pre_assessment_draft';
+  
+  // Initialize state from localStorage if available
+  const getInitialState = (): AssessmentState => {
+    if (typeof window === 'undefined') {
+      return {
+        currentQuestion: 0,
+        answers: {},
+        isSubmitting: false,
+        isCompleted: false,
+        error: null,
+      };
+    }
+    
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsedData = JSON.parse(saved);
+        // Only restore if saved within last 24 hours
+        if (Date.now() - parsedData.timestamp < 24 * 60 * 60 * 1000) {
+          console.log('🔄 Restored assessment draft from localStorage');
+          return {
+            currentQuestion: parsedData.currentQuestion || 0,
+            answers: parsedData.answers || {},
+            isSubmitting: false,
+            isCompleted: false,
+            error: null,
+          };
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load assessment draft:', error);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    
+    return {
+      currentQuestion: 0,
+      answers: {},
+      isSubmitting: false,
+      isCompleted: false,
+      error: null,
+    };
+  };
+  
+  const [state, setState] = useState<AssessmentState>(getInitialState());
+
+  // Auto-save assessment draft when state changes
+  useEffect(() => {
+    const hasAnswers = Object.keys(state.answers).length > 0;
+    
+    if (hasAnswers && !state.isCompleted && !state.isSubmitting) {
+      const saveTimeout = setTimeout(() => {
+        try {
+          const draftData = {
+            currentQuestion: state.currentQuestion,
+            answers: state.answers,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(draftData));
+          console.log('💾 Assessment draft auto-saved');
+        } catch (error) {
+          console.warn('Failed to save assessment draft:', error);
+        }
+      }, 2000);
+
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [state.currentQuestion, state.answers, state.isCompleted, state.isSubmitting, STORAGE_KEY]);
 
   // Pre-assessment questions
   const questions: Question[] = [
@@ -229,6 +292,9 @@ const PreAssessment: React.FC = () => {
       }
 
       setState(prev => ({ ...prev, isSubmitting: false, isCompleted: true }));
+      
+      // Clear the draft on successful submission
+      localStorage.removeItem(STORAGE_KEY);
 
     } catch (error) {
       console.error('Error submitting assessment:', error);

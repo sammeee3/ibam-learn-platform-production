@@ -1,7 +1,7 @@
 // app/components/sections/LookingForward/LookingForwardSection.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lightbulb, ChevronDown, ChevronRight } from 'lucide-react';
 import type { ActionCommitment, PathwayMode } from '../../../lib/types';
 import ActionBuilderComponent from '../../actions/ActionBuilderComponent';
@@ -33,6 +33,22 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
   isExpanded,
   onToggleExpanded
 }) => {
+  // Auto-save sharing commitment
+  useEffect(() => {
+    if (sharingCommitment.trim().length > 0) {
+      const saveTimeout = setTimeout(() => {
+        try {
+          localStorage.setItem('ibam_sharing_commitment_draft', sharingCommitment);
+          console.log('💾 Sharing commitment auto-saved');
+        } catch (error) {
+          console.warn('Failed to save sharing commitment:', error);
+        }
+      }, 2000);
+
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [sharingCommitment]);
+
   // Delete action handler
   const handleDeleteAction = (actionId: string) => {
     setSavedActions(prev => prev.filter(a => a.id !== actionId));
