@@ -922,11 +922,25 @@ const navigateTo = (path: string) => {
       setSectionProgress(prev => ({ ...prev, lookup: progressPercent }));
       console.log(`📈 Looking Up section progress: ${completedCount}/${visibleSubsections.length} = ${progressPercent}%`);
       
-      // If all visible subsections complete, mark main section complete and update progress
+      return newProgress;
+    });
+    
+    // Handle completion outside of setState to avoid stale closure issues
+    if (typeof window !== 'undefined') {
+      const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+      const newLookingUpProgress = { ...lookingUpProgress, [subsection]: true };
+      const allVisibleComplete = visibleSubsections.every(sub => newLookingUpProgress[sub as keyof typeof newLookingUpProgress]);
+      
       if (allVisibleComplete && !completedSections.lookup) {
-        console.log('✅ All visible Looking Up subsections complete - marking section complete');
+        console.log('🚀 All visible Looking Up subsections complete - triggering section completion');
         setTimeout(() => {
           setCompletedSections(current => {
+            // Double-check to prevent duplicate updates
+            if (current.lookup) {
+              console.log('⚠️ Looking Up already marked complete, skipping update');
+              return current;
+            }
+            
             const updatedSections = { ...current, lookup: true };
             
             // Calculate updated session progress immediately
@@ -942,11 +956,9 @@ const navigateTo = (path: string) => {
             
             return updatedSections;
           });
-        }, 100); // Small delay to prevent state conflicts
+        }, 200); // Slightly longer delay to ensure state is settled
       }
-      
-      return newProgress;
-    });
+    }
     
     // Handle debounced save outside of setState to avoid closure issues
     if (typeof window !== 'undefined') {
