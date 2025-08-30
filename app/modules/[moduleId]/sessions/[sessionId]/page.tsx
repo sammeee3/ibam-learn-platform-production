@@ -125,23 +125,12 @@ const [lastSaved, setLastSaved] = useState<Date | null>(null);
     try {
       setSaveStatus('saving');
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Get the correct user profile ID (integer) instead of auth UUID
-      const { data: userProfile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (profileError || !userProfile) {
-        console.error('❌ Could not find user profile:', profileError);
+      const userId = await getUserProfileId();
+      if (!userId) {
+        console.error('❌ Could not find user profile for auto-save');
         setSaveStatus('error');
         return;
       }
-
-      const userId = userProfile.id; // This is the integer ID we need
 
       for (const action of savedActions) {
         console.log('💾 Saving action:', action.id, 'for user:', userId);
@@ -471,12 +460,12 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
         
         // Load saved progress from database
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          console.log('🔍 Loading progress for user:', user?.id);
+          const userId = await getUserProfileId();
+          console.log('🔍 Loading progress for user:', userId);
           
-          if (user) {
+          if (userId) {
             // Get user's overall progress
-            const progressData = await progressTracker.getUserProgress(user.id);
+            const progressData = await progressTracker.getUserProgress(userId);
             console.log('📊 Progress data loaded:', progressData);
             
             // Find progress for this specific session
@@ -670,14 +659,14 @@ const navigateTo = (path: string) => {
     
     // Save to database
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      const userId = await getUserProfileId();
+      if (userId) {
         // Update progress using existing method
         const sectionsCompleted: any = {};
         sectionsCompleted[section] = true;
         
         await progressTracker.updateSessionProgress({
-          userId: user.id,
+          userId: userId,
           moduleId: parseInt(moduleId),
           sessionId: parseInt(sessionId),
           section: section,
@@ -686,7 +675,7 @@ const navigateTo = (path: string) => {
         
         // Track activity using existing method
         await progressTracker.logActivity({
-          userId: user.id,
+          userId: userId,
           activityType: 'section_completed',
           moduleId: parseInt(moduleId),
           sessionId: parseInt(sessionId),
