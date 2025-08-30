@@ -901,6 +901,7 @@ const navigateTo = (path: string) => {
   const markLookingUpComplete = (subsection: string) => {
     console.log(`🔄 Looking Up subsection completed: ${subsection}`);
     
+    // Update progress state first
     setLookingUpProgress(prev => {
       const newProgress = { ...prev, [subsection]: true };
       
@@ -909,65 +910,74 @@ const navigateTo = (path: string) => {
       const allVisibleComplete = visibleSubsections.every(sub => newProgress[sub as keyof typeof newProgress]);
       
       console.log(`📊 Looking Up progress check:`, {
+        subsection,
         completed: visibleSubsections.filter(sub => newProgress[sub as keyof typeof newProgress]),
         remaining: visibleSubsections.filter(sub => !newProgress[sub as keyof typeof newProgress]),
         allComplete: allVisibleComplete
       });
       
-      // Debounced save to prevent multiple concurrent API calls
-      if (typeof window !== 'undefined') {
-        // Clear any existing save timeout
-        if (saveTimeout) {
-          clearTimeout(saveTimeout);
-        }
-        
-        // Set new debounced save with 500ms delay
-        const newTimeout = setTimeout(async () => {
-          const userEmail = localStorage.getItem('ibam-auth-email');
-          if (userEmail) {
-            try {
-              const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
-              const profile = await response.json();
-              
-              if (profile.id) {
-                console.log(`💾 Debounced save: Looking Up progress for subsection: ${subsection}`);
-                await fetch('/api/progress/session', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    userId: profile.id,
-                    moduleId: parseInt(moduleId),
-                    sessionId: parseInt(sessionId),
-                    section: 'lookup',
-                    sectionCompleted: {
-                      lookback: completedSections.lookback,
-                      lookup: allVisibleComplete, // Only mark fully complete when all visible subsections done
-                      lookforward: completedSections.lookforward
-                    },
-                    subsectionProgress: {
-                      lookingUp: newProgress // Send updated subsection progress
-                    }
-                  })
-                });
-                console.log('✅ Debounced auto-save completed successfully');
-              }
-            } catch (error) {
-              console.error('❌ Error in debounced auto-save:', error);
-            }
-          }
-        }, 500); // 500ms debounce delay
-        
-        setSaveTimeout(newTimeout);
-      }
-      
       // If all visible subsections complete, mark main section complete
-      if (allVisibleComplete) {
+      if (allVisibleComplete && !completedSections.lookup) {
         console.log('✅ All visible Looking Up subsections complete - marking section complete');
-        setCompletedSections(current => ({ ...current, lookup: true }));
+        setTimeout(() => {
+          setCompletedSections(current => ({ ...current, lookup: true }));
+        }, 100); // Small delay to prevent state conflicts
       }
       
       return newProgress;
     });
+    
+    // Handle debounced save outside of setState to avoid closure issues
+    if (typeof window !== 'undefined') {
+      // Clear any existing save timeout
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+      
+      // Set new debounced save with 500ms delay
+      const newTimeout = setTimeout(async () => {
+        const userEmail = localStorage.getItem('ibam-auth-email');
+        if (userEmail) {
+          try {
+            const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+            const profile = await response.json();
+            
+            if (profile.id) {
+              console.log(`💾 Debounced save: Looking Up progress for subsection: ${subsection}`);
+              
+              // Get current states for API call
+              const currentLookingUpProgress = { ...lookingUpProgress, [subsection]: true };
+              const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+              const allVisibleComplete = visibleSubsections.every(sub => currentLookingUpProgress[sub as keyof typeof currentLookingUpProgress]);
+              
+              await fetch('/api/progress/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: profile.id,
+                  moduleId: parseInt(moduleId),
+                  sessionId: parseInt(sessionId),
+                  section: 'lookup',
+                  sectionCompleted: {
+                    lookback: completedSections.lookback,
+                    lookup: allVisibleComplete, // Only mark fully complete when all visible subsections done
+                    lookforward: completedSections.lookforward
+                  },
+                  subsectionProgress: {
+                    lookingUp: currentLookingUpProgress // Send updated subsection progress
+                  }
+                })
+              });
+              console.log('✅ Debounced auto-save completed successfully');
+            }
+          } catch (error) {
+            console.error('❌ Error in debounced auto-save:', error);
+          }
+        }
+      }, 500); // 500ms debounce delay
+      
+      setSaveTimeout(newTimeout);
+    }
   };
 
   // Loading state
