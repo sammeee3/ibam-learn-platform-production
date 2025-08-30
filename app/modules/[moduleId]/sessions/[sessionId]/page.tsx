@@ -1,80 +1,37 @@
 'use client';
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  CheckCircle,
   ChevronDown,
   ChevronRight,
-  MessageCircle,
   Target,
-  Download,
-  Play,
-  Heart,
-  Users,
-  Briefcase,
-  HelpCircle,
   Book,
-  Lightbulb,
   Clock,
   User,
-  Loader2,
-  AlertCircle,
-  Zap,
-  Star,
-  Link2,
-  Send,
-  Bot,
-  ExternalLink,
-  X,
-  CheckCircle2,
-  Circle,
-  FileText
+  Loader2
 } from 'lucide-react';
 
 // Add these lines here:
 import type { 
   SessionData, 
-  SessionPageProps, 
-  ReadingChunk, 
-  ActionCommitment, 
-  PreviousAction, 
-  AIMessage, 
-  ActionStep,
-  SectionCompletionState,
-  LookingUpProgressState,
-  AutoSaveHookReturn
+  SessionPageProps,
+  ActionCommitment
 } from '../../../../lib/types';
 
-import { 
-  enhancedBibleReferences,
-  aiCoachingResponses,
-  biblicalMotivationalMessages,
-  pathwayPrayers,
-  inspiringSectionTitles
-} from '../../../../lib/constants';
+// Only import needed constants
 
-import { VimeoVideo } from '../../../../components/video/VimeoVideo';
-import AIChatInterface from '../../../../components/coaching/AIChatInterface';
-import { calculateReadingTime, parseMainContentIntoChunks, extractKeyPoints } from '../../../../lib/utils';
-import AnonymousSessionSurvey from '../../../../components/feedback/AnonymousSessionSurvey';
 import SafeFeedbackWidget from '../../../../components/feedback/SafeFeedbackWidget';
 import FloatingCoachButton from '../../../../components/coaching/FloatingCoachButton';
 import { progressTracker } from '../../../../../lib/services/progressTracking';
-import ActionBuilderComponent from '../../../../components/actions/ActionBuilderComponent';
-import EnhancedScriptureReference from '../../../../components/scripture/EnhancedScriptureReference';
-import EnhancedQuizSection from '../../../../components/quiz/EnhancedQuizSection';
-import EnhancedReadingChunks from '../../../../components/reading/EnhancedReadingChunks';
-import UniversalReadingWithToggle from '../../../../components/reading/UniversalReadingWithToggle';
 import EnhancedLookingBack from '../../../../components/sections/LookingBack/EnhancedLookingBack';
 import BeautifulLookingUpSection from '../../../../components/sections/LookingUp/BeautifulLookingUpSection';
 import LookingForwardSection from '../../../../components/sections/LookingForward/LookingForwardSection';
-import BeautifulCaseStudyComponent from '../../../../components/case-study/BeautifulCaseStudyComponent';
 import SessionProgressOverviewModern from '../../../../components/progress/SessionProgressOverviewModern';
 import SessionResourcesSection from '../../../../components/resources/SessionResourcesSection';
 // Real Supabase client
