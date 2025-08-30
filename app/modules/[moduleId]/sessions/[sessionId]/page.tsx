@@ -1152,6 +1152,7 @@ const navigateTo = (path: string) => {
           sectionProgress={sectionProgress}
           sessionProgressPercent={sessionProgressPercent}
           currentSection={expandedSection || undefined}
+          lookingUpProgress={lookingUpProgress}
         />
 
         {/* Three main sections */}

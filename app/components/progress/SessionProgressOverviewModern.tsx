@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { CheckCircle2, Circle, Clock, BookOpen, Heart, Target, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, Circle, Clock, BookOpen, Heart, Target, MessageSquare, Info, X } from 'lucide-react';
 
 interface SessionProgressOverviewModernProps {
   completedSections: {
@@ -20,14 +20,25 @@ interface SessionProgressOverviewModernProps {
   };
   sessionProgressPercent: number;
   currentSection?: string;
+  lookingUpProgress?: {
+    wealth: boolean;
+    people: boolean;
+    reading: boolean;
+    case: boolean;
+    integrate: boolean;
+    coaching: boolean;
+    practice: boolean;
+  };
 }
 
 const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps> = ({
   completedSections,
   sectionProgress,
   sessionProgressPercent,
-  currentSection
+  currentSection,
+  lookingUpProgress
 }) => {
+  const [showWhatsLeftPopup, setShowWhatsLeftPopup] = useState(false);
   const sections = [
     { id: 'lookback', name: 'Looking Back', icon: '⏮️', time: 5 },
     { id: 'lookup', name: 'Looking Up', icon: '🙏', time: 10 },
@@ -96,7 +107,18 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Session Progress</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold text-gray-800">Session Progress</h3>
+              {sessionProgressPercent < 100 && (
+                <button
+                  onClick={() => setShowWhatsLeftPopup(true)}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full text-sm font-medium transition-colors"
+                >
+                  <Info className="w-4 h-4" />
+                  <span>What's Left?</span>
+                </button>
+              )}
+            </div>
             {remainingTime > 0 ? (
               <p className="text-sm text-gray-600 flex items-center">
                 <Clock className="w-4 h-4 mr-1 text-blue-500" />
@@ -183,6 +205,114 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
             {sessionProgressPercent >= 50 && sessionProgressPercent < 75 && "🔥 Over halfway there! Don't stop now!"}
             {sessionProgressPercent >= 75 && sessionProgressPercent < 100 && "⭐ Almost done! Final stretch!"}
           </p>
+        </div>
+      )}
+
+      {/* What's Left Popup */}
+      {showWhatsLeftPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-800">What's Left to Complete?</h3>
+              <button
+                onClick={() => setShowWhatsLeftPopup(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Progress Overview */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gray-800 mb-1">{sessionProgressPercent}%</div>
+                  <div className="text-sm text-gray-600">Session Complete</div>
+                </div>
+              </div>
+
+              {/* Remaining Sections */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-gray-800 mb-3">📋 Remaining Tasks:</h4>
+                
+                {sections.map((section) => {
+                  const isCompleted = completedSections[section.id as keyof typeof completedSections];
+                  const progress = sectionProgress[section.id as keyof typeof sectionProgress];
+                  
+                  if (isCompleted) return null; // Skip completed sections
+                  
+                  return (
+                    <div key={section.id} className="border rounded-lg p-3 bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">{section.icon}</span>
+                          <span className="font-medium text-gray-800">{section.name}</span>
+                        </div>
+                        <span className="text-sm text-gray-500">{section.time} min</span>
+                      </div>
+                      
+                      {section.id === 'lookup' && lookingUpProgress && (
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xs text-gray-600 mb-1">Subsections:</div>
+                          {[
+                            { key: 'wealth', name: '💰 Wealth & Generosity', completed: lookingUpProgress.wealth },
+                            { key: 'people', name: '👥 People & Relationships', completed: lookingUpProgress.people },
+                            { key: 'reading', name: '📖 Scripture Reading', completed: lookingUpProgress.reading },
+                            { key: 'case', name: '📋 Case Study', completed: lookingUpProgress.case },
+                            { key: 'practice', name: '🧠 Memory Practice', completed: lookingUpProgress.practice }
+                          ].map(sub => (
+                            <div key={sub.key} className="flex items-center space-x-2 text-sm">
+                              <div className={`w-2 h-2 rounded-full ${sub.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
+                              <span className={sub.completed ? 'text-green-700 line-through' : 'text-gray-700'}>
+                                {sub.name}
+                              </span>
+                              {!sub.completed && <span className="text-red-500">← Next</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {progress > 0 && progress < 100 && (
+                        <div className="mt-2">
+                          <div className="bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">{progress}% complete</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Next Steps */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-800 mb-2">🎯 Next Steps:</h4>
+                <p className="text-sm text-green-700">
+                  {sessionProgressPercent === 0 && "Start with Looking Back to review your previous commitments."}
+                  {sessionProgressPercent > 0 && sessionProgressPercent < 33 && "Continue with Looking Up for today's spiritual reflection."}
+                  {sessionProgressPercent >= 33 && sessionProgressPercent < 66 && "Complete the remaining Looking Up subsections above."}
+                  {sessionProgressPercent >= 66 && sessionProgressPercent < 85 && "Move on to the Main Content section."}
+                  {sessionProgressPercent >= 85 && sessionProgressPercent < 100 && "Finish with Looking Forward to plan your next actions."}
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <button
+                onClick={() => setShowWhatsLeftPopup(false)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Got it! Let's continue
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
