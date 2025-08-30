@@ -922,6 +922,16 @@ const navigateTo = (path: string) => {
       setSectionProgress(prev => ({ ...prev, lookup: progressPercent }));
       console.log(`📈 Looking Up section progress: ${completedCount}/${visibleSubsections.length} = ${progressPercent}%`);
       
+      // Update session progress incrementally - each subsection adds to overall progress
+      const lookbackComplete = completedSections.lookback ? 1 : 0;
+      const lookupPartialProgress = completedCount / visibleSubsections.length; // 0 to 1
+      const lookforwardComplete = completedSections.lookforward ? 1 : 0;
+      
+      // Calculate incremental session progress (each section worth 33.33%)
+      const incrementalSessionProgress = Math.round(((lookbackComplete + lookupPartialProgress + lookforwardComplete) / 3) * 100);
+      setSessionProgressPercent(incrementalSessionProgress);
+      console.log(`📊 INCREMENTAL SESSION PROGRESS: ${lookbackComplete} + ${lookupPartialProgress.toFixed(2)} + ${lookforwardComplete} = ${incrementalSessionProgress}%`);
+      
       return newProgress;
     });
     
