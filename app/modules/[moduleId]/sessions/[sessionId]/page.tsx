@@ -182,6 +182,44 @@ export default function SessionPage({ params }: SessionPageProps) {
   const { moduleId, sessionId } = params;
   const router = useRouter();
   
+  // Helper function to get user profile ID (integer) consistently using custom auth system
+  const getUserProfileId = async (): Promise<number | null> => {
+    try {
+      // Get user email from custom auth system (same as dashboard)
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      
+      console.log('🔍 getUserProfileId - checking localStorage for email:', userEmail);
+      
+      if (!userEmail) {
+        console.log('❌ No user email found in localStorage');
+        return null;
+      }
+      
+      // Fetch user profile using API endpoint (same as dashboard)
+      console.log('🔄 Fetching user profile via API for:', userEmail);
+      const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      
+      if (!response.ok) {
+        console.error('❌ Profile API fetch failed:', response.status);
+        return null;
+      }
+      
+      const profile = await response.json();
+      console.log('✅ Profile fetched via API:', profile);
+      
+      if (!profile || !profile.id) {
+        console.error('❌ Profile missing ID field:', profile);
+        return null;
+      }
+        
+      console.log('✅ Found profile ID:', profile.id);
+      return profile.id;
+    } catch (error) {
+      console.error('❌ getUserProfileId error:', error);
+      return null;
+    }
+  };
+  
   // Enhanced state management
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [completedSections, setCompletedSections] = useState({
@@ -324,9 +362,12 @@ const saveActionToDatabase = async (action: ActionCommitment): Promise<{ success
   try {
     console.log('💾 Saving single action:', action);
     
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f';
-    console.log('🔑 Using user ID:', userId);
+    const userId = await getUserProfileId();
+    if (!userId) {
+      return { success: false, message: 'User not authenticated or profile not found' };
+    }
+    
+    console.log('🔑 Using profile user ID:', userId);
 
     if (!sessionData) {
       return { success: false, message: 'No session data available' };
@@ -497,10 +538,16 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
       if (!sessionData) return;
       
       try {
+        const userId = await getUserProfileId();
+        if (!userId) {
+          console.log('⚠️ No user profile found for action loading');
+          return;
+        }
+        
         const { data: actions } = await supabase
           .from('user_action_steps')
           .select('*')
-          .eq('user_id', '0571f8be-e6d4-4158-9301-a6cf2183e40f')
+          .eq('user_id', userId)
           .eq('session_id', sessionData.session_number) // FIXED: Use session_number instead of session UUID
           .eq('module_id', sessionData.module_id);
         
