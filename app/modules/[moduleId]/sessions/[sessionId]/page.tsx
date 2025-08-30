@@ -111,6 +111,43 @@ const formatCaseStudyContent = (content: string) => {
 
 // Enhanced Action Step Accountability System
 
+// Helper function to get user profile ID (integer) consistently using custom auth system
+const getUserProfileId = async (): Promise<number | null> => {
+  try {
+    // Get user email from custom auth system (same as dashboard)
+    const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+    
+    console.log('🔍 getUserProfileId - checking localStorage for email:', userEmail);
+    
+    if (!userEmail) {
+      console.log('❌ No user email found in localStorage');
+      return null;
+    }
+    
+    // Fetch user profile using API endpoint (same as dashboard)
+    console.log('🔄 Fetching user profile via API for:', userEmail);
+    const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+    
+    if (!response.ok) {
+      console.error('❌ Profile API fetch failed:', response.status);
+      return null;
+    }
+    
+    const profile = await response.json();
+    console.log('✅ Profile fetched via API:', profile);
+    
+    if (!profile || !profile.id) {
+      console.error('❌ Profile missing ID field:', profile);
+      return null;
+    }
+      
+    console.log('✅ Found profile ID:', profile.id);
+    return profile.id;
+  } catch (error) {
+    console.error('❌ getUserProfileId error:', error);
+    return null;
+  }
+};
 
 // AUTO-SAVE HOOK FUNCTION  
 const useAutoSave = (sessionData, savedActions, caseAnswers, sharingCommitment) => {
@@ -308,43 +345,6 @@ const { saveStatus, lastSaved, saveNow } = useAutoSave(sessionData, savedActions
       document.head.removeChild(style);
     };
   }, []);
-// Helper function to get user profile ID (integer) consistently using custom auth system
-const getUserProfileId = async (): Promise<number | null> => {
-  try {
-    // Get user email from custom auth system (same as dashboard)
-    const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
-    
-    console.log('🔍 getUserProfileId - checking localStorage for email:', userEmail);
-    
-    if (!userEmail) {
-      console.log('❌ No user email found in localStorage');
-      return null;
-    }
-    
-    // Fetch user profile using API endpoint (same as dashboard)
-    console.log('🔄 Fetching user profile via API for:', userEmail);
-    const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
-    
-    if (!response.ok) {
-      console.error('❌ Profile API fetch failed:', response.status);
-      return null;
-    }
-    
-    const profile = await response.json();
-    console.log('✅ Profile fetched via API:', profile);
-    
-    if (!profile || !profile.id) {
-      console.error('❌ Profile missing ID field:', profile);
-      return null;
-    }
-      
-    console.log('✅ Found profile ID:', profile.id);
-    return profile.id;
-  } catch (error) {
-    console.error('❌ getUserProfileId error:', error);
-    return null;
-  }
-};
 
 // Direct action save function
 const saveActionToDatabase = async (action: ActionCommitment): Promise<{ success: boolean; message: string }> => {
