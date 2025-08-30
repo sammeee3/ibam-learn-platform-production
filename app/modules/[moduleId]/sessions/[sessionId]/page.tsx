@@ -259,6 +259,27 @@ export default function SessionPage({ params }: SessionPageProps) {
 
   const [sharingCommitment, setSharingCommitment] = useState('');
 
+  // Granular subsection progress tracking
+  const [subsectionProgress, setSubsectionProgress] = useState({
+    lookback: {
+      prayer: false,
+      checkin: false,
+      accountability: false
+    },
+    lookup: {
+      wealth_video: false,
+      reading: false,
+      people_video: false,
+      case_study: false,
+      integration: false,
+      quiz: false
+    },
+    lookforward: {
+      actions: false,
+      sharing: false
+    }
+  });
+
   // Toast notification state
   const [saveNotification, setSaveNotification] = useState<{
     show: boolean;
@@ -485,31 +506,57 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
             console.log('📈 Session progress found:', progress);
             
             if (progress) {
-              // Restore completed sections based on individual completion flags
+              // 🔧 CRITICAL FIX: Restore completed sections with correct database mapping
               const restoredSections = {
                 lookback: progress.lookback_completed || false,
                 lookup: progress.lookup_completed || false,
-                content: progress.lookup_completed || false, // Map to content section
-                quiz: progress.assessment_completed || false,
+                content: progress.lookup_completed || false, // Content uses lookup completion
+                quiz: progress.assessment_completed || false, // Quiz uses assessment completion
                 lookforward: progress.lookforward_completed || false
               };
-              console.log('✅ Restored sections:', restoredSections);
+              console.log('✅ Restored sections from DB:', {
+                'DB lookback_completed': progress.lookback_completed,
+                'DB lookup_completed': progress.lookup_completed,
+                'DB assessment_completed': progress.assessment_completed,
+                'DB lookforward_completed': progress.lookforward_completed,
+                'UI sections restored': restoredSections
+              });
               setCompletedSections(restoredSections);
               
               // Calculate section progress percentages
               const sectionProg = {
                 lookback: progress.lookback_completed ? 100 : 0,
                 lookup: progress.lookup_completed ? 100 : 0,
-                content: progress.lookup_completed ? 100 : 0,
-                quiz: progress.assessment_completed ? 100 : 0,
+                content: progress.lookup_completed ? 100 : 0, // Content mirrors lookup
+                quiz: progress.assessment_completed ? 100 : 0, // Quiz mirrors assessment
                 lookforward: progress.lookforward_completed ? 100 : 0
               };
               setSectionProgress(sectionProg);
+              console.log('📊 Section progress percentages:', sectionProg);
               
-              // Restore overall progress
-              const overallProgress = progress.completion_percentage || 0;
-              console.log('📊 Setting overall progress to:', overallProgress);
-              setSessionProgressPercent(overallProgress);
+              // 🔧 RECALCULATE overall progress based on actual 3 DB sections
+              const dbCompletedCount = [
+                progress.lookback_completed,
+                progress.lookup_completed,
+                progress.lookforward_completed
+              ].filter(Boolean).length;
+              
+              const recalculatedProgress = Math.round((dbCompletedCount / 3) * 100); // 3 sections: lookback, lookup, lookforward
+              const dbProgress = progress.completion_percentage || 0;
+              
+              console.log('📊 Progress comparison:', {
+                'DB stored progress': dbProgress,
+                'Recalculated progress': recalculatedProgress,
+                'DB sections completed': dbCompletedCount,
+                'Section details': {
+                  lookback: progress.lookback_completed,
+                  lookup: progress.lookup_completed,
+                  lookforward: progress.lookforward_completed
+                }
+              });
+              
+              // Use the recalculated progress to ensure accuracy
+              setSessionProgressPercent(recalculatedProgress);
             } else {
               console.log('⚠️ No progress found for this session');
             }
@@ -648,6 +695,8 @@ const navigateTo = (path: string) => {
 
   // Handle section completion with database persistence
   const markSectionComplete = async (section: string) => {
+    console.log(`🚀 MARKING SECTION COMPLETE: ${section}`);
+    
     // Update local state immediately for responsive UI
     setCompletedSections(prev => ({
       ...prev,
@@ -660,17 +709,20 @@ const navigateTo = (path: string) => {
       [section]: 100
     }));
     
-    // Calculate overall session progress
-    const sections = ['lookback', 'lookup', 'content', 'quiz', 'lookforward'];
-    const completedCount = sections.filter(s => 
-      s === section || completedSections[s as keyof typeof completedSections]
-    ).length;
-    const newProgress = Math.round((completedCount / sections.length) * 100);
-    setSessionProgressPercent(newProgress);
+    // Calculate overall session progress based on ACTUAL database sections (3 main sections)
+    const currentSections = { ...completedSections, [section]: true };
+    const dbSectionCount = [
+      currentSections.lookback,
+      currentSections.lookup || currentSections.content || currentSections.quiz, // Any Looking Up activity
+      currentSections.lookforward
+    ].filter(Boolean).length;
     
-    // Save to database
+    const newProgress = Math.round((dbSectionCount / 3) * 100); // 3 DB sections: lookback, lookup, lookforward
+    setSessionProgressPercent(newProgress);
+    console.log(`📊 CALCULATED PROGRESS: ${dbSectionCount}/3 sections = ${newProgress}%`);
+    
+    // Save to database with CORRECT mapping
     try {
-      // Get auth UUID for progress tracking (progress system uses auth UUIDs, not profile IDs)
       const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
       if (userEmail) {
         const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
@@ -678,33 +730,106 @@ const navigateTo = (path: string) => {
         const authUserId = profile.auth_user_id;
         
         if (authUserId) {
-          // Update progress using existing method
-          const sectionsCompleted: any = {};
-          sectionsCompleted[section] = true;
+          // 🚨 CRITICAL FIX: Map UI sections to database fields correctly
+          const sectionMapping = {
+            'lookback': 'lookback',
+            'lookup': 'lookup', 
+            'content': 'lookup',    // 🔧 FIX: content is subsection of Looking Up → lookup in DB
+            'quiz': 'lookup',       // 🔧 FIX: quiz is subsection of Looking Up → lookup in DB  
+            'lookforward': 'lookforward'
+          };
+          
+          const dbSection = sectionMapping[section as keyof typeof sectionMapping] || section;
+          console.log(`🗄️ DB MAPPING: UI '${section}' → DB '${dbSection}'`);
+          
+          // Build complete section completion state for database
+          const currentDbSections = {
+            lookback: currentSections.lookback || false,
+            lookup: currentSections.lookup || currentSections.content || currentSections.quiz || false, // Any Looking Up subsection completes lookup
+            lookforward: currentSections.lookforward || false,
+            assessment: false // No separate assessment in this session structure
+          };
+          
+          // Set the newly completed section
+          currentDbSections[dbSection as keyof typeof currentDbSections] = true;
+          
+          console.log(`💾 SAVING TO DATABASE:`, currentDbSections);
           
           await progressTracker.updateSessionProgress({
             userId: authUserId,
             moduleId: parseInt(moduleId),
             sessionId: parseInt(sessionId),
             section: section,
-            sectionCompleted: sectionsCompleted as any
+            sectionCompleted: currentDbSections
           });
           
-          // Track activity using existing method
+          console.log(`✅ DATABASE SAVE COMPLETED for section: ${section}`);
+          
+          // Track activity
           await progressTracker.logActivity({
             userId: authUserId,
-          activityType: 'section_completed',
-          moduleId: parseInt(moduleId),
-          sessionId: parseInt(sessionId),
-          activityData: {
-            section: section,
-            progress: newProgress
-          }
-        });
+            activityType: 'section_completed',
+            moduleId: parseInt(moduleId),
+            sessionId: parseInt(sessionId),
+            activityData: {
+              section: section,
+              dbSection: dbSection,
+              progress: newProgress
+            }
+          });
+        } else {
+          console.error('❌ No auth user ID found');
         }
+      } else {
+        console.error('❌ No user email found in localStorage');
       }
     } catch (error) {
-      console.error('Error saving progress:', error);
+      console.error('❌ Error saving progress:', error);
+      showToast('error', 'Failed to save progress. Please try again.');
+    }
+  };
+
+  // Enhanced subsection completion tracking
+  const markSubsectionComplete = (section: string, subsection: string) => {
+    console.log(`🎯 Marking subsection complete: ${section}.${subsection}`);
+    
+    setSubsectionProgress(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [subsection]: true
+      }
+    }));
+    
+    // Show immediate feedback
+    showToast('success', `✅ ${subsection.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} completed!`);
+    
+    // Check if entire section is now complete based on requirements
+    const updatedSubsectionProgress = {
+      ...subsectionProgress,
+      [section]: {
+        ...subsectionProgress[section as keyof typeof subsectionProgress],
+        [subsection]: true
+      }
+    };
+    
+    // Define minimum requirements for each section
+    const sectionRequirements = {
+      lookback: ['prayer', 'accountability'], // Prayer + action review required for Looking Back
+      lookup: ['reading'], // Only reading required for Looking Up  
+      lookforward: ['actions'] // Only actions required for Looking Forward
+    };
+    
+    const requirements = sectionRequirements[section as keyof typeof sectionRequirements] || [];
+    const sectionSubsections = updatedSubsectionProgress[section as keyof typeof updatedSubsectionProgress];
+    
+    const allRequiredComplete = requirements.every(req => 
+      sectionSubsections[req as keyof typeof sectionSubsections]
+    );
+    
+    if (allRequiredComplete && !completedSections[section as keyof typeof completedSections]) {
+      console.log(`✅ All required subsections complete for ${section} - marking section complete`);
+      setTimeout(() => markSectionComplete(section), 500); // Small delay for UX
     }
   };
 
@@ -884,6 +1009,7 @@ const navigateTo = (path: string) => {
                   sessionData={sessionData}
                   pathwayMode="individual"
                   onComplete={() => markSectionComplete('lookback')}
+                  onSubsectionComplete={(subsection: string) => markSubsectionComplete('lookback', subsection)}
                 />
               </div>
             )}
