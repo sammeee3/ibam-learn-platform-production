@@ -14,7 +14,8 @@ import {
   Book,
   Clock,
   User,
-  Loader2
+  Loader2,
+  Briefcase
 } from 'lucide-react';
 
 // Add these lines here:
