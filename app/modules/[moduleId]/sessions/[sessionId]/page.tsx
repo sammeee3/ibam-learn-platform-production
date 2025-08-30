@@ -193,6 +193,9 @@ export default function SessionPage({ params }: SessionPageProps) {
     coaching: false,
     practice: false
   });
+  
+  // Debounce mechanism for auto-save to prevent duplicate API calls
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const handleNextSession = () => {
     // FIXED: Correct session counts from production database
     const moduleSessionCounts = { 1: 4, 2: 4, 3: 5, 4: 4, 5: 5 };
@@ -699,6 +702,10 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
     
     return () => {
       window.removeEventListener('expandLookingUp', handleExpandLookingUp);
+      // Cleanup save timeout on unmount to prevent memory leaks
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
     };
   }, []);
 
@@ -907,15 +914,23 @@ const navigateTo = (path: string) => {
         allComplete: allVisibleComplete
       });
       
-      // Save incremental progress after each subsection completion
+      // Debounced save to prevent multiple concurrent API calls
       if (typeof window !== 'undefined') {
-        const userEmail = localStorage.getItem('userEmail');
-        if (userEmail) {
-          fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`)
-            .then(response => response.json())
-            .then(async (profile) => {
+        // Clear any existing save timeout
+        if (saveTimeout) {
+          clearTimeout(saveTimeout);
+        }
+        
+        // Set new debounced save with 500ms delay
+        const newTimeout = setTimeout(async () => {
+          const userEmail = localStorage.getItem('ibam-auth-email');
+          if (userEmail) {
+            try {
+              const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+              const profile = await response.json();
+              
               if (profile.id) {
-                console.log(`💾 Saving incremental Looking Up progress for subsection: ${subsection}`);
+                console.log(`💾 Debounced save: Looking Up progress for subsection: ${subsection}`);
                 await fetch('/api/progress/session', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -934,10 +949,15 @@ const navigateTo = (path: string) => {
                     }
                   })
                 });
+                console.log('✅ Debounced auto-save completed successfully');
               }
-            })
-            .catch(error => console.error('Error saving incremental progress:', error));
-        }
+            } catch (error) {
+              console.error('❌ Error in debounced auto-save:', error);
+            }
+          }
+        }, 500); // 500ms debounce delay
+        
+        setSaveTimeout(newTimeout);
       }
       
       // If all visible subsections complete, mark main section complete
