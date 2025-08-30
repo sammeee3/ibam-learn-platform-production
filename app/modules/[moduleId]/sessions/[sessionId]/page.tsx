@@ -169,25 +169,25 @@ const [lastSaved, setLastSaved] = useState<Date | null>(null);
         return;
       }
 
-      for (const action of savedActions) {
-        console.log('💾 Saving action:', action.id, 'for user:', userId);
-        const { error: actionError } = await supabase.from('user_action_steps').upsert({
-          user_id: userId, // Use integer ID from user_profiles
-          module_id: sessionData.module_id,
-          session_id: sessionData.session_number,
-          action_type: action.type,
-          specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
-          timed: action.smartData?.timed || 'No time specified',
-          generated_statement: action.generatedStatement,
-          person_to_tell: sharingCommitment,
-          completed: false,
-          created_at: new Date().toISOString()
-        });
+      // Use bulk save API endpoint instead of direct Supabase calls
+      const response = await fetch('/api/actions/bulk-save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          moduleId: sessionData.module_id,
+          sessionId: sessionData.session_number,
+          actions: savedActions,
+          sharingCommitment
+        })
+      });
 
-        if (actionError) {
-          console.error('❌ Action save failed:', actionError);
-          throw actionError;
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Bulk save API error:', errorData);
+        throw new Error(errorData.error || 'Failed to bulk save actions');
       }
 
       setSaveStatus('saved');
@@ -368,22 +368,25 @@ const saveActionToDatabase = async (action: ActionCommitment): Promise<{ success
     const time = action.smartData?.timed || 'soon';
     const completeSentence = `I will ${what} ${measurable} ${time}`.trim().replace(/\s+/g, ' ');
 
-    const { error } = await supabase.from('user_action_steps').upsert({
-      user_id: userId,
-      module_id: sessionData.module_id,
-      session_id: sessionData.session_number, // Fixed: Use session_number not UUID
-      action_type: action.type,
-      specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
-      timed: action.smartData?.timed || 'No time specified',
-      generated_statement: completeSentence,
-      person_to_tell: sharingCommitment || 'No one specified',
-      completed: false,
-      created_at: new Date().toISOString()
+    // Use API endpoint instead of direct Supabase call (admin permissions required)
+    const response = await fetch('/api/actions/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        moduleId: sessionData.module_id,
+        sessionId: sessionData.session_number,
+        action,
+        sharingCommitment
+      })
     });
 
-    if (error) {
-      console.error('❌ Save failed:', error);
-      return { success: false, message: `Save failed: ${error.message}` };
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ API save error:', errorData);
+      return { success: false, message: errorData.error || 'Failed to save action' };
     } else {
       console.log('✅ Action saved to database!');
       return { success: true, message: 'Action saved successfully!' };
