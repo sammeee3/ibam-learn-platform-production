@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
       timeSpentSeconds = 0,
       videoWatchPercentage,
       quizScore,
-      quizAttempts
+      quizAttempts,
+      subsectionProgress // NEW: Track individual subsection progress
     } = await request.json();
 
     if (!userId || !moduleId || !sessionId) {
@@ -67,9 +68,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Calculate completion percentage with granular subsection progress
-    // Looking Back: 33% base
-    // Looking Up: 33% base (5 subsections: wealth, people, reading, case, practice)
-    // Looking Forward: 33% base
+    // Each main section: ~33% (Looking Back, Looking Up, Looking Forward)
+    // Looking Up has 5 active subsections: wealth, people, reading, case, practice (integrate is hidden/auto-complete)
     
     let totalProgress = 0;
     
@@ -81,12 +81,14 @@ export async function POST(request: NextRequest) {
     // Looking Up (33% with granular subsection tracking)
     if (updatedProgress.lookup_completed) {
       totalProgress += 33; // All subsections complete
-    } else {
-      // Estimate Looking Up subsection progress based on typical completion pattern
-      // This is a simplified approach - in a more complex system you'd track individual subsections
-      const lookupBaseProgress = 33;
-      const estimatedSubsectionProgress = lookupBaseProgress * 0.8; // Assume 80% of Looking Up is done if not fully complete
-      totalProgress += estimatedSubsectionProgress;
+    } else if (subsectionProgress?.lookingUp) {
+      // Calculate granular Looking Up progress based on completed subsections
+      const lookupSubsections = ['wealth', 'people', 'reading', 'case', 'practice']; // 5 visible subsections
+      const completedCount = lookupSubsections.filter(sub => subsectionProgress.lookingUp[sub]).length;
+      const lookupProgress = (completedCount / lookupSubsections.length) * 33;
+      totalProgress += lookupProgress;
+      
+      console.log(`📊 Looking Up granular progress: ${completedCount}/${lookupSubsections.length} = ${Math.round(lookupProgress)}%`);
     }
     
     // Looking Forward (33% if complete)  
@@ -95,6 +97,8 @@ export async function POST(request: NextRequest) {
     }
     
     updatedProgress.completion_percentage = Math.min(100, Math.round(totalProgress));
+    
+    console.log(`📊 Total session progress: ${updatedProgress.completion_percentage}% (Looking Back: ${updatedProgress.lookback_completed ? '✅' : '❌'}, Looking Up: ${updatedProgress.lookup_completed ? '✅' : Math.round((subsectionProgress?.lookingUp ? Object.values(subsectionProgress.lookingUp).filter(Boolean).length : 0) / 5 * 33)}%, Looking Forward: ${updatedProgress.lookforward_completed ? '✅' : '❌'})`);
 
     // Set completed_at if 100% complete
     if (updatedProgress.completion_percentage === 100 && !currentProgress.completed_at) {

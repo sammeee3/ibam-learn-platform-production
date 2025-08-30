@@ -816,7 +816,10 @@ const navigateTo = (path: string) => {
               moduleId: parseInt(moduleId),
               sessionId: parseInt(sessionId),
               section: section,
-              sectionCompleted: currentDbSections
+              sectionCompleted: currentDbSections,
+              subsectionProgress: {
+                lookingUp: lookingUpProgress // Send current subsection progress for granular tracking
+              }
             })
           });
           
@@ -894,12 +897,53 @@ const navigateTo = (path: string) => {
     setLookingUpProgress(prev => {
       const newProgress = { ...prev, [subsection]: true };
       
-      // If all subsections complete, mark main section complete
-      if (Object.values(newProgress).every(Boolean)) {
-        console.log('✅ All Looking Up subsections complete - saving to database');
+      // Check if all VISIBLE subsections are complete (exclude hidden 'integrate' and 'coaching')
+      const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+      const allVisibleComplete = visibleSubsections.every(sub => newProgress[sub as keyof typeof newProgress]);
+      
+      console.log(`📊 Looking Up progress check:`, {
+        completed: visibleSubsections.filter(sub => newProgress[sub as keyof typeof newProgress]),
+        remaining: visibleSubsections.filter(sub => !newProgress[sub as keyof typeof newProgress]),
+        allComplete: allVisibleComplete
+      });
+      
+      // Save incremental progress after each subsection completion
+      if (typeof window !== 'undefined') {
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`)
+            .then(response => response.json())
+            .then(async (profile) => {
+              if (profile.id) {
+                console.log(`💾 Saving incremental Looking Up progress for subsection: ${subsection}`);
+                await fetch('/api/progress/session', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: profile.id,
+                    moduleId: parseInt(moduleId),
+                    sessionId: parseInt(sessionId),
+                    section: 'lookup',
+                    sectionCompleted: {
+                      lookback: completedSections.lookback,
+                      lookup: allVisibleComplete, // Only mark fully complete when all visible subsections done
+                      lookforward: completedSections.lookforward
+                    },
+                    subsectionProgress: {
+                      lookingUp: newProgress // Send updated subsection progress
+                    }
+                  })
+                });
+              }
+            })
+            .catch(error => console.error('Error saving incremental progress:', error));
+        }
+      }
+      
+      // If all visible subsections complete, mark main section complete
+      if (allVisibleComplete) {
+        console.log('✅ All visible Looking Up subsections complete - marking section complete');
         setCompletedSections(current => ({ ...current, lookup: true }));
-        // 🔧 CRITICAL FIX: Save to database when section is complete
-        markSectionComplete('lookup');
       }
       
       return newProgress;
