@@ -296,11 +296,13 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     );
   }
 
-  if (isCompleted) {
+  // Check if all questions have been answered (regardless of correctness)
+  const allQuestionsAnswered = questionResults.every(result => result !== null);
+  
+  if (isCompleted || allQuestionsAnswered) {
     const currentScore = getCurrentScore();
     const percentage = Math.round((currentScore / questions.length) * 100);
-    // When all questions are correct (completion requirement), it's always excellent
-    const isExcellent = true; // Since completion requires 100% correct
+    const isExcellent = percentage >= 80; // 80% or higher is excellent
     
     return (
       <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
@@ -314,11 +316,20 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
           </div>
           
           <div className="relative z-10">
-            <div className="text-6xl mb-4 animate-bounce">🧠</div>
-            <h1 className="text-4xl font-bold mb-4">Memory Mastery Complete!</h1>
-            <p className="text-xl mb-4">Perfect Score: {currentScore} out of {questions.length} (100%)</p>
+            <div className="text-6xl mb-4 animate-bounce">
+              {isExcellent ? '🧠' : '📚'}
+            </div>
+            <h1 className="text-4xl font-bold mb-4">
+              {isExcellent ? 'Knowledge Mastery Complete!' : 'Quiz Complete!'}
+            </h1>
+            <p className="text-xl mb-4">
+              {isExcellent ? 'Excellent Score:' : 'Your Score:'} {currentScore} out of {questions.length} ({percentage}%)
+            </p>
             <p className="text-lg opacity-90">
-              You've mastered all the faith-driven business principles! Every question answered correctly shows your deep understanding.
+              {isExcellent 
+                ? "Outstanding! You've demonstrated strong understanding of faith-driven business principles."
+                : `You've completed the quiz! ${percentage >= 60 ? 'Good effort!' : 'Consider reviewing the material and trying again.'}`
+              }
             </p>
           </div>
         </div>
@@ -340,13 +351,47 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
         </div>
         
         {/* Action Buttons */}
-        <div className="p-6 bg-gray-50 text-center">
-          <button
-            onClick={resetQuiz}
-            className="bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
-          >
-            🔄 Retake Quiz (Debug)
-          </button>
+        <div className="p-6 bg-gray-50 text-center space-y-4">
+          {!isCompleted && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-blue-800 text-sm">
+                {percentage >= 80 ? 
+                  'Great job! You can complete this section or retake for a perfect score.' :
+                  'You can complete this section now or retake to improve your score.'
+                }
+              </p>
+            </div>
+          )}
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {!isCompleted && (
+              <button
+                onClick={() => {
+                  setIsCompleted(true);
+                  onCompletion?.(true);
+                  console.log('✅ Quiz marked as complete by user choice');
+                }}
+                className={`${
+                  percentage >= 80 ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+                } text-white px-6 py-3 rounded-lg font-semibold transition-colors`}
+              >
+                ✅ Complete Quiz & Continue
+              </button>
+            )}
+            
+            <button
+              onClick={resetQuiz}
+              className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+            >
+              🔄 Retake Quiz
+            </button>
+            
+            {isCompleted && (
+              <div className="text-green-600 font-semibold">
+                ✅ Section Completed Successfully!
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

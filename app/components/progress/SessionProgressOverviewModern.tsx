@@ -39,12 +39,11 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
   lookingUpProgress
 }) => {
   const [showWhatsLeftPopup, setShowWhatsLeftPopup] = useState(false);
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const sections = [
-    { id: 'lookback', name: 'Looking Back', icon: '⏮️', time: 5 },
-    { id: 'lookup', name: 'Looking Up', icon: '🙏', time: 10 },
-    { id: 'content', name: 'Main Content', icon: '📖', time: 15 },
-    { id: 'quiz', name: 'Knowledge Check', icon: '✅', time: 5 },
-    { id: 'lookforward', name: 'Looking Forward', icon: '🎯', time: 10 }
+    { id: 'lookback', name: 'Looking Back', icon: '⏮️', time: 15 },
+    { id: 'lookup', name: 'Looking Up', icon: '🙏', time: 15 },
+    { id: 'lookforward', name: 'Looking Forward', icon: '🎯', time: 15 }
   ];
 
   const totalTime = 45;
@@ -133,27 +132,112 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
         </div>
 
         {/* Section Pills */}
-        <div className="flex flex-wrap gap-2 max-w-md">
+        <div className="flex flex-wrap gap-2 max-w-md relative">
           {sections.map((section) => {
             const isCompleted = completedSections[section.id as keyof typeof completedSections];
             const isCurrent = currentSection === section.id;
             
             return (
-              <div
-                key={section.id}
-                className={`
-                  px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                  ${isCompleted 
-                    ? 'bg-green-100 text-green-700 border border-green-200' 
-                    : isCurrent
-                    ? 'bg-blue-100 text-blue-700 border border-blue-300 shadow-sm'
-                    : 'bg-gray-50 text-gray-500 border border-gray-200'
-                  }
-                `}
-              >
-                <span className="mr-1">{section.icon}</span>
-                <span className="hidden sm:inline">{section.name}</span>
-                {isCompleted && <span className="ml-1">✓</span>}
+              <div key={section.id} className="relative">
+                <div
+                  className={`
+                    px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer
+                    ${isCompleted 
+                      ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200' 
+                      : isCurrent
+                      ? 'bg-blue-100 text-blue-700 border border-blue-300 shadow-sm hover:bg-blue-200'
+                      : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'
+                    }
+                  `}
+                  onMouseEnter={() => setHoveredSection(section.id)}
+                  onMouseLeave={() => setHoveredSection(null)}
+                >
+                  <span className="mr-1">{section.icon}</span>
+                  <span className="hidden sm:inline">{section.name}</span>
+                  {isCompleted && <span className="ml-1">✓</span>}
+                </div>
+
+                {/* Hover Popup */}
+                {hoveredSection === section.id && (
+                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
+                    <div className="text-center mb-3">
+                      <div className="text-lg mb-1">{section.icon}</div>
+                      <h4 className="font-semibold text-gray-800">{section.name}</h4>
+                    </div>
+                    
+                    {section.id === 'lookback' && (
+                      <div className="space-y-2">
+                        <div className={`flex items-center space-x-2 text-sm ${isCompleted ? 'text-green-700' : 'text-gray-700'}`}>
+                          <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-green-500' : 'bg-gray-300'}`} />
+                          <span>Review previous commitments and accountability</span>
+                        </div>
+                        {isCompleted ? (
+                          <div className="text-center p-2 bg-green-50 rounded-lg">
+                            <span className="text-green-600 text-sm font-medium">✅ Complete!</span>
+                          </div>
+                        ) : (
+                          <div className="text-center p-2 bg-blue-50 rounded-lg">
+                            <span className="text-blue-600 text-sm">← Start here</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {section.id === 'lookup' && (
+                      <div className="space-y-2">
+                        {lookingUpProgress && (
+                          <>
+                            {[
+                              { key: 'wealth', name: '💰 Wealth & Generosity', completed: lookingUpProgress.wealth },
+                              { key: 'people', name: '👥 People & Relationships', completed: lookingUpProgress.people },
+                              { key: 'reading', name: '📖 Scripture Reading', completed: lookingUpProgress.reading },
+                              { key: 'case', name: '📋 Case Study', completed: lookingUpProgress.case },
+                              { key: 'practice', name: '🧠 Memory Practice', completed: lookingUpProgress.practice }
+                            ].map(sub => (
+                              <div key={sub.key} className="flex items-center space-x-2 text-sm">
+                                <div className={`w-2 h-2 rounded-full ${sub.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
+                                <span className={sub.completed ? 'text-green-700 line-through' : 'text-gray-700'}>
+                                  {sub.name}
+                                </span>
+                                {!sub.completed && <span className="text-blue-500 text-xs">← Next</span>}
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        {isCompleted ? (
+                          <div className="text-center p-2 bg-green-50 rounded-lg">
+                            <span className="text-green-600 text-sm font-medium">✅ All Complete!</span>
+                          </div>
+                        ) : (
+                          <div className="text-center p-2 bg-orange-50 rounded-lg">
+                            <span className="text-orange-600 text-sm">In Progress...</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {section.id === 'lookforward' && (
+                      <div className="space-y-2">
+                        <div className={`flex items-center space-x-2 text-sm ${isCompleted ? 'text-green-700' : 'text-gray-700'}`}>
+                          <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-green-500' : 'bg-gray-300'}`} />
+                          <span>Set goals and plan next actions</span>
+                        </div>
+                        {isCompleted ? (
+                          <div className="text-center p-2 bg-green-50 rounded-lg">
+                            <span className="text-green-600 text-sm font-medium">✅ Complete!</span>
+                          </div>
+                        ) : (
+                          <div className="text-center p-2 bg-gray-50 rounded-lg">
+                            <span className="text-gray-600 text-sm">Complete other sections first</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Arrow pointer */}
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -185,9 +269,7 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
                 </div>
                 {index < sections.length - 1 && (
                   <div className={`flex-1 h-0.5 mx-1 ${
-                    completedSections[sections[index + 1].id as keyof typeof completedSections]
-                      ? 'bg-green-500'
-                      : 'bg-gray-300'
+                    isCompleted ? 'bg-green-500' : 'bg-gray-300'
                   }`} />
                 )}
               </React.Fragment>
@@ -274,6 +356,18 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
                         </div>
                       )}
                       
+                      {section.id === 'lookback' && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          Review previous commitments and accountability
+                        </div>
+                      )}
+                      
+                      {section.id === 'lookforward' && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          Set goals and plan next actions
+                        </div>
+                      )}
+                      
                       {progress > 0 && progress < 100 && (
                         <div className="mt-2">
                           <div className="bg-gray-200 rounded-full h-2">
@@ -297,8 +391,8 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
                   {sessionProgressPercent === 0 && "Start with Looking Back to review your previous commitments."}
                   {sessionProgressPercent > 0 && sessionProgressPercent < 33 && "Continue with Looking Up for today's spiritual reflection."}
                   {sessionProgressPercent >= 33 && sessionProgressPercent < 66 && "Complete the remaining Looking Up subsections above."}
-                  {sessionProgressPercent >= 66 && sessionProgressPercent < 85 && "Move on to the Main Content section."}
-                  {sessionProgressPercent >= 85 && sessionProgressPercent < 100 && "Finish with Looking Forward to plan your next actions."}
+                  {sessionProgressPercent >= 66 && sessionProgressPercent < 100 && "Finish with Looking Forward to plan your next actions."}
+                  {sessionProgressPercent === 100 && "🎉 Session complete! Great work on your progress."}
                 </p>
               </div>
             </div>
