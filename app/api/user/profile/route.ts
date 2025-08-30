@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
   const supabase = supabaseAdmin;
   
   try {
-    // First try with all expected columns
+    // First try with all expected columns - CRITICAL: Include 'id' field for action saving
     let { data: profile, error } = await supabase
       .from('user_profiles')
-      .select('first_name, last_name, email, login_source, learning_path, learning_mode')
+      .select('id, first_name, last_name, email, login_source, learning_path, learning_mode')
       .eq('email', email)
       .single();
     
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       console.log('Trying with basic columns only...');
       const { data: basicProfile, error: basicError } = await supabase
         .from('user_profiles')
-        .select('first_name, last_name, email')
+        .select('id, first_name, last_name, email')
         .eq('email', email)
         .single();
       
