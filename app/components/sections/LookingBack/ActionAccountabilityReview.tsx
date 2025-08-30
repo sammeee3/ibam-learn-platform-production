@@ -51,9 +51,29 @@ const ActionAccountabilityReview: React.FC<ActionAccountabilityReviewProps> = ({
         // Get real previous actions from database
         console.log('🔧 ABOUT TO QUERY DATABASE');
         const { data: { user } } = await supabase.auth.getUser();
-        const userId = user?.id || '0571f8be-e6d4-4158-9301-a6cf2183e40f';
+        
+        if (!user) {
+          console.error('❌ No authenticated user found');
+          setLoading(false);
+          return;
+        }
 
-        console.log('🔍 USER CHECK:', user?.id);
+        // Get the correct user profile ID (integer) instead of auth UUID
+        const { data: userProfile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single();
+
+        if (profileError || !userProfile) {
+          console.error('❌ Could not find user profile:', profileError);
+          setLoading(false);
+          return;
+        }
+
+        const userId = userProfile.id; // Use integer ID from user_profiles
+        console.log('🔍 USER CHECK: auth_user_id =', user.id, 'profile_id =', userId);
+        
         // Single database query - no duplicates
         const { data: realActions, error } = await supabase
           .from('user_action_steps')

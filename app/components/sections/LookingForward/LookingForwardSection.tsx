@@ -33,6 +33,9 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
   isExpanded,
   onToggleExpanded
 }) => {
+  const [sharingCommitmentSaved, setSharingCommitmentSaved] = useState(false);
+  const [sharingCommitmentSaving, setSharingCommitmentSaving] = useState(false);
+
   // Auto-save sharing commitment
   useEffect(() => {
     if (sharingCommitment.trim().length > 0) {
@@ -40,6 +43,8 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
         try {
           localStorage.setItem('ibam_sharing_commitment_draft', sharingCommitment);
           console.log('💾 Sharing commitment auto-saved');
+          setSharingCommitmentSaved(true);
+          setTimeout(() => setSharingCommitmentSaved(false), 2000);
         } catch (error) {
           console.warn('Failed to save sharing commitment:', error);
         }
@@ -48,6 +53,26 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
       return () => clearTimeout(saveTimeout);
     }
   }, [sharingCommitment]);
+
+  // Manual save function for sharing commitment
+  const handleManualSaveSharing = () => {
+    if (!sharingCommitment.trim()) return;
+    
+    setSharingCommitmentSaving(true);
+    try {
+      localStorage.setItem('ibam_sharing_commitment_draft', sharingCommitment);
+      localStorage.setItem('ibam_sharing_commitment_manual_save', Date.now().toString());
+      console.log('💾 Sharing commitment manually saved');
+      setSharingCommitmentSaved(true);
+      setTimeout(() => {
+        setSharingCommitmentSaved(false);
+        setSharingCommitmentSaving(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to save sharing commitment:', error);
+      setSharingCommitmentSaving(false);
+    }
+  };
 
   // Delete action handler
   const handleDeleteAction = (actionId: string) => {
@@ -83,7 +108,7 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
             maxActions={4}
           />
 
-          {/* Sharing Commitment */}
+          {/* Sharing Commitment with Enhanced Save UI */}
           <div className="bg-indigo-50 rounded-lg p-6 border-l-4 border-indigo-400">
             <h4 className="font-bold text-indigo-800 mb-3">🤝 Multiplication Through Sharing</h4>
             <p className="text-gray-700 mb-4">
@@ -93,17 +118,47 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
               <label className="block font-medium text-gray-700 mb-2">
                 Who will you share today's key insights with this week? (Enter one name)
               </label>
-              <input
-                type="text"
-                value={sharingCommitment}
-                onChange={(e) => setSharingCommitment(e.target.value)}
-                placeholder="e.g., John, Sarah, my spouse, my business partner..."
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
-              />
-              <p className="text-sm text-gray-500 mt-2">
-                💡 This person will appear in your next session's accountability check. Feel free to share with as many people as you want, 
-                but commit to at least this one conversation.
-              </p>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={sharingCommitment}
+                  onChange={(e) => setSharingCommitment(e.target.value)}
+                  placeholder="e.g., John, Sarah, my spouse, my business partner..."
+                  className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                />
+                <button
+                  onClick={handleManualSaveSharing}
+                  disabled={!sharingCommitment.trim() || sharingCommitmentSaving}
+                  className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                    sharingCommitmentSaved
+                      ? 'bg-green-600 text-white'
+                      : sharingCommitmentSaving
+                      ? 'bg-indigo-300 text-white cursor-wait'
+                      : sharingCommitment.trim()
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {sharingCommitmentSaving ? (
+                    <>⏳ Saving...</>
+                  ) : sharingCommitmentSaved ? (
+                    <>✅ Saved!</>
+                  ) : (
+                    <>💾 Save</>
+                  )}
+                </button>
+              </div>
+              <div className="flex justify-between items-center mt-3">
+                <p className="text-sm text-gray-500">
+                  💡 This person will appear in your next session's accountability check. Feel free to share with as many people as you want, 
+                  but commit to at least this one conversation.
+                </p>
+                {sharingCommitment.trim() && !sharingCommitmentSaving && !sharingCommitmentSaved && (
+                  <p className="text-xs text-indigo-600 ml-4">
+                    Auto-saves in 2 seconds...
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

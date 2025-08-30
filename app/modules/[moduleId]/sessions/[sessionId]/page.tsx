@@ -119,7 +119,7 @@ const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const supabase = createClientComponentClient();
 
   const saveAllUserData = useCallback(async () => {
-      console.log('🔥 saveAllUserData called!', { sessionData, savedActions }); // ADD THIS LINE
+      console.log('🔥 saveAllUserData called!', { sessionData, savedActions });
   if (!sessionData || savedActions.length === 0) return;
     
     try {
@@ -128,15 +128,26 @@ const [lastSaved, setLastSaved] = useState<Date | null>(null);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      for (const action of savedActions) {     
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Get the correct user profile ID (integer) instead of auth UUID
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (profileError || !userProfile) {
+        console.error('❌ Could not find user profile:', profileError);
+        setSaveStatus('error');
+        return;
+      }
+
+      const userId = userProfile.id; // This is the integer ID we need
 
       for (const action of savedActions) {
-        await supabase.from('user_action_steps').upsert({
-          user_id: user?.id || '550e8400-e29b-41d4-a716-446655440000',
+        console.log('💾 Saving action:', action.id, 'for user:', userId);
+        const { error: actionError } = await supabase.from('user_action_steps').upsert({
+          user_id: userId, // Use integer ID from user_profiles
           module_id: sessionData.module_id,
-// NEW (matches database):
           session_id: sessionData.session_number,
           action_type: action.type,
           specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
@@ -146,20 +157,11 @@ const [lastSaved, setLastSaved] = useState<Date | null>(null);
           completed: false,
           created_at: new Date().toISOString()
         });
-      }
-        await supabase.from('user_action_steps').upsert({
-          user_id: user?.id || '550e8400-e29b-41d4-a716-446655440000',
-          module_id: sessionData.module_id,
-// NEW (matches database):
-          session_id: sessionData.session_number,
-          action_type: action.type,
-          specific_action: action.smartData?.specific || action.generatedStatement || 'No description',
-          timed: action.smartData?.timed || 'No time specified',
-          generated_statement: action.generatedStatement,
-          person_to_tell: sharingCommitment,
-          completed: false,
-          created_at: new Date().toISOString()
-        });
+
+        if (actionError) {
+          console.error('❌ Action save failed:', actionError);
+          throw actionError;
+        }
       }
 
       setSaveStatus('saved');
