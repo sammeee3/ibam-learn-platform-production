@@ -189,6 +189,7 @@ export default function SessionPage({ params }: SessionPageProps) {
       const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
       
       console.log('🔍 getUserProfileId - checking localStorage for email:', userEmail);
+      console.log('🎯 Schema fix applied - all columns should exist now');
       
       if (!userEmail) {
         console.log('❌ No user email found in localStorage');
