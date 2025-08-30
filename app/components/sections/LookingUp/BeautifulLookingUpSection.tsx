@@ -470,7 +470,8 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
 
   // Handle swipe navigation for mobile
   const handleSwipe = (direction: 'next' | 'prev') => {
-    if (direction === 'next' && currentSwipeIndex < lookingUpSections.length - 1) {
+    const filteredSections = lookingUpSections.filter(section => section.id !== 'integrate');
+    if (direction === 'next' && currentSwipeIndex < filteredSections.length - 1) {
       setCurrentSwipeIndex(currentSwipeIndex + 1);
     } else if (direction === 'prev' && currentSwipeIndex > 0) {
       setCurrentSwipeIndex(currentSwipeIndex - 1);
@@ -480,7 +481,7 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
   // Desktop Accordion Style
   const DesktopAccordion = () => (
     <div className="space-y-4">
-      {lookingUpSections.map((section, index) => (
+      {lookingUpSections.filter(section => section.id !== 'integrate').map((section, index) => (
         <div key={section.id} className="bg-white rounded-xl shadow-lg border overflow-hidden">
           <button
             onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
@@ -515,7 +516,8 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
 
   // Mobile Swipe Carousel
   const MobileSwipeCarousel = () => {
-    const currentSection = lookingUpSections[currentSwipeIndex];
+    const filteredSections = lookingUpSections.filter(section => section.id !== 'integrate');
+    const currentSection = filteredSections[currentSwipeIndex];
     
     return (
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -538,7 +540,7 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
             
             <button 
               onClick={() => handleSwipe('next')}
-              disabled={currentSwipeIndex === lookingUpSections.length - 1}
+              disabled={currentSwipeIndex === lookingUpSections.filter(section => section.id !== 'integrate').length - 1}
               className="p-2 rounded-full bg-white/20 disabled:opacity-50"
             >
               <ChevronRight className="w-5 h-5" />
@@ -547,7 +549,7 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
           
           {/* Dot indicators */}
           <div className="flex justify-center space-x-2">
-            {lookingUpSections.map((_, index) => (
+            {lookingUpSections.filter(section => section.id !== 'integrate').map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSwipeIndex(index)}
@@ -559,7 +561,7 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
           </div>
           
           <div className="text-center mt-2 text-white/80 text-sm">
-            {currentSwipeIndex + 1} of {lookingUpSections.length}
+            {currentSwipeIndex + 1} of {lookingUpSections.filter(section => section.id !== 'integrate').length}
           </div>
         </div>
 
