@@ -613,11 +613,75 @@ const Module1FoundationalPrinciples: React.FC = () => {
     );  
   };
 
-  // Continue Learning CTA (Red like dashboard) - Updated with pre-assessment check
+  // Continue Learning CTA (Red like dashboard) - Updated with smart resume location
   const ContinueLearningCTA: React.FC = () => {
     const currentSession = sessions.find(s => s.isCurrentSession);
+    const [resumeLocation, setResumeLocation] = useState<string>('');
     
     if (!preAssessmentCompleted || !currentSession) return null;
+
+    // Get user's last progress location to resume exactly where they left off
+    const handleContinueSession = async () => {
+      try {
+        // Get user's session progress to determine where to resume
+        const userEmail = localStorage.getItem('ibam-auth-email');
+        if (userEmail) {
+          const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+          const profile = await profileResponse.json();
+          
+          if (profile.id) {
+            // Get detailed session progress to determine resume point
+            const progressResponse = await fetch(`/api/progress/session?userId=${profile.id}&sessionId=${currentSession.id}`);
+            const progressData = await progressResponse.json();
+            
+            let resumeHash = '';
+            
+            // Smart resume logic based on completion status
+            if (progressData?.sectionCompleted) {
+              const { lookback, lookup, content, quiz, lookforward } = progressData.sectionCompleted;
+              
+              // Resume at the first incomplete section
+              if (!lookback) {
+                resumeHash = '#lookback';
+              } else if (!lookup) {
+                // For Looking Up, check subsection progress
+                if (progressData.subsectionProgress?.lookingUp) {
+                  const lookingUpProgress = progressData.subsectionProgress.lookingUp;
+                  // Find first incomplete subsection
+                  const subsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+                  const firstIncomplete = subsections.find(sub => !lookingUpProgress[sub]);
+                  resumeHash = firstIncomplete ? `#lookup-${firstIncomplete}` : '#lookup';
+                } else {
+                  resumeHash = '#lookup';
+                }
+              } else if (!content) {
+                resumeHash = '#content';
+              } else if (!quiz) {
+                resumeHash = '#quiz';
+              } else if (!lookforward) {
+                resumeHash = '#lookforward';
+              }
+            }
+            
+            // Navigate with smart resume location
+            const targetUrl = `/modules/1/sessions/${currentSession.id}${resumeHash}`;
+            console.log(`🎯 Smart resume: Taking user to ${targetUrl}`);
+            window.location.href = targetUrl;
+            
+          } else {
+            // Fallback to basic navigation
+            window.location.href = `/modules/1/sessions/${currentSession.id}`;
+          }
+        } else {
+          // No user auth - basic navigation
+          window.location.href = `/modules/1/sessions/${currentSession.id}`;
+        }
+      } catch (error) {
+        console.error('Error getting resume location:', error);
+        // Fallback to basic navigation on error
+        window.location.href = `/modules/1/sessions/${currentSession.id}`;
+      }
+    };
 
     return (  
       <div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl shadow-lg p-6 mb-6">  
@@ -634,7 +698,7 @@ const Module1FoundationalPrinciples: React.FC = () => {
             </div>  
           </div>  
           <button  
-            onClick={() => window.location.href = `/modules/1/sessions/${currentSession.id}`}
+            onClick={handleContinueSession}
             className="bg-white text-red-600 px-6 py-3 rounded-lg font-semibold hover:bg-red-50 transition-colors flex items-center"  
           >  
             Continue Session  
@@ -817,30 +881,37 @@ const Module1FoundationalPrinciples: React.FC = () => {
                         }`}>{session.subtitle}</p>  
                           
                         <div className="flex items-center justify-between">  
-                          <span className={`  
-                            text-xs px-3 py-1 rounded-full font-medium  
-                            ${session.isCompleted   
-                              ? 'bg-green-200 text-green-800'   
-                              : isSessionLocked   
+                          {session.isCompleted ? (
+                            <div className="flex items-center space-x-2">
+                              <span className="bg-green-200 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
+                                Completed
+                              </span>
+                              <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold shadow-sm">
+                                ✅ SESSION COMPLETE
+                              </div>
+                            </div>
+                          ) : (
+                            <span className={`  
+                              text-xs px-3 py-1 rounded-full font-medium  
+                              ${isSessionLocked   
                                 ? !preAssessmentCompleted
                                   ? 'bg-blue-200 text-blue-800'
                                   : 'bg-gray-200 text-gray-600'
                                 : session.isCurrentSession && preAssessmentCompleted
                                   ? 'bg-blue-200 text-blue-800'  
                                   : 'bg-orange-200 text-orange-800'  
-                            }  
-                          `}>  
-                            {session.isCompleted   
-                              ? 'Completed'   
-                              : !preAssessmentCompleted
+                              }  
+                            `}>  
+                              {!preAssessmentCompleted
                                 ? 'Pre-Assessment Required'
                                 : session.isLocked   
                                   ? 'Locked'   
                                   : session.isCurrentSession  
                                     ? 'Current Session'  
                                     : 'Available'  
-                            }  
-                          </span>  
+                              }  
+                            </span>
+                          )}
                             
                           {!isSessionLocked && (  
                             <ChevronRight className="w-5 h-5 text-gray-400" />  

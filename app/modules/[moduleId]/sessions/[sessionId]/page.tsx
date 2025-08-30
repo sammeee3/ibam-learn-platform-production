@@ -682,7 +682,7 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
     loadSavedActions();
   }, [sessionData]);
 
-  // Add event listener for Looking UP section expansion from Looking Back component
+  // Add event listener for Looking UP section expansion and URL hash navigation
   useEffect(() => {
     const handleExpandLookingUp = () => {
       console.log('🎯 Custom event received: expanding Looking UP section');
@@ -698,10 +698,65 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
       }, 100);
     };
 
+    // Handle URL hash navigation for smart resume from Continue Session button
+    const handleHashNavigation = () => {
+      const hash = window.location.hash.replace('#', '');
+      console.log(`🎯 Smart resume hash navigation: ${hash}`);
+      
+      if (hash) {
+        // Expand the appropriate section based on hash
+        if (hash === 'lookback') {
+          setExpandedSection('lookback');
+          console.log('📍 Auto-expanding Looking Back section');
+        } else if (hash.startsWith('lookup')) {
+          setExpandedSection('lookup');
+          console.log('📍 Auto-expanding Looking Up section');
+          
+          // If it's a specific Looking Up subsection, trigger expansion after delay
+          if (hash.includes('-')) {
+            const subsection = hash.split('-')[1]; // e.g., 'wealth', 'people'
+            console.log(`📍 Will highlight subsection: ${subsection}`);
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('expandLookingUp'));
+            }, 500);
+          }
+        } else if (hash === 'content') {
+          setExpandedSection('content');
+          console.log('📍 Auto-expanding Main Content section');
+        } else if (hash === 'quiz') {
+          setExpandedSection('quiz');
+          console.log('📍 Auto-expanding Knowledge Check section');
+        } else if (hash === 'lookforward') {
+          setExpandedSection('lookforward');
+          console.log('📍 Auto-expanding Looking Forward section');
+        }
+        
+        // Scroll to the section after expansion completes
+        setTimeout(() => {
+          const sectionId = hash.split('-')[0]; // Get base section ID
+          const targetElement = document.getElementById(sectionId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            console.log(`✅ Smart resume: Scrolled to ${sectionId} section`);
+          } else {
+            console.log(`⚠️ Target element not found: ${sectionId}`);
+          }
+        }, 1000);
+      }
+    };
+
+    // Check hash on component mount
+    if (typeof window !== 'undefined') {
+      setTimeout(handleHashNavigation, 500); // Delay to ensure DOM is ready
+    }
+    
+    // Listen for hash changes and custom events
+    window.addEventListener('hashchange', handleHashNavigation);
     window.addEventListener('expandLookingUp', handleExpandLookingUp);
     
     return () => {
       window.removeEventListener('expandLookingUp', handleExpandLookingUp);
+      window.removeEventListener('hashchange', handleHashNavigation);
       // Cleanup save timeout on unmount to prevent memory leaks
       if (saveTimeout) {
         clearTimeout(saveTimeout);
