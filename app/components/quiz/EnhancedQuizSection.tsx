@@ -251,13 +251,16 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     }
   }, [currentQuestion, isCompleted]);
   
-  // Trigger completion callback when quiz is finished
+  // Trigger completion callback when quiz is finished (only once)
+  const [hasTriggeredCompletion, setHasTriggeredCompletion] = useState(false);
+  
   useEffect(() => {
-    if (isCompleted) {
+    if (isCompleted && !hasTriggeredCompletion) {
       onCompletion?.(true);
-      console.log('🎉 Quiz completion callback triggered');
+      setHasTriggeredCompletion(true);
+      console.log('🎉 Quiz completion callback triggered (once)');
     }
-  }, [isCompleted, onCompletion]);
+  }, [isCompleted, hasTriggeredCompletion, onCompletion]);
   
   // 🧠 NEW RESET: Clear all individual question progress (for admin/debug purposes)
   const resetQuiz = () => {
