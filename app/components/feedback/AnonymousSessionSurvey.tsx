@@ -44,7 +44,7 @@ const AnonymousSessionSurvey: React.FC = () => {
 
   // Auto-save draft every 3 seconds when data changes
   useEffect(() => {
-    const hasData = Object.values(surveyResponses).some(rating => rating > 0) || comments.trim().length > 0;
+    const hasData = Object.values(surveyResponses).some((rating: number) => rating > 0) || comments.trim().length > 0;
     
     if (hasData && !submitted) {
       const saveTimeout = setTimeout(() => {
@@ -199,7 +199,7 @@ const AnonymousSessionSurvey: React.FC = () => {
         </div>
 
         {/* Submit Button */}
-        {Object.values(surveyResponses).every(rating => rating > 0) && (
+        {Object.values(surveyResponses).every((rating: number) => rating > 0) && (
           <div className="text-center">
             <button
               onClick={submitSurvey}
