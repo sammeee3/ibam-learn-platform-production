@@ -11,12 +11,14 @@ interface EnhancedLookingBackProps {
   sessionData: SessionData;
   pathwayMode: PathwayMode;
   onComplete: () => void;
+  onSubsectionComplete?: (subsection: string) => void;
 }
 
 const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({ 
   sessionData, 
   pathwayMode, 
-  onComplete 
+  onComplete,
+  onSubsectionComplete
 }) => {
   const supabase = createClientComponentClient();
   
@@ -74,6 +76,17 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
         // Show action accountability section after prayer
         setShowActionAccountability(true);
         console.log('✅ Action accountability enabled');
+        
+        // 🚨 FIXED: Only trigger subsection completion, NOT full section completion
+        if (onSubsectionComplete) {
+          console.log('🎯 Triggering prayer subsection completion');
+          onSubsectionComplete('prayer');
+        }
+        
+        // 🚨 REMOVED: Do NOT trigger onComplete() here! 
+        // Looking Back can only be completed after ALL actions are addressed
+        console.log('✅ Prayer completed, action accountability enabled - but section NOT yet complete');
+        
       } else {
         // Hide action accountability if prayer unchecked
         setShowActionAccountability(false);
@@ -339,6 +352,11 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
             sessionData={sessionData}
             pathwayMode={pathwayMode}
             onComplete={() => {
+              // Mark accountability subsection as complete
+              if (onSubsectionComplete) {
+                console.log('🎯 Triggering accountability subsection completion');
+                onSubsectionComplete('accountability');
+              }
               // Show vision reminder after accountability
               setShowVisionReminder(true);
             }}

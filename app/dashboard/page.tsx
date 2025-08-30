@@ -239,22 +239,24 @@ const IBAMDashboard: React.FC = () => {
    }
  ];
 
-// Get the actual logged-in user ID
+// Get the actual logged-in user ID using custom auth
 const getCurrentUserId = async (): Promise<string | null> => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) {
-      console.error('Error getting current user:', error);
-      return null;
-    }
-    
-    if (!user) {
+    // Use custom auth system
+    const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+    if (!userEmail) {
       console.log('No user logged in');
       return null;
     }
     
-    return user.id; // Returns the actual logged-in user's ID
+    const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+    const profile = await profileResponse.json();
+    if (!profile.auth_user_id) {
+      console.error('User profile not found');
+      return null;
+    }
+    
+    return profile.auth_user_id; // Returns the actual logged-in user's ID
   } catch (error) {
     console.error('Error in getCurrentUserId:', error);
     return null;
@@ -399,13 +401,15 @@ const getCurrentUserId = async (): Promise<string | null> => {
  
     // Load continue session data
 const loadContinueData = async () => {
-  // First, ask Supabase "who is logged in?"
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  // Now we can use 'user' because we just got it from Supabase
-  if (user?.id) {
-    const lastSession = await fetchLastAccessedSession(user.id);
-    setContinueSession(lastSession);
+  // Use custom auth system
+  const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+  if (userEmail) {
+    const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+    const profile = await profileResponse.json();
+    if (profile.auth_user_id) {
+      const lastSession = await fetchLastAccessedSession(profile.auth_user_id);
+      setContinueSession(lastSession);
+    }
   }
 };
     loadContinueData();

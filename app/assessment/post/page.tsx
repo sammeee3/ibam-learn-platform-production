@@ -141,13 +141,18 @@ const PostAssessment: React.FC = () => {
   useEffect(() => {
     const checkExistingAssessment = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        // Use custom auth system
+        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+        if (!userEmail) return;
+        
+        const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        const profile = await profileResponse.json();
+        if (!profile.auth_user_id) return;
 
         const { data, error } = await supabase
           .from('assessment_responses')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', profile.auth_user_id)
           .eq('assessment_id', '4a70a585-ae69-4b93-92d0-a03ba789d853')
           .single();
 
@@ -198,9 +203,16 @@ const PostAssessment: React.FC = () => {
     try {
       setState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Use custom auth system
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (!userEmail) {
         throw new Error('User not authenticated');
+      }
+      
+      const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      const profile = await profileResponse.json();
+      if (!profile.auth_user_id) {
+        throw new Error('User profile not found');
       }
 
       // Prepare responses for database
@@ -217,7 +229,7 @@ const PostAssessment: React.FC = () => {
       const { error } = await supabase
         .from('assessment_responses')
         .insert({
-          user_id: user.id,
+          user_id: profile.auth_user_id,
           assessment_id: '4a70a585-ae69-4b93-92d0-a03ba789d853', // Post-assessment ID
           responses: responses,
           total_score: totalScore,

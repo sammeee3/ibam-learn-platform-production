@@ -61,25 +61,20 @@ const BusinessPlannerApp = () => {
   // Initialize user and membership
   useEffect(() => {
     const getUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      // Use custom auth system
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (!userEmail) return;
       
-      if (user) {
-        // Get user profile with membership info
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('membership_level')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (profile) {
-          setMembershipLevel(profile.membership_level || 'trial');
-        }
-      }
+      const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      const profile = await profileResponse.json();
+      if (!profile.auth_user_id) return;
+      
+      setUser({ id: profile.auth_user_id, email: userEmail });
+      setMembershipLevel(profile.membership_level || 'trial');
     };
     
     getUserData();
-  }, [supabase]);
+  }, []);
 
   // Get current section data
   const currentSectionData = sections[currentSection];

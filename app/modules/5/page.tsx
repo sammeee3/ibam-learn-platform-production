@@ -94,14 +94,18 @@ const Module5BusinessPlanning: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
 
-  // Get user ID using proper authentication
+  // Get user ID using custom auth system
   const getTestUserId = async (): Promise<string> => {
     try {
-      // First try to get the real authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        console.log('🔐 Module 5: Found authenticated user:', user.id);
-        return user.id;
+      // Use custom auth system
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (userEmail) {
+        const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        const profile = await profileResponse.json();
+        if (profile.auth_user_id) {
+          console.log('🔐 Module 5: Found authenticated user:', profile.auth_user_id);
+          return profile.auth_user_id;
+        }
       }
       
       // If no authenticated user, try database fallback

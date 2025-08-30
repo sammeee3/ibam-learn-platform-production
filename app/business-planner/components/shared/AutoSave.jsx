@@ -24,11 +24,18 @@ const AutoSave = ({ formData, onSave, membershipLevel = 'trial' }) => {
   // Initialize user
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      // Use custom auth system
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (!userEmail) return;
+      
+      const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      const profile = await profileResponse.json();
+      if (!profile.auth_user_id) return;
+      
+      setUser({ id: profile.auth_user_id, email: userEmail });
     };
     getUser();
-  }, [supabase]);
+  }, []);
 
   // Save to localStorage
   const saveToLocal = useCallback((data) => {

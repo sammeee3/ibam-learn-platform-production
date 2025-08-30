@@ -99,14 +99,18 @@ const Module1FoundationalPrinciples: React.FC = () => {
   const [assessmentLoading, setAssessmentLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ENHANCED: Get user ID using multiple methods
+  // ENHANCED: Get user ID using custom auth system
   const getTestUserId = async (): Promise<string> => {
     try {
-      // First try to get the real authenticated user (same as pre-assessment)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        console.log('🔐 Found authenticated user:', user.id);
-        return user.id;
+      // Use custom auth system
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (userEmail) {
+        const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        const profile = await profileResponse.json();
+        if (profile.auth_user_id) {
+          console.log('🔐 Found authenticated user:', profile.auth_user_id);
+          return profile.auth_user_id;
+        }
       }
       
       // If no authenticated user, try database fallback
@@ -165,10 +169,15 @@ const Module1FoundationalPrinciples: React.FC = () => {
     try {
       // Try multiple user ID methods
       const methods = [
-        // Method 1: Real authenticated user
+        // Method 1: Custom auth system
         async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          return user?.id;
+          const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+          if (userEmail) {
+            const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+            const profile = await profileResponse.json();
+            return profile.auth_user_id;
+          }
+          return null;
         },
         
         // Method 2: Try all recent assessment users

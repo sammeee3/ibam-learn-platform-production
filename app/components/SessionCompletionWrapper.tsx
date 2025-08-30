@@ -31,14 +31,19 @@ const SessionCompletionWrapper: React.FC<SessionCompletionWrapperProps> = ({
     if (moduleId !== 5 || sessionId !== 5) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Use custom auth system
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (!userEmail) return;
+      
+      const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      const profile = await profileResponse.json();
+      if (!profile.auth_user_id) return;
 
       // Check if post-assessment already completed
       const { data: assessmentData, error } = await supabase
         .from('assessment_responses')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', profile.auth_user_id)
         .eq('assessment_id', 'c88g5b79-9bd5-42bb-9767-7fe2d0f920c8') // Post-assessment ID
         .single();
 
@@ -107,14 +112,19 @@ const SessionCompletionWrapper: React.FC<SessionCompletionWrapperProps> = ({
       if (postAssessmentCompleted) return;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        // Use custom auth system
+        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+        if (!userEmail) return;
+        
+        const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        const profile = await profileResponse.json();
+        if (!profile.auth_user_id) return;
 
         // Check if this session is already completed
         const { data: progressData } = await supabase
           .from('user_progress')
           .select('completion_percentage, completed_at')
-          .eq('user_id', user.id)
+          .eq('user_id', profile.auth_user_id)
           .eq('module_id', moduleId)
           .eq('session_id', sessionId)
           .single();
