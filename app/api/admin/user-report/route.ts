@@ -32,15 +32,23 @@ export async function GET(request: Request) {
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
     const authUser = authUsers?.users?.find((user: any) => user.email === email)
     
-    // 3. Get session progress
+    // 3. Get session progress with time tracking
     const { data: sessionProgress, error: progressError } = await supabase
       .from('user_session_progress')
       .select(`
         *,
+        time_spent_seconds,
         sessions(id, title, module_id, session_number)
       `)
       .eq('user_id', userProfile.id)
       .order('updated_at', { ascending: false })
+
+    // 3a. Get total time spent summary
+    const { data: progressSummary } = await supabase
+      .from('user_progress_summary')
+      .select('total_time_spent_seconds')
+      .eq('user_id', userProfile.id)
+      .single()
     
     // 4. Get assessment results
     const { data: assessments, error: assessmentError } = await supabase
@@ -82,17 +90,71 @@ export async function GET(request: Request) {
     const lastActivity = sessionProgress?.[0]?.updated_at || userProfile.updated_at
     const daysSinceLastActivity = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
 
+    // Calculate time spent analytics
+    const totalTimeSpentSeconds = progressSummary?.total_time_spent_seconds || 
+      sessionProgress?.reduce((sum, session) => sum + (session.time_spent_seconds || 0), 0) || 0
+    
+    const totalTimeSpentMinutes = Math.round(totalTimeSpentSeconds / 60)
+    const totalTimeSpentHours = Math.round(totalTimeSpentMinutes / 60 * 10) / 10 // 1 decimal place
+    
+    const averageSessionTime = totalSessions > 0 ? Math.round(totalTimeSpentMinutes / totalSessions) : 0
+    
+    // Format last login
+    const lastLogin = userProfile.last_login ? new Date(userProfile.last_login) : null
+
+    // Map membership tier to proper display name
+    const getMembershipTierName = (tier: string | null) => {
+      if (!tier) return 'Standard'
+      
+      const membershipMap: Record<string, string> = {
+        'ibam_member': 'IBAM Impact Members',
+        'entrepreneur': 'Entrepreneur Member', 
+        'business': 'Business Member',
+        'church_small': 'Small Church Partner',
+        'church_large': 'Large Church Partner', 
+        'church_mega': 'Mega Church Partner',
+        'trial': 'Trial Member'
+      }
+      
+      return membershipMap[tier] || tier || 'Standard'
+    }
+
+    // Determine user creation source
+    const getCreationSource = () => {
+      if (userProfile.created_via_webhook) return 'IBAM.org Website (Webhook)'
+      if (userProfile.login_source === 'systemio') return 'System.io Integration'
+      if (userProfile.login_source === 'direct') return 'Direct Platform Signup'
+      return 'Platform Signup'
+    }
+
     // Generate comprehensive report
     const report = {
       userInfo: {
         email: userProfile.email,
         fullName: userProfile.full_name,
-        membershipTier: userProfile.membership_tier,
+        membershipTier: getMembershipTierName(userProfile.membership_tier),
+        membershipTierKey: userProfile.membership_tier,
         createdAt: userProfile.created_at,
         daysInSystem,
         lastActivity,
         daysSinceLastActivity,
-        authProvider: (authUser as any)?.app_metadata?.provider || 'email'
+        lastLogin: lastLogin ? lastLogin.toISOString() : null,
+        lastLoginFormatted: lastLogin ? lastLogin.toLocaleDateString() : 'Never',
+        authProvider: (authUser as any)?.app_metadata?.provider || 'email',
+        creationSource: getCreationSource(),
+        createdViaWebhook: userProfile.created_via_webhook || false
+      },
+
+      timeTracking: {
+        totalTimeSpentSeconds,
+        totalTimeSpentMinutes,
+        totalTimeSpentHours,
+        totalTimeSpentFormatted: totalTimeSpentHours >= 1 ? 
+          `${totalTimeSpentHours} hours` : 
+          `${totalTimeSpentMinutes} minutes`,
+        averageSessionTimeMinutes: averageSessionTime,
+        averageSessionTimeFormatted: `${averageSessionTime} min/session`,
+        dailyAverageMinutes: daysInSystem > 0 ? Math.round(totalTimeSpentMinutes / daysInSystem) : 0
       },
       
       progressSummary: {
@@ -105,6 +167,8 @@ export async function GET(request: Request) {
           title: p.sessions?.title,
           completed: p.completed,
           progress: p.progress_percentage,
+          timeSpentMinutes: Math.round((p.time_spent_seconds || 0) / 60),
+          timeSpentFormatted: `${Math.round((p.time_spent_seconds || 0) / 60)} min`,
           lastUpdated: p.updated_at
         })) || []
       },

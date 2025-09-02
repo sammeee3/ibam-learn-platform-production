@@ -172,7 +172,13 @@ export default function UserReportsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Membership</p>
-                  <p className="font-semibold">{report.userInfo.membershipTier || 'Standard'}</p>
+                  <p className="font-semibold text-purple-600">{report.userInfo.membershipTier}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Creation Source</p>
+                  <p className={`font-semibold ${report.userInfo.createdViaWebhook ? 'text-blue-600' : 'text-green-600'}`}>
+                    {report.userInfo.creationSource}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Days in System</p>
@@ -191,6 +197,33 @@ export default function UserReportsPage() {
                   <p className={`font-semibold ${report.userInfo.daysSinceLastActivity > 7 ? 'text-red-600' : 'text-green-600'}`}>
                     {report.userInfo.daysSinceLastActivity} days ago
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Last Login</p>
+                  <p className="font-semibold">{report.userInfo.lastLoginFormatted}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Tracking */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">⏱️ Time Tracking</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-blue-600">{report.timeTracking?.totalTimeSpentFormatted || '0 min'}</p>
+                  <p className="text-gray-500">Total Time</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-green-600">{report.timeTracking?.averageSessionTimeFormatted || '0 min'}</p>
+                  <p className="text-gray-500">Per Session</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-purple-600">{report.timeTracking?.dailyAverageMinutes || 0} min</p>
+                  <p className="text-gray-500">Daily Average</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-orange-600">{report.timeTracking?.totalTimeSpentHours || 0}h</p>
+                  <p className="text-gray-500">Total Hours</p>
                 </div>
               </div>
             </div>
@@ -227,6 +260,7 @@ export default function UserReportsPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">{session.progress}%</p>
+                          <p className="text-xs text-blue-600 font-medium">{session.timeSpentFormatted || '0 min'}</p>
                           <p className="text-xs text-gray-500">
                             {new Date(session.lastUpdated).toLocaleDateString()}
                           </p>

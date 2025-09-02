@@ -11,14 +11,15 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Get all user profiles
+    // Get all user profiles - use same query as sync API
     const { data: userProfiles, error: profileError } = await supabase
       .from('user_profiles')
-      .select('id, email, full_name, membership_tier, created_at')
-      .order('created_at', { ascending: false })
+      .select('id, email, full_name, created_at')
 
     if (profileError) {
       console.error('Error fetching user profiles:', profileError)
+    } else {
+      console.log(`Successfully fetched ${userProfiles?.length || 0} user profiles`)
     }
 
     // Get auth users

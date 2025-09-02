@@ -26,7 +26,6 @@ interface SessionProgressOverviewModernProps {
     reading: boolean;
     case: boolean;
     integrate: boolean;
-    coaching: boolean;
     practice: boolean;
   };
 }
@@ -188,10 +187,11 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
                         {lookingUpProgress && (
                           <>
                             {[
-                              { key: 'wealth', name: '💰 Wealth & Generosity', completed: lookingUpProgress.wealth },
-                              { key: 'people', name: '👥 People & Relationships', completed: lookingUpProgress.people },
-                              { key: 'reading', name: '📖 Scripture Reading', completed: lookingUpProgress.reading },
+                              { key: 'wealth', name: '💰 GROW Business', completed: lookingUpProgress.wealth },
+                              { key: 'reading', name: '📖 Reading', completed: lookingUpProgress.reading },
+                              { key: 'people', name: '👥 GROW Impact', completed: lookingUpProgress.people },
                               { key: 'case', name: '📋 Case Study', completed: lookingUpProgress.case },
+                              { key: 'integrate', name: '🔗 Integrating Both', completed: lookingUpProgress.integrate },
                               { key: 'practice', name: '🧠 Memory Practice', completed: lookingUpProgress.practice }
                             ].map(sub => (
                               <div key={sub.key} className="flex items-center space-x-2 text-sm">
@@ -339,10 +339,11 @@ const SessionProgressOverviewModern: React.FC<SessionProgressOverviewModernProps
                         <div className="mt-2 space-y-1">
                           <div className="text-xs text-gray-600 mb-1">Subsections:</div>
                           {[
-                            { key: 'wealth', name: '💰 Wealth & Generosity', completed: lookingUpProgress.wealth },
-                            { key: 'people', name: '👥 People & Relationships', completed: lookingUpProgress.people },
-                            { key: 'reading', name: '📖 Scripture Reading', completed: lookingUpProgress.reading },
+                            { key: 'wealth', name: '💰 GROW Business', completed: lookingUpProgress.wealth },
+                            { key: 'reading', name: '📖 Reading', completed: lookingUpProgress.reading },
+                            { key: 'people', name: '👥 GROW Impact', completed: lookingUpProgress.people },
                             { key: 'case', name: '📋 Case Study', completed: lookingUpProgress.case },
+                            { key: 'integrate', name: '🔗 Integrating Both', completed: lookingUpProgress.integrate },
                             { key: 'practice', name: '🧠 Memory Practice', completed: lookingUpProgress.practice }
                           ].map(sub => (
                             <div key={sub.key} className="flex items-center space-x-2 text-sm">

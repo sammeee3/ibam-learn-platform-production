@@ -23,22 +23,35 @@ export async function POST() {
       .select('id, email')
 
     if (profilesError) {
+      console.error('Profile query error:', profilesError)
       throw new Error(`Failed to get profiles: ${profilesError.message}`)
     }
+
+    console.log(`Found ${profiles?.length || 0} existing profiles in database`)
 
     const existingProfileEmails = new Set(profiles?.map(p => p.email) || [])
     const authUsers = authData?.users || []
     
     console.log(`Found ${authUsers.length} auth users, ${profiles?.length || 0} existing profiles`)
 
-    // Find users missing profiles
+    // Find users missing profiles - FORCE CREATION FOR TESTING
     const missingProfileUsers = authUsers.filter(user => 
       user.email && !existingProfileEmails.has(user.email)
     )
 
+    // Create all missing profiles normally
+
+    console.log(`Missing profiles: ${missingProfileUsers.length}`)
+    console.log(`First few missing:`, missingProfileUsers.slice(0, 3).map(u => u.email))
+
     console.log(`Creating ${missingProfileUsers.length} missing profiles...`)
 
-    const results = []
+    const results: Array<{
+      email: string | undefined
+      status: string
+      error?: string
+      membership?: string
+    }> = []
 
     // Create missing profiles
     for (const user of missingProfileUsers) {
@@ -50,9 +63,8 @@ export async function POST() {
           id: user.id,
           email: user.email,
           full_name: user.email === 'sammeee@yahoo.com' ? 'Jeff Samuelson' : 
-                    user.email.includes('test') ? `Test User (${user.email})` :
+                    user.email?.includes('test') ? `Test User (${user.email})` :
                     `User (${user.email})`,
-          membership_tier: user.email === 'sammeee@yahoo.com' ? 'premium' : 'standard',
           created_at: user.created_at,
           updated_at: new Date().toISOString()
         })
@@ -68,8 +80,7 @@ export async function POST() {
         console.log(`✅ Created profile for ${user.email}`)
         results.push({
           email: user.email,
-          status: 'created',
-          membership: user.email === 'sammeee@yahoo.com' ? 'premium' : 'standard'
+          status: 'created'
         })
       }
     }
