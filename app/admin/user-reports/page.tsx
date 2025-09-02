@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 export default function UserReportsPage() {
-  const [email, setEmail] = useState('scott.adkins1@gmail.com')
+  const [email, setEmail] = useState('test@staging.com')
   const [report, setReport] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,10 +22,10 @@ export default function UserReportsPage() {
     try {
       console.log('🔍 Generating user report for:', email)
       
-      // Connect to PRODUCTION database
+      // Connect to STAGING database
       const supabase = createClient(
-        'https://tutrnikhomrgcpkzszvq.supabase.co',
-        process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || ''
+        'https://yhfxxouswctucxvfetcq.supabase.co',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
       )
 
       console.log('📋 Finding user profile...')
