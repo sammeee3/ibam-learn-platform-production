@@ -133,7 +133,7 @@ export async function GET(request: Request) {
       actions: {
         totalActions: userActions?.length || 0,
         completedActions: userActions?.filter(a => a.completed)?.length || 0,
-        actionCompletionRate: userActions?.length > 0 ? (userActions.filter(a => a.completed).length / userActions.length * 100).toFixed(1) : '0',
+        actionCompletionRate: (userActions?.length || 0) > 0 ? (userActions!.filter(a => a.completed).length / userActions!.length * 100).toFixed(1) : '0',
         recentActions: userActions?.map(a => ({
           actionType: a.action_type,
           specificAction: a.specific_action,
