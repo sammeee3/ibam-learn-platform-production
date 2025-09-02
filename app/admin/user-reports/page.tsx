@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 export default function UserReportsPage() {
@@ -8,6 +8,32 @@ export default function UserReportsPage() {
   const [report, setReport] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [users, setUsers] = useState<any[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true)
+      const response = await fetch('/api/admin/list-users')
+      if (response.ok) {
+        const data = await response.json()
+        const userProfiles = data.userProfiles || []
+        // Sort users by creation date (newest first) and filter out duplicates
+        const sortedUsers = userProfiles
+          .filter((user: any) => user.email) // Only users with emails
+          .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        setUsers(sortedUsers)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
 
   const generateReport = async () => {
     if (!email) {
@@ -62,27 +88,67 @@ export default function UserReportsPage() {
         
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Generate User Report</h2>
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                User Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter user email..."
-              />
+          
+          {/* User Selection Section */}
+          <div className="mb-6">
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select from Existing Users
+                </label>
+                {loadingUsers ? (
+                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                    Loading users...
+                  </div>
+                ) : (
+                  <select
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a user...</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.email}>
+                        {user.full_name ? `${user.full_name} (${user.email})` : user.email}
+                        {user.membership_tier && ` - ${user.membership_tier}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Or Enter Email Manually
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter user email..."
+                />
+              </div>
             </div>
+            
+            {/* User Stats */}
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+              <span>📊 Total Users in System: {users.length}</span>
+              <span>🕒 Last Updated: {new Date().toLocaleTimeString()}</span>
+            </div>
+          </div>
+
+          {/* Generate Button */}
+          <div className="flex justify-end">
             <button
               onClick={generateReport}
-              disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || !email}
+              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
-              {loading ? 'Generating...' : 'Generate Report'}
+              {loading ? 'Generating Report...' : 'Generate User Report'}
             </button>
           </div>
+          
           {error && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-700">{error}</p>
