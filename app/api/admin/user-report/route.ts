@@ -99,7 +99,7 @@ export async function GET(request: Request) {
         totalSessions,
         completedSessions: completedSessions.length,
         completionRate: `${completionRate}%`,
-        currentProgress: sessionProgress?.map(p => ({
+        sessionDetails: sessionProgress?.map(p => ({
           module: p.sessions?.module_id,
           session: p.sessions?.session_number,
           title: p.sessions?.title,
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
         hasBusinessPlan: (businessPlan?.length || 0) > 0,
         totalEntries: businessPlan?.length || 0,
         lastUpdated: businessPlan?.[0]?.updated_at,
-        sections: businessPlan?.map(bp => ({
+        recentEntries: businessPlan?.map(bp => ({
           section: bp.section,
           question: bp.question,
           lastUpdated: bp.updated_at
@@ -133,7 +133,8 @@ export async function GET(request: Request) {
       actions: {
         totalActions: userActions?.length || 0,
         completedActions: userActions?.filter(a => a.completed)?.length || 0,
-        data: userActions?.map(a => ({
+        actionCompletionRate: userActions?.length > 0 ? (userActions.filter(a => a.completed).length / userActions.length * 100).toFixed(1) : '0',
+        recentActions: userActions?.map(a => ({
           actionType: a.action_type,
           specificAction: a.specific_action,
           completed: a.completed,
@@ -146,7 +147,7 @@ export async function GET(request: Request) {
       engagement: {
         feedbackSubmissions: feedback?.length || 0,
         lastFeedback: feedback?.[0]?.created_at,
-        feedbackData: feedback?.map(f => ({
+        recentFeedback: feedback?.map(f => ({
           feedbackText: f.feedback_text,
           pageUrl: f.page_url,
           submittedAt: f.created_at
