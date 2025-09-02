@@ -163,8 +163,48 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
   const [currentQuestion, setCurrentQuestion] = useState(initialQuestionStates.currentQuestion);
   const [isCompleted, setIsCompleted] = useState(initialQuestionStates.isCompleted);
   const [celebrationActive, setCelebrationActive] = useState(false);
+  
+  // 🎓 NEW MASTERY-BASED FLOW STATES
+  const [quizStage, setQuizStage] = useState<'initial' | 'review' | 'mastery'>('initial');
+  const [reviewQuestions, setReviewQuestions] = useState<number[]>([]);
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
   const questions = getQuizQuestions();
+
+  // 🎓 MASTERY-BASED FLOW HELPERS
+  const getIncorrectQuestions = () => {
+    return questionResults
+      .map((result, index) => ({ result, index }))
+      .filter(({ result }) => result && !result.isCorrect)
+      .map(({ index }) => index);
+  };
+  
+  const getCorrectQuestions = () => {
+    return questionResults
+      .map((result, index) => ({ result, index }))
+      .filter(({ result }) => result && result.isCorrect)
+      .map(({ index }) => index);
+  };
+  
+  const getAllAnsweredQuestions = () => {
+    return questionResults.filter(result => result !== null).length;
+  };
+  
+  const startReviewMode = () => {
+    const incorrect = getIncorrectQuestions();
+    if (incorrect.length > 0) {
+      setReviewQuestions(incorrect);
+      setCurrentReviewIndex(0);
+      setQuizStage('review');
+    } else {
+      // All correct, go straight to mastery
+      setQuizStage('mastery');
+    }
+  };
+  
+  const completeReview = () => {
+    setQuizStage('mastery');
+  };
 
   // 🧠 NEW ANSWER HANDLING - Individual question persistence
   const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
@@ -279,6 +319,11 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     setCurrentQuestion(0);
     setIsCompleted(false);
     setCelebrationActive(false);
+    
+    // 🎓 Reset mastery-based flow states
+    setQuizStage('initial');
+    setReviewQuestions([]);
+    setCurrentReviewIndex(0);
   };
   
   // 🧠 Calculate current score from individual question results
@@ -296,13 +341,12 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     );
   }
 
-  // Check if all questions have been answered (regardless of correctness)
-  const allQuestionsAnswered = questionResults.every(result => result !== null);
-  
-  if (isCompleted || allQuestionsAnswered) {
+  // 🎓 STAGE 3: MASTERY CONFIRMATION - Final completion with celebration
+  if (quizStage === 'mastery' || isCompleted) {
     const currentScore = getCurrentScore();
+    const incorrectQuestions = getIncorrectQuestions();
     const percentage = Math.round((currentScore / questions.length) * 100);
-    const isExcellent = percentage >= 80; // 80% or higher is excellent
+    const isMastery = percentage >= 80; // 80% or higher is mastery
     
     return (
       <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
@@ -317,80 +361,288 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
           
           <div className="relative z-10">
             <div className="text-6xl mb-4 animate-bounce">
-              {isExcellent ? '🧠' : '📚'}
+              {isMastery ? '🏆' : '📚'}
             </div>
             <h1 className="text-4xl font-bold mb-4">
-              {isExcellent ? 'Knowledge Mastery Complete!' : 'Quiz Complete!'}
+              {isMastery ? 'MASTERY ACHIEVED!' : 'Learning Complete!'}
             </h1>
             <p className="text-xl mb-4">
-              {isExcellent ? 'Excellent Score:' : 'Your Score:'} {currentScore} out of {questions.length} ({percentage}%)
+              Final Score: {currentScore} out of {questions.length} ({percentage}%)
             </p>
             <p className="text-lg opacity-90">
-              {isExcellent 
-                ? "Outstanding! You've demonstrated strong understanding of faith-driven business principles."
-                : `You've completed the quiz! ${percentage >= 60 ? 'Good effort!' : 'Consider reviewing the material and trying again.'}`
+              {isMastery 
+                ? "🌟 Outstanding! You've mastered these faith-driven business principles!"
+                : `✅ Great work! You've completed the learning process and can now continue.`
               }
             </p>
           </div>
         </div>
         
-        {/* Individual Question Progress Display */}
+        {/* Mastery Progress Display */}
         <div className="p-6 bg-green-50">
-          <h3 className="text-xl font-bold text-green-800 mb-4 text-center">🎯 Your Perfect Progress</h3>
+          <h3 className="text-xl font-bold text-green-800 mb-4 text-center">
+            🎯 Your Learning Journey
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {questions.map((question, index) => (
-              <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
-                <div className="flex items-center mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                  <span className="font-semibold text-green-800">Question {index + 1}</span>
+            {questions.map((question, index) => {
+              const result = questionResults[index];
+              const isCorrect = result?.isCorrect || false;
+              return (
+                <div key={index} className={`rounded-lg p-4 border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
+                  <div className="flex items-center mb-2">
+                    {isCorrect ? (
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                    ) : (
+                      <Lightbulb className="w-5 h-5 text-orange-600 mr-2" />
+                    )}
+                    <span className={`font-semibold ${isCorrect ? 'text-green-800' : 'text-orange-800'}`}>
+                      Question {index + 1} {isCorrect ? '✓ Mastered' : '💡 Learned'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700">{question.question}</p>
                 </div>
-                <p className="text-sm text-gray-700 truncate">{question.question}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         
-        {/* Action Buttons */}
-        <div className="p-6 bg-gray-50 text-center space-y-4">
+        {/* Single Clear Completion Button */}
+        <div className="p-6 bg-gray-50 text-center">
           {!isCompleted && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-blue-800 text-sm">
-                {percentage >= 80 ? 
-                  'Great job! You can complete this section or retake for a perfect score.' :
-                  'You can complete this section now or retake to improve your score.'
-                }
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-blue-800 font-medium">
+                🎓 You've completed the learning process and can now continue with the session.
               </p>
             </div>
           )}
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="space-y-4">
             {!isCompleted && (
               <button
                 onClick={() => {
                   setIsCompleted(true);
                   onCompletion?.(true);
-                  console.log('✅ Quiz marked as complete by user choice');
+                  console.log('✅ Quiz mastery confirmed - section complete');
                 }}
-                className={`${
-                  percentage >= 80 ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
-                } text-white px-6 py-3 rounded-lg font-semibold transition-colors`}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg"
               >
-                ✅ Complete Quiz & Continue
+                🏆 Confirm Mastery & Continue Session
               </button>
+            )}
+            
+            {isCompleted && (
+              <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+                <div className="text-green-700 font-bold text-lg">✅ MASTERY CONFIRMED!</div>
+                <p className="text-green-600">You can continue with the session</p>
+              </div>
             )}
             
             <button
               onClick={resetQuiz}
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+              className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
-              🔄 Retake Quiz
+              🔄 Start Fresh
             </button>
-            
-            {isCompleted && (
-              <div className="text-green-600 font-semibold">
-                ✅ Section Completed Successfully!
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🎓 STAGE 2: TARGETED REVIEW - Show only incorrect questions for focused learning
+  if (quizStage === 'review' && reviewQuestions.length > 0) {
+    const currentReviewQuestionIndex = reviewQuestions[currentReviewIndex];
+    const question = questions[currentReviewQuestionIndex];
+    const result = questionResults[currentReviewQuestionIndex];
+    
+    return (
+      <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
+        {/* Review Mode Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
+          <div className="flex justify-between items-center mb-3">
+            <h1 className="text-2xl font-bold">🎯 Targeted Review Mode</h1>
+            <div className="flex items-center space-x-4">
+              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                Review {currentReviewIndex + 1} of {reviewQuestions.length}
+              </span>
+              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                Question {currentReviewQuestionIndex + 1}
+              </span>
+            </div>
+          </div>
+          <p className="text-orange-100">Let's focus on mastering these concepts</p>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-white/20 rounded-full h-2 mt-4">
+            <div 
+              className="bg-white h-2 rounded-full transition-all duration-500"
+              style={{ width: `${((currentReviewIndex + 1) / reviewQuestions.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Review Question Content */}
+        <div className="p-8">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center mb-2">
+              <Lightbulb className="w-5 h-5 text-orange-600 mr-2" />
+              <span className="font-semibold text-orange-800">Learning Opportunity</span>
+            </div>
+            <p className="text-orange-700 text-sm">
+              This question needs attention. Review the explanation and try again.
+            </p>
+          </div>
+
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 leading-tight">
+            {question.question}
+          </h2>
+
+          {/* Previous Answer Review */}
+          {result && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center mb-2">
+                <X className="w-5 h-5 text-red-600 mr-2" />
+                <span className="font-semibold text-red-800">Previous Answer</span>
               </div>
+              <p className="text-red-700">"{question.options[result.selectedAnswer]}"</p>
+            </div>
+          )}
+
+          {/* Correct Answer & Explanation */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center mb-2">
+              <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+              <span className="font-semibold text-green-800">Correct Answer</span>
+            </div>
+            <p className="text-green-700 font-medium mb-3">"{question.options[question.correct]}"</p>
+            <p className="text-green-600 text-sm">{question.explanation}</p>
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center">
+            <button
+              onClick={() => {
+                if (currentReviewIndex > 0) {
+                  setCurrentReviewIndex(currentReviewIndex - 1);
+                }
+              }}
+              disabled={currentReviewIndex === 0}
+              className="bg-gray-500 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              ← Previous
+            </button>
+
+            <span className="text-gray-600">
+              {currentReviewIndex + 1} of {reviewQuestions.length} concepts to master
+            </span>
+
+            {currentReviewIndex < reviewQuestions.length - 1 ? (
+              <button
+                onClick={() => setCurrentReviewIndex(currentReviewIndex + 1)}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Next Review →
+              </button>
+            ) : (
+              <button
+                onClick={completeReview}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition-colors"
+              >
+                Complete Review 🎯
+              </button>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🎓 STAGE 1: INITIAL ATTEMPT - Check if all questions answered, then move to appropriate stage
+  const allQuestionsAnswered = questionResults.every(result => result !== null);
+  
+  if (allQuestionsAnswered && quizStage === 'initial') {
+    const currentScore = getCurrentScore();
+    const incorrectQuestions = getIncorrectQuestions();
+    const percentage = Math.round((currentScore / questions.length) * 100);
+    
+    return (
+      <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 text-center relative overflow-hidden">
+          <div className="text-4xl mb-4">📊</div>
+          <h1 className="text-3xl font-bold mb-4">Initial Attempt Complete!</h1>
+          <p className="text-xl mb-4">
+            Score: {currentScore} out of {questions.length} ({percentage}%)
+          </p>
+        </div>
+        
+        {/* Results Summary */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Mastered Concepts */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center mb-3">
+                <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
+                <h3 className="text-lg font-bold text-green-800">Mastered ({currentScore})</h3>
+              </div>
+              {getCorrectQuestions().map(index => (
+                <div key={index} className="text-sm text-green-700 mb-1">
+                  ✓ Question {index + 1}
+                </div>
+              ))}
+            </div>
+
+            {/* Needs Review */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center mb-3">
+                <Lightbulb className="w-6 h-6 text-orange-600 mr-2" />
+                <h3 className="text-lg font-bold text-orange-800">Needs Review ({incorrectQuestions.length})</h3>
+              </div>
+              {incorrectQuestions.map(index => (
+                <div key={index} className="text-sm text-orange-700 mb-1">
+                  💡 Question {index + 1}
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Next Steps */}
+          <div className="text-center space-y-4">
+            {incorrectQuestions.length > 0 ? (
+              <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-blue-800 font-medium">
+                    🎯 Let's review the {incorrectQuestions.length} concepts that need attention for mastery.
+                  </p>
+                </div>
+                <button
+                  onClick={startReviewMode}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg"
+                >
+                  📚 Review Missed Concepts ({incorrectQuestions.length})
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 font-medium">
+                    🏆 Perfect! You got all questions correct. You've achieved mastery!
+                  </p>
+                </div>
+                <button
+                  onClick={() => setQuizStage('mastery')}
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg"
+                >
+                  🎉 Celebrate Mastery
+                </button>
+              </>
+            )}
+            
+            <button
+              onClick={resetQuiz}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors ml-4"
+            >
+              🔄 Start Over
+            </button>
           </div>
         </div>
       </div>
