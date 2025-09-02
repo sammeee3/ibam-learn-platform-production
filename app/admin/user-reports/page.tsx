@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 export default function UserReportsPage() {
-  const [email, setEmail] = useState('test@staging.com')
+  const [email, setEmail] = useState('sammeee@yahoo.com')
   const [report, setReport] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,159 +22,28 @@ export default function UserReportsPage() {
     try {
       console.log('🔍 Generating user report for:', email)
       
-      // Connect to STAGING database
-      const supabase = createClient(
-        'https://yhfxxouswctucxvfetcq.supabase.co',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      )
-
-      console.log('📋 Finding user profile...')
+      // Call the API route instead of direct database connection
+      // (API route uses service role key to bypass RLS)
+      const response = await fetch(`/api/admin/user-report?email=${encodeURIComponent(email)}`)
       
-      // Find user profile
-      const { data: userProfile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('email', email)
-        .single()
-      
-      if (profileError || !userProfile) {
-        setError(`User not found with email: ${email}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        setError(`API Error: ${errorText}`)
         setLoading(false)
         return
       }
 
-      console.log('✅ User found, gathering activity data...')
-
-      // Get all user data
-      const [sessionProgressResult, assessmentsResult, businessPlanResult, userActionsResult, feedbackResult] = await Promise.all([
-        // Session progress
-        supabase
-          .from('user_session_progress')
-          .select(`
-            *,
-            sessions(id, title, module_id, session_number)
-          `)
-          .eq('user_id', userProfile.id)
-          .order('updated_at', { ascending: false }),
-        
-        // Assessment results
-        supabase
-          .from('assessment_results')
-          .select('*')
-          .eq('user_id', userProfile.id)
-          .order('created_at', { ascending: false }),
-        
-        // Business plan data
-        supabase
-          .from('business_plan_data')
-          .select('*')
-          .eq('user_id', userProfile.id)
-          .order('updated_at', { ascending: false }),
-        
-        // User actions
-        supabase
-          .from('user_action_steps')
-          .select('*')
-          .eq('user_id', userProfile.id)
-          .order('created_at', { ascending: false }),
-        
-        // Feedback submissions
-        supabase
-          .from('feedback')
-          .select('*')
-          .eq('user_id', userProfile.id)
-          .order('created_at', { ascending: false })
-      ])
-
-      const sessionProgress = sessionProgressResult.data || []
-      const assessments = assessmentsResult.data || []
-      const businessPlan = businessPlanResult.data || []
-      const userActions = userActionsResult.data || []
-      const feedback = feedbackResult.data || []
-
-      // Calculate analytics
-      const now = new Date()
-      const createdAt = new Date(userProfile.created_at)
-      const daysInSystem = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+      const apiData = await response.json()
       
-      const completedSessions = sessionProgress.filter(p => p.completed)
-      const totalSessions = sessionProgress.length
-      const completionRate = totalSessions > 0 ? (completedSessions.length / totalSessions * 100).toFixed(1) : '0'
-      
-      const lastActivity = sessionProgress[0]?.updated_at || userProfile.updated_at
-      const daysSinceLastActivity = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
-      
-      const completedActions = userActions.filter(a => a.completed)
-
-      // Generate report
-      const reportData = {
-        userInfo: {
-          email: userProfile.email,
-          fullName: userProfile.full_name,
-          membershipTier: userProfile.membership_tier,
-          createdAt: userProfile.created_at,
-          daysInSystem,
-          lastActivity,
-          daysSinceLastActivity
-        },
-        progressSummary: {
-          totalSessions,
-          completedSessions: completedSessions.length,
-          completionRate: `${completionRate}%`,
-          sessionDetails: sessionProgress.slice(0, 20).map(p => ({
-            module: p.sessions?.module_id,
-            session: p.sessions?.session_number,
-            title: p.sessions?.title,
-            completed: p.completed,
-            progress: p.progress_percentage,
-            lastUpdated: p.updated_at
-          }))
-        },
-        assessments: {
-          total: assessments.length,
-          data: assessments.slice(0, 10).map(a => ({
-            type: a.assessment_type,
-            score: a.score,
-            completedAt: a.created_at,
-            moduleId: a.module_id
-          }))
-        },
-        businessPlan: {
-          hasBusinessPlan: businessPlan.length > 0,
-          totalEntries: businessPlan.length,
-          lastUpdated: businessPlan[0]?.updated_at,
-          recentEntries: businessPlan.slice(0, 5).map(bp => ({
-            section: bp.section,
-            question: bp.question,
-            lastUpdated: bp.updated_at
-          }))
-        },
-        actions: {
-          totalActions: userActions.length,
-          completedActions: completedActions.length,
-          actionCompletionRate: userActions.length > 0 ? (completedActions.length / userActions.length * 100).toFixed(1) : '0',
-          recentActions: userActions.slice(0, 10).map(a => ({
-            actionType: a.action_type,
-            specificAction: a.specific_action,
-            completed: a.completed,
-            moduleId: a.module_id,
-            sessionId: a.session_id,
-            createdAt: a.created_at
-          }))
-        },
-        engagement: {
-          feedbackSubmissions: feedback.length,
-          lastFeedback: feedback[0]?.created_at,
-          recentFeedback: feedback.slice(0, 5).map(f => ({
-            feedbackText: f.feedback_text,
-            pageUrl: f.page_url,
-            submittedAt: f.created_at
-          }))
-        }
+      if (!apiData.success) {
+        setError(apiData.error || 'Report generation failed')
+        setLoading(false)
+        return
       }
 
-      setReport(reportData)
+      setReport(apiData.report)
       console.log('✅ Report generated successfully!')
+      setLoading(false)
 
     } catch (error) {
       console.error('❌ Error generating report:', error)

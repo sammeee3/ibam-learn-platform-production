@@ -8,9 +8,9 @@ export async function GET(request: Request) {
     
     console.log(`Generating comprehensive user report for: ${email}`)
     
-    // Connect to PRODUCTION database
+    // Connect to STAGING database  
     const supabase = createClient(
-      'https://tutrnikhomrgcpkzszvq.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
     
