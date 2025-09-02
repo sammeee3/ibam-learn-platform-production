@@ -38,8 +38,9 @@ export default function SuperAdminDashboard() {
       description: 'Add users, manage accounts, view activity',
       items: [
         { name: 'Quick Add User', href: '/admin/quick-add', icon: '➕', color: 'bg-green-500', active: true },
+        { name: 'User Reports', href: '/admin/user-reports', icon: '📊', color: 'bg-indigo-600', active: true },
         { name: 'User List', href: '#', icon: '📋', color: 'bg-blue-500', active: false },
-        { name: 'Activity Log', href: '#', icon: '📊', color: 'bg-purple-500', active: false },
+        { name: 'Activity Log', href: '#', icon: '📈', color: 'bg-purple-500', active: false },
       ]
     },
     {
@@ -183,10 +184,16 @@ export default function SuperAdminDashboard() {
               📢 Send Broadcast (Soon)
             </button>
             <Link
+              href="/admin/user-reports"
+              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
+            >
+              📊 User Reports
+            </Link>
+            <Link
               href="/admin/analytics"
               className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
             >
-              📊 View Analytics
+              📈 Analytics
             </Link>
             <Link
               href="/admin/webhooks"
