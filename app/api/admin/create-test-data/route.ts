@@ -45,7 +45,7 @@ export async function POST() {
       }
     ]
 
-    const results = []
+    const results: any[] = []
 
     for (const userData of testUsers) {
       console.log(`Creating test user: ${userData.email}`)
