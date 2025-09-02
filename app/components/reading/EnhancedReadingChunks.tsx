@@ -537,17 +537,17 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
                   nextChunk();
                 }
               }}
-              className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-semibold transform hover:scale-105 ${
+              className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-bold transform hover:scale-105 ${
                 currentChunk === chunks.length - 1 
                   ? isCompleted 
-                    ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg' 
+                    ? 'bg-gradient-to-r from-green-500 to-green-700 text-white hover:from-green-600 hover:to-green-800 shadow-xl border-2 border-green-400' 
                     : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
               {currentChunk === chunks.length - 1 ? (
                 isCompleted ? (
-                  <>📖 Review Reading <BookOpen className="w-4 h-4 ml-2" /></>
+                  <>📖 REVIEW READING <BookOpen className="w-5 h-5 ml-2" /></>
                 ) : (
                   <>Complete Reading <CheckCircle className="w-4 h-4 ml-2" /></>
                 )

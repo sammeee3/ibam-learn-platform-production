@@ -304,12 +304,18 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
               })()
             )}
             
-            {/* Reading Completion Confirmation Banner */}
+            {/* Reading Completion Confirmation Banner - ENHANCED */}
             {lookingUpProgress.reading && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                <div className="text-2xl mb-2">📖</div>
-                <p className="font-semibold text-green-800">Reading Complete!</p>
-                <p className="text-green-600 text-sm">Your progress has been saved to the database</p>
+              <div className="bg-gradient-to-r from-green-400 to-green-600 text-white p-8 rounded-xl shadow-2xl border-4 border-green-300 text-center mb-6 transform hover:scale-105 transition-all duration-500 animate-pulse">
+                <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                <h3 className="text-4xl font-bold mb-3">📖 READING COMPLETE!</h3>
+                <p className="text-green-100 text-xl font-semibold">🌟 Excellent Work! Your Progress Has Been Saved 🌟</p>
+                <div className="flex justify-center space-x-3 mt-6">
+                  <div className="text-3xl animate-pulse">✨</div>
+                  <div className="text-3xl animate-pulse" style={{animationDelay: '0.3s'}}>⭐</div>
+                  <div className="text-3xl animate-pulse" style={{animationDelay: '0.6s'}}>🏆</div>
+                  <div className="text-3xl animate-pulse" style={{animationDelay: '0.9s'}}>🎊</div>
+                </div>
               </div>
             )}
           </div>
