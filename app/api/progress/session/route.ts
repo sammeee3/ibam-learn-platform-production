@@ -82,7 +82,9 @@ export async function POST(request: NextRequest) {
       ),
       quiz_score: quizScore ?? currentProgress.quiz_score,
       quiz_attempts: (currentProgress.quiz_attempts || 0) + (quizAttempts || 0),
-      last_accessed: new Date().toISOString()
+      last_accessed: new Date().toISOString(),
+      // 🔧 CRITICAL FIX: Store individual subsection progress for persistence
+      looking_up_subsections: subsectionProgress?.lookingUp || currentProgress.looking_up_subsections || {}
     };
 
     // Calculate completion percentage with granular subsection progress

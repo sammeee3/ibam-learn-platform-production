@@ -515,8 +515,17 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
               // Use the database stored progress which includes granular subsection calculations
               setSessionProgressPercent(dbProgress);
               
-              // 🔧 CRITICAL FIX: Restore individual Looking Up subsection progress from localStorage
-              // This fixes the video completion button reset issue on refresh
+              // 🔧 CRITICAL FIX: First restore from database if available, then supplement with localStorage
+              // This ensures Memory Practice and other subsections persist across page refreshes
+              if (progress.looking_up_subsections && Object.keys(progress.looking_up_subsections).length > 0) {
+                console.log('🗄️ Restoring Looking Up subsections from database:', progress.looking_up_subsections);
+                setLookingUpProgress(prev => ({
+                  ...prev,
+                  ...progress.looking_up_subsections
+                }));
+              }
+              
+              // 🔧 SUPPLEMENT: Also restore from localStorage for any missing data
               try {
                 const moduleNum = parseInt(moduleId);
                 const sessionNum = parseInt(sessionId);
@@ -579,6 +588,14 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
                   wealth: wealthCompleted,
                   people: peopleCompleted
                 }));
+                
+                // 🔧 CRITICAL FIX: Also check Memory Practice completion from localStorage
+                const practiceStorageKey = `practice_quiz_completed_${moduleNum}_${sessionNum}`;
+                const practiceCompleted = localStorage.getItem(practiceStorageKey) === 'true';
+                if (practiceCompleted) {
+                  console.log('🧠 Restored Memory Practice completion from localStorage');
+                  setLookingUpProgress(prev => ({ ...prev, practice: practiceCompleted }));
+                }
                 
                 // 🔇 AUTO-COMPLETE INTEGRATION: Hidden section always marked complete
                 // This ensures it doesn't block progress but remains hidden from UI
