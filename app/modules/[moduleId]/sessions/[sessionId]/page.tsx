@@ -498,20 +498,12 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
               setSectionProgress(sectionProg);
               console.log('📊 Section progress percentages:', sectionProg);
               
-              // 🔧 RECALCULATE overall progress based on actual 3 DB sections
-              const dbCompletedCount = [
-                progress.lookback_completed,
-                progress.lookup_completed,
-                progress.lookforward_completed
-              ].filter(Boolean).length;
-              
-              const recalculatedProgress = Math.round((dbCompletedCount / 3) * 100); // 3 sections: lookback, lookup, lookforward
+              // 🔧 USE database stored progress instead of recalculating
+              // The database already has the accurate granular progress calculation
               const dbProgress = progress.completion_percentage || 0;
               
-              console.log('📊 Progress comparison:', {
+              console.log('📊 Using stored database progress:', {
                 'DB stored progress': dbProgress,
-                'Recalculated progress': recalculatedProgress,
-                'DB sections completed': dbCompletedCount,
                 'Section details': {
                   lookback: progress.lookback_completed,
                   lookup: progress.lookup_completed,
@@ -519,8 +511,8 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
                 }
               });
               
-              // Use the recalculated progress to ensure accuracy
-              setSessionProgressPercent(recalculatedProgress);
+              // Use the database stored progress which includes granular subsection calculations
+              setSessionProgressPercent(dbProgress);
               
               // 🔧 CRITICAL FIX: Restore individual Looking Up subsection progress from localStorage
               // This fixes the video completion button reset issue on refresh
@@ -592,7 +584,7 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
                 setLookingUpProgress(prev => ({ ...prev, integrate: true }));
                 console.log('🔇 Auto-completed hidden integration section');
                 
-                // If lookup section is marked complete in DB, mark individual subsections as complete
+                // Restore subsection progress and recalculate session progress if needed
                 if (progress.lookup_completed) {
                   console.log('✅ Lookup section complete in DB - marking all subsections as complete');
                   setLookingUpProgress({
@@ -605,7 +597,43 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
                     practice: true
                   });
                 } else {
-                  console.log('📝 Lookup section not complete - restored individual subsections from localStorage');
+                  console.log('📝 Lookup section not complete - will recalculate session progress after state updates');
+                  
+                  // Add a delayed recalculation that uses the updated lookingUpProgress state
+                  setTimeout(() => {
+                    // Get the current lookingUpProgress state (after all localStorage restorations)
+                    setLookingUpProgress(currentProgress => {
+                      console.log('🔄 Current Looking Up progress after restoration:', currentProgress);
+                      
+                      const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+                      const completedCount = visibleSubsections.filter(sub => 
+                        currentProgress[sub as keyof typeof currentProgress]
+                      ).length;
+                      
+                      const lookbackComplete = progress.lookback_completed ? 1 : 0;
+                      const lookupPartialProgress = completedCount / visibleSubsections.length; // 0 to 1
+                      const lookforwardComplete = progress.lookforward_completed ? 1 : 0;
+                      
+                      // Calculate accurate session progress including partial Looking Up
+                      const accurateSessionProgress = Math.round(((lookbackComplete + lookupPartialProgress + lookforwardComplete) / 3) * 100);
+                      
+                      console.log('🔄 Recalculated session progress on load:', {
+                        lookback: lookbackComplete,
+                        lookup: `${completedCount}/${visibleSubsections.length} = ${lookupPartialProgress.toFixed(2)}`,
+                        lookforward: lookforwardComplete,
+                        dbStored: dbProgress,
+                        calculated: accurateSessionProgress
+                      });
+                      
+                      // Update session progress if it's different from what was loaded from DB
+                      if (Math.abs(accurateSessionProgress - dbProgress) > 2) {
+                        console.log(`📊 Updating progress: DB=${dbProgress}% → Calculated=${accurateSessionProgress}%`);
+                        setSessionProgressPercent(accurateSessionProgress);
+                      }
+                      
+                      return currentProgress; // Don't modify the progress, just use this to trigger recalculation
+                    });
+                  }, 500); // Longer delay to ensure all localStorage restorations are complete
                 }
                 
               } catch (localStorageError) {
