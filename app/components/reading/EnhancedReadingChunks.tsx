@@ -216,10 +216,10 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
       
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center">
-          <div className="text-3xl mr-4">📚</div>
+          <div className="text-4xl mr-4">📚</div>
           <div>
-            <h3 className="text-xl font-bold mb-1">Reading Complete!</h3>
-            <p className="text-green-100">All {chunks.length} sections mastered • Reflections saved</p>
+            <h3 className="text-3xl font-bold mb-2">Reading Complete!</h3>
+            <p className="text-green-100 text-lg">All {chunks.length} sections mastered • Reflections saved</p>
           </div>
         </div>
         
@@ -529,19 +529,25 @@ const EnhancedReadingChunks: React.FC<EnhancedReadingChunksProps> = ({ chunks, t
             </div>
 
             <button
-              onClick={nextChunk}
+              onClick={() => {
+                if (isCompleted) {
+                  // Scroll to top to review all content
+                  document.querySelector('.bg-white.rounded-xl')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                  nextChunk();
+                }
+              }}
               className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-semibold transform hover:scale-105 ${
                 currentChunk === chunks.length - 1 
                   ? isCompleted 
-                    ? 'bg-green-600 text-white cursor-default shadow-lg' 
+                    ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg' 
                     : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
-              disabled={isCompleted}
             >
               {currentChunk === chunks.length - 1 ? (
                 isCompleted ? (
-                  <>✅ Reading Complete! <CheckCircle className="w-4 h-4 ml-2" /></>
+                  <>📖 Review Reading <BookOpen className="w-4 h-4 ml-2" /></>
                 ) : (
                   <>Complete Reading <CheckCircle className="w-4 h-4 ml-2" /></>
                 )
