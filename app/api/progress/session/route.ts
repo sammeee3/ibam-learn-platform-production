@@ -84,7 +84,9 @@ export async function POST(request: NextRequest) {
       quiz_attempts: (currentProgress.quiz_attempts || 0) + (quizAttempts || 0),
       last_accessed: new Date().toISOString(),
       // 🔧 CRITICAL FIX: Store individual subsection progress for persistence
-      looking_up_subsections: subsectionProgress?.lookingUp || currentProgress.looking_up_subsections || {}
+      looking_up_subsections: subsectionProgress?.lookingUp || currentProgress.looking_up_subsections || {},
+      // 🎯 NEW: Store individual Looking Forward subsection progress 
+      looking_forward_subsections: subsectionProgress?.lookingForward || currentProgress.looking_forward_subsections || {}
     };
 
     // Calculate completion percentage with granular subsection progress
@@ -111,9 +113,17 @@ export async function POST(request: NextRequest) {
       console.log(`📊 Looking Up granular progress: ${completedCount}/${lookupSubsections.length} = ${Math.round(lookupProgress)}%`);
     }
     
-    // Looking Forward (33% if complete)  
+    // Looking Forward (33% if complete, or granular based on 3 parts)
     if (updatedProgress.lookforward_completed) {
-      totalProgress += 33;
+      totalProgress += 33; // All 3 parts complete
+    } else if (subsectionProgress?.lookingForward) {
+      // Calculate granular Looking Forward progress based on 3 parts
+      const lookForwardParts = ['business_actions_completed', 'spiritual_integration_completed', 'sharing_person_completed'];
+      const forwardCompletedCount = lookForwardParts.filter(part => subsectionProgress.lookingForward[part]).length;
+      const forwardProgress = (forwardCompletedCount / lookForwardParts.length) * 33;
+      totalProgress += forwardProgress;
+      
+      console.log(`📊 Looking Forward granular progress: ${forwardCompletedCount}/${lookForwardParts.length} = ${Math.round(forwardProgress)}%`);
     }
     
     updatedProgress.completion_percentage = Math.min(100, Math.round(totalProgress));

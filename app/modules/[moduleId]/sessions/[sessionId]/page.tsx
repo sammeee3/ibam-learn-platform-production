@@ -915,6 +915,17 @@ const navigateTo = (path: string) => {
           
           console.log(`💾 SAVING TO DATABASE:`, currentDbSections);
           
+          // 🎯 NEW: Calculate Looking Forward subsection progress for database
+          const businessActions = savedActions.filter(action => action.type === 'business');
+          const spiritualActions = savedActions.filter(action => 
+            action.type === 'discipleship' || action.type === 'spiritual_integration'
+          );
+          const lookingForwardProgress = {
+            business_actions_completed: businessActions.length >= 1,
+            spiritual_integration_completed: spiritualActions.length >= 1,
+            sharing_person_completed: sharingCommitment.trim().length > 0
+          };
+          
           // 🔧 FIX: Use server-side API to bypass RLS issues
           const progressResponse = await fetch('/api/progress/session', {
             method: 'POST',
@@ -926,7 +937,8 @@ const navigateTo = (path: string) => {
               section: section,
               sectionCompleted: currentDbSections,
               subsectionProgress: {
-                lookingUp: lookingUpProgress // Send current subsection progress for granular tracking
+                lookingUp: lookingUpProgress, // Send current subsection progress for granular tracking
+                lookingForward: lookingForwardProgress // 🎯 NEW: Send Looking Forward subsection progress
               }
             })
           });

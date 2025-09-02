@@ -93,7 +93,8 @@ export interface ReadingChunk {
 // Enhanced Action Commitment Interface
 export interface ActionCommitment {
   id: string;
-  type: 'business' | 'discipleship';
+  type: 'business' | 'discipleship' | 'spiritual_integration';
+  title?: string; // Add title field for simple action display
   smartData: {
     specific: string;
     measurable?: string;
@@ -104,17 +105,18 @@ export interface ActionCommitment {
     timed: string;
   };
   generatedStatement: string;
-  completed: boolean;
+  completed?: boolean;
   completionNotes?: string;
   learningReflection?: string;
   impactAssessment?: string;
   obstacleIdentification?: string;
+  createdAt?: string; // Add creation timestamp
 }
 
 // Previous Action Interface
 export interface PreviousAction {
   id: string;
-  type: 'business' | 'discipleship';
+  type: 'business' | 'discipleship' | 'spiritual_integration';
   statement: string;
   completion_percentage: number;
   completed_status: null | number;
@@ -136,7 +138,7 @@ export interface ActionStep {
   session_id: string;
   module_id: number;
   session_number: number;
-  type: 'business' | 'discipleship';
+  type: 'business' | 'discipleship' | 'spiritual_integration';
   specific: string;
   measurable?: string;
   ministryMinded?: string;
