@@ -3,6 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase-config';
 
 export async function POST(request: NextRequest) {
   try {
+    const requestBody = await request.json();
+    console.log('🔍 Incoming request body:', JSON.stringify(requestBody, null, 2));
+    
     const {
       userId,
       moduleId,
@@ -14,16 +17,31 @@ export async function POST(request: NextRequest) {
       quizScore,
       quizAttempts,
       subsectionProgress // NEW: Track individual subsection progress
-    } = await request.json();
+    } = requestBody;
 
+    // Enhanced validation with type checking
     if (!userId || !moduleId || !sessionId) {
+      console.error('❌ Missing required fields:', { userId, moduleId, sessionId });
       return NextResponse.json(
         { error: 'Missing required fields: userId, moduleId, sessionId' }, 
         { status: 400 }
       );
     }
+    
+    // Ensure proper data types
+    const validUserId = String(userId);
+    const validModuleId = parseInt(String(moduleId));
+    const validSessionId = parseInt(String(sessionId));
+    
+    if (isNaN(validModuleId) || isNaN(validSessionId)) {
+      console.error('❌ Invalid moduleId or sessionId:', { moduleId, sessionId, validModuleId, validSessionId });
+      return NextResponse.json(
+        { error: 'Invalid moduleId or sessionId format' }, 
+        { status: 400 }
+      );
+    }
 
-    console.log('🔄 Server-side progress update for:', { userId, moduleId, sessionId, section });
+    console.log('🔄 Server-side progress update for:', { validUserId, validModuleId, validSessionId, section });
 
     // Use admin client to bypass RLS
     const supabase = supabaseAdmin;
@@ -32,9 +50,9 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await supabase
       .from('user_session_progress')
       .select('*')
-      .eq('user_id', userId)
-      .eq('module_id', moduleId)
-      .eq('session_id', sessionId)
+      .eq('user_id', validUserId)
+      .eq('module_id', validModuleId)
+      .eq('session_id', validSessionId)
       .single();
 
     const currentProgress = existing || {
@@ -49,9 +67,9 @@ export async function POST(request: NextRequest) {
 
     // Update section completion status
     const updatedProgress: any = {
-      user_id: userId,
-      module_id: moduleId,
-      session_id: sessionId,
+      user_id: validUserId,
+      module_id: validModuleId,
+      session_id: validSessionId,
       last_section: section || currentProgress.last_section,
       lookback_completed: sectionCompleted?.lookback ?? currentProgress.lookback_completed,
       lookup_completed: sectionCompleted?.lookup ?? currentProgress.lookup_completed,
@@ -115,19 +133,29 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('❌ Database error:', error);
+      console.error('❌ Database error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        updatedProgress: JSON.stringify(updatedProgress, null, 2)
+      });
       throw error;
     }
 
     console.log('✅ Progress saved successfully:', data);
 
     // Update module completion
-    await updateModuleCompletion(supabase, userId, moduleId);
+    await updateModuleCompletion(supabase, validUserId, validModuleId);
 
     return NextResponse.json({ success: true, data });
 
   } catch (error) {
-    console.error('❌ Server error updating progress:', error);
+    console.error('❌ Server error updating progress:', {
+      message: error.message,
+      stack: error.stack,
+      error: error
+    });
     return NextResponse.json(
       { error: 'Failed to update progress', details: error.message }, 
       { status: 500 }
@@ -137,23 +165,48 @@ export async function POST(request: NextRequest) {
 
 async function updateModuleCompletion(supabase: any, userId: string, moduleId: number) {
   try {
+    console.log('🔄 Updating module completion for user:', userId, 'module:', moduleId);
+    
+    // Ensure proper data types
+    const validUserId = String(userId);
+    const validModuleId = parseInt(String(moduleId));
+    
+    if (isNaN(validModuleId)) {
+      console.error('❌ Invalid moduleId in updateModuleCompletion:', moduleId);
+      return;
+    }
+    
     // Get all sessions for this module
-    const { data: sessions } = await supabase
+    const { data: sessions, error: sessionError } = await supabase
       .from('user_session_progress')
       .select('completion_percentage, time_spent_seconds')
-      .eq('user_id', userId)
-      .eq('module_id', moduleId);
+      .eq('user_id', validUserId)
+      .eq('module_id', validModuleId);
 
-    if (!sessions || sessions.length === 0) return;
+    if (sessionError) {
+      console.error('❌ Error fetching sessions for module completion:', sessionError);
+      return;
+    }
 
-    const totalSessions = getTotalSessionsForModule(moduleId);
+    if (!sessions || sessions.length === 0) {
+      console.log('⚠️ No sessions found for module completion calculation');
+      return;
+    }
+
+    const totalSessions = getTotalSessionsForModule(validModuleId);
     const completedSessions = sessions.filter((s: any) => s.completion_percentage === 100).length;
     const totalTimeSpent = sessions.reduce((sum: number, s: any) => sum + (s.time_spent_seconds || 0), 0);
     const moduleCompletion = Math.round((completedSessions / totalSessions) * 100);
 
+    console.log('📊 Module completion calculation:', {
+      totalSessions,
+      completedSessions,
+      moduleCompletion: `${moduleCompletion}%`
+    });
+
     const moduleData: any = {
-      user_id: userId,
-      module_id: moduleId,
+      user_id: validUserId,
+      module_id: validModuleId,
       sessions_completed: completedSessions,
       total_sessions: totalSessions,
       completion_percentage: moduleCompletion,
@@ -167,12 +220,18 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       moduleData.completed_at = new Date().toISOString();
     }
 
-    await supabase
+    const { error: upsertError } = await supabase
       .from('module_completion')
       .upsert(moduleData);
 
+    if (upsertError) {
+      console.error('❌ Error upserting module completion:', upsertError);
+    } else {
+      console.log('✅ Module completion updated successfully');
+    }
+
   } catch (error) {
-    console.error('Error updating module completion:', error);
+    console.error('❌ Error in updateModuleCompletion:', error);
   }
 }
 
@@ -193,21 +252,25 @@ export async function GET(request: NextRequest) {
     const userId = url.searchParams.get('userId');
 
     if (!userId) {
+      console.error('❌ GET request missing userId');
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
+
+    const validUserId = String(userId);
+    console.log('🔍 GET request for user:', validUserId);
 
     const supabase = supabaseAdmin;
 
     const { data: modules } = await supabase
       .from('module_completion')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', validUserId)
       .order('module_id');
 
     const { data: sessions } = await supabase
       .from('user_session_progress')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', validUserId)
       .order('module_id, session_id');
 
     const overallCompletion = calculateOverallCompletion(modules || []);

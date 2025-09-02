@@ -8,7 +8,7 @@ import { VimeoVideo } from '../../video/VimeoVideo';
 import EnhancedReadingChunks from '../../reading/EnhancedReadingChunks';
 import BeautifulCaseStudyComponent from '../../case-study/BeautifulCaseStudyComponent';
 import EnhancedScriptureReference from '../../scripture/EnhancedScriptureReference';
-import EnhancedQuizSection from '../../quiz/EnhancedQuizSection';
+import SimpleReliableQuizSection from '../../quiz/SimpleReliableQuizSection';
 import UniversalReadingWithToggle from '../../reading/UniversalReadingWithToggle';
 import { parseMainContentIntoChunks } from '../../../lib/utils';
 
@@ -46,6 +46,7 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
   const [currentSwipeIndex, setCurrentSwipeIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizScore, setQuizScore] = useState<{ percentage: number, correct: number, total: number } | null>(null);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
   
   // 🔧 NEW: Integration section state
@@ -58,6 +59,9 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
   // 🔧 NEW: Storage keys for video completions
   const wealthVideoStorageKey = `wealth_video_completed_${sessionData.module_id}_${sessionData.session_number}`;
   const peopleVideoStorageKey = `people_video_completed_${sessionData.module_id}_${sessionData.session_number}`;
+  
+  // 🔧 NEW: Storage key for Memory Practice (quiz) completion
+  const practiceStorageKey = `practice_quiz_completed_${sessionData.module_id}_${sessionData.session_number}`;
   
   // 🔧 NEW: Load saved integration data and video completions on mount
   useEffect(() => {
@@ -74,8 +78,28 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
           console.error('Error loading saved integration goal:', error);
         }
       }
+      
+      // 🔧 NEW: Load Memory Practice completion state
+      const practiceCompleted = localStorage.getItem(practiceStorageKey);
+      if (practiceCompleted === 'true') {
+        console.log('🧠 Restored Memory Practice completion from localStorage');
+        setQuizCompleted(true);
+      }
     }
-  }, [integrationStorageKey]);
+  }, [integrationStorageKey, practiceStorageKey]);
+  
+  // 🔧 NEW: Sync quiz completion state with database progress
+  useEffect(() => {
+    if (lookingUpProgress.practice && !quizCompleted) {
+      console.log('🔄 Database shows Memory Practice complete, syncing local state');
+      setQuizCompleted(true);
+      // Also save to localStorage to maintain consistency
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(practiceStorageKey, 'true');
+        console.log('💾 Synced Memory Practice completion to localStorage from database');
+      }
+    }
+  }, [lookingUpProgress.practice, quizCompleted, practiceStorageKey]);
   
   // 🔧 NEW: Autosave integration goal
   const saveIntegrationGoal = (goal: string) => {
@@ -439,36 +463,86 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
       case 'practice':
         return (
           <div className="space-y-6">
-            <EnhancedQuizSection 
+            <SimpleReliableQuizSection 
               sessionData={sessionData} 
+              onScoreAvailable={(score) => {
+                console.log('📉 Score available:', score);
+                setQuizScore(score);
+              }}
               onCompletion={(completed) => {
-                console.log('🧠 Quiz completion callback:', completed);
-                setQuizCompleted(completed);
-                // Automatically mark the practice section complete when quiz is completed
+                console.log('🧠 Quiz completion callback (60% threshold):', completed);
+                // Called when user achieves 60% or higher
                 if (completed) {
-                  console.log('🎯 Auto-marking Memory Practice as complete');
+                  console.log('✅ Quiz completed with passing score - marking section complete');
+                  // 🔧 SAVE TO LOCALSTORAGE: Mark Memory Practice as complete
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem(practiceStorageKey, 'true');
+                    console.log('💾 Saved Memory Practice completion to localStorage');
+                  }
+                  setQuizCompleted(true);
                   onMarkComplete('practice');
                 }
               }}
             />
-            <button 
-              onClick={() => {
-                if (!quizCompleted) {
-                  setShowValidationPopup(true);
-                  return;
-                }
-                // Quiz completion already handled in callback above
-                console.log('🎯 Memory Practice button clicked - already completed');
-              }}
-              className={`px-6 py-2 rounded font-semibold transition-all transform hover:scale-105 ${
-                quizCompleted 
-                  ? 'bg-green-600 text-white cursor-default shadow-lg' 
-                  : 'bg-pink-600 text-white hover:bg-pink-700'
-              }`}
-              disabled={quizCompleted}
-            >
-              {quizCompleted ? '✅ COMPLETED' : '🎯 Complete Memory Practice'}
-            </button>
+            
+            {/* Show completion button only if quiz attempted but not fully mastered */}
+            {!quizCompleted && quizScore && (
+              <div className="mt-6">
+                <button 
+                  onClick={() => {
+                    if (quizScore.percentage >= 60) {
+                      // Score meets minimum threshold - complete the section
+                      console.log('🎯 MANUAL BUTTON: 60%+ achieved, completing Memory Practice:', quizScore.percentage);
+                      // 🔧 SAVE TO LOCALSTORAGE: Mark Memory Practice as complete
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem(practiceStorageKey, 'true');
+                        console.log('💾 MANUAL BUTTON: Saved Memory Practice completion to localStorage');
+                      }
+                      setQuizCompleted(true);
+                      onMarkComplete('practice'); // This calls markLookingUpComplete in parent
+                    } else {
+                      // Score below 60% - show encouragement popup
+                      console.log('🔄 Score below 60%, showing encouragement popup');
+                      setShowValidationPopup(true);
+                    }
+                  }}
+                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg ${
+                    quizScore.percentage >= 60 
+                      ? 'bg-green-600 text-white hover:bg-green-700' 
+                      : 'bg-orange-600 text-white hover:bg-orange-700'
+                  }`}
+                >
+                  {quizScore.percentage >= 60 
+                    ? `🏆 Complete Memory Practice (${quizScore.percentage}% Achieved!)` 
+                    : `🎯 Review & Improve (${quizScore.percentage}% - Need 60%)`
+                  }
+                </button>
+              </div>
+            )}
+            
+            {/* Show quiz prompt if no score yet */}
+            {!quizCompleted && !quizScore && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <p className="text-blue-800 font-medium mb-3">
+                  🏅 Complete the quiz above to unlock section completion
+                </p>
+                <p className="text-blue-600 text-sm">
+                  You need at least 60% to proceed to the next section
+                </p>
+              </div>
+            )}
+            
+            {/* Show completion celebration when quiz is completed */}
+            {quizCompleted && (
+              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                <div className="text-2xl mb-2">🎉</div>
+                <h3 className="text-xl font-bold text-green-800 mb-2">Congratulations!</h3>
+                <p className="text-green-700">You have successfully completed this Memory Practice section!</p>
+                <div className="mt-3 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-semibold">
+                  ✅ SECTION COMPLETE
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -595,15 +669,20 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
             <div className="text-6xl mb-4">📚</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Complete Quiz First!</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              {quizScore && quizScore.percentage < 60 ? 'Keep Learning!' : 'Complete Quiz First!'}
+            </h3>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Please finish the entire Memory Practice quiz to unlock this section. Every question builds your understanding of biblical business principles!
+              {quizScore && quizScore.percentage < 60
+                ? `You scored ${quizScore.percentage}% (${quizScore.correct}/${quizScore.total}). Review the concepts you missed and try again. You need at least 60% to continue to Looking Forward - this ensures you have the foundation for the next sections!`
+                : 'Please finish the entire Memory Practice quiz first. Every question builds your understanding of biblical business principles!'
+              }
             </p>
             <button
               onClick={() => setShowValidationPopup(false)}
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
             >
-              Continue Learning
+              {quizScore && quizScore.percentage < 60 ? 'Review & Try Again' : 'Continue Learning'}
             </button>
           </div>
         </div>

@@ -1,16 +1,17 @@
 // app/components/quiz/EnhancedQuizSection.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Lightbulb, X, ChevronRight } from 'lucide-react';
 import type { SessionData } from '../../lib/types';
 
 interface EnhancedQuizSectionProps {
   sessionData: SessionData;
-  onCompletion?: (completed: boolean) => void;
+  onCompletion?: (completed: boolean, score?: { percentage: number, correct: number, total: number }) => void;
+  onScoreAvailable?: (score: { percentage: number, correct: number, total: number }) => void;
 }
 
-const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, onCompletion }) => {
+const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, onCompletion, onScoreAvailable }) => {
   // 🧠 NEW INDIVIDUAL QUESTION PERSISTENCE SYSTEM
   const moduleId = sessionData.module_id;
   const sessionNum = sessionData.session_number;
@@ -273,7 +274,13 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     
     if (allCorrect) {
       setIsCompleted(true);
-      onCompletion?.(true);
+      const currentScore = getCurrentScore();
+      const scoreData = {
+        percentage: Math.round((currentScore / questions.length) * 100),
+        correct: currentScore,
+        total: questions.length
+      };
+      onCompletion?.(true, scoreData);
       console.log('🎉 Quiz completed! All questions answered correctly.');
     }
   };
@@ -291,12 +298,31 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
     }
   }, [currentQuestion, isCompleted]);
   
+  // Notify parent when score becomes available (initial attempt complete)
+  const [hasNotifiedScore, setHasNotifiedScore] = useState(false);
+  
+  useEffect(() => {
+    const allAnswered = questionResults.every(result => result !== null);
+    if (allAnswered && quizStage === 'initial' && !hasNotifiedScore && onScoreAvailable) {
+      const scoreData = getCurrentScoreData();
+      console.log('🎯 Notifying parent of score availability:', scoreData);
+      onScoreAvailable(scoreData);
+      setHasNotifiedScore(true);
+    }
+  }, [questionResults, quizStage, hasNotifiedScore]);
+  
   // Trigger completion callback when quiz is finished (only once)
   const [hasTriggeredCompletion, setHasTriggeredCompletion] = useState(false);
   
   useEffect(() => {
     if (isCompleted && !hasTriggeredCompletion) {
-      onCompletion?.(true);
+      const currentScore = getCurrentScore();
+      const scoreData = {
+        percentage: Math.round((currentScore / questions.length) * 100),
+        correct: currentScore,
+        total: questions.length
+      };
+      onCompletion?.(true, scoreData);
       setHasTriggeredCompletion(true);
       console.log('🎉 Quiz completion callback triggered (once)');
     }
@@ -416,15 +442,21 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
             </div>
           )}
           
-          <div className="space-y-4">
+          <div className="space-y-8">
             {!isCompleted && (
               <button
                 onClick={() => {
                   setIsCompleted(true);
-                  onCompletion?.(true);
+                  const currentScore = getCurrentScore();
+                  const scoreData = {
+                    percentage: Math.round((currentScore / questions.length) * 100),
+                    correct: currentScore,
+                    total: questions.length
+                  };
+                  onCompletion?.(true, scoreData);
                   console.log('✅ Quiz mastery confirmed - section complete');
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg"
+                className="w-full bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg"
               >
                 🏆 Confirm Mastery & Continue Session
               </button>
@@ -437,12 +469,14 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
               </div>
             )}
             
-            <button
-              onClick={resetQuiz}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-            >
-              🔄 Start Fresh
-            </button>
+            <div className="pt-4 border-t border-gray-200">
+              <button
+                onClick={resetQuiz}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                🔄 Start Fresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -559,6 +593,16 @@ const EnhancedQuizSection: React.FC<EnhancedQuizSectionProps> = ({ sessionData, 
 
   // 🎓 STAGE 1: INITIAL ATTEMPT - Check if all questions answered, then move to appropriate stage
   const allQuestionsAnswered = questionResults.every(result => result !== null);
+  
+  // Get current score for UI display
+  const getCurrentScoreData = () => {
+    const currentScore = getCurrentScore();
+    return {
+      percentage: Math.round((currentScore / questions.length) * 100),
+      correct: currentScore,
+      total: questions.length
+    };
+  };
   
   if (allQuestionsAnswered && quizStage === 'initial') {
     const currentScore = getCurrentScore();
