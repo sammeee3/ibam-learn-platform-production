@@ -442,8 +442,13 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
             <EnhancedQuizSection 
               sessionData={sessionData} 
               onCompletion={(completed) => {
+                console.log('🧠 Quiz completion callback:', completed);
                 setQuizCompleted(completed);
-                // Don't call onMarkComplete here - let the button handle it to prevent double-triggers
+                // Automatically mark the practice section complete when quiz is completed
+                if (completed) {
+                  console.log('🎯 Auto-marking Memory Practice as complete');
+                  onMarkComplete('practice');
+                }
               }}
             />
             <button 
@@ -452,7 +457,8 @@ const BeautifulLookingUpSection: React.FC<BeautifulLookingUpSectionProps> = ({
                   setShowValidationPopup(true);
                   return;
                 }
-                onMarkComplete('practice');
+                // Quiz completion already handled in callback above
+                console.log('🎯 Memory Practice button clicked - already completed');
               }}
               className={`px-6 py-2 rounded font-semibold transition-all transform hover:scale-105 ${
                 quizCompleted 
