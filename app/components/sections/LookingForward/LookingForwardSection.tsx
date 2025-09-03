@@ -54,13 +54,89 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
   const completedCount = [businessCompleted, spiritualCompleted, sharingCompleted].filter(Boolean).length;
   const allThreeCompleted = completedCount === 3;
 
-  // Auto-save sharing commitment
+  // 🔧 CRITICAL FIX: Save Looking Forward progress to database whenever any part changes
+  const saveLookingForwardProgress = async () => {
+    try {
+      const userEmail = localStorage.getItem('ibam-auth-email');
+      if (!userEmail) {
+        console.log('⚠️ No user email found, skipping Looking Forward progress save');
+        return;
+      }
+
+      // Get user profile
+      const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      const profile = await response.json();
+      
+      if (!profile.id) {
+        console.log('⚠️ No user profile found, skipping Looking Forward progress save');
+        return;
+      }
+
+      // Extract module and session IDs from URL
+      const pathParts = window.location.pathname.split('/');
+      const moduleId = parseInt(pathParts[2]);
+      const sessionId = parseInt(pathParts[4]);
+
+      if (isNaN(moduleId) || isNaN(sessionId)) {
+        console.log('⚠️ Invalid module/session ID, skipping Looking Forward progress save');
+        return;
+      }
+
+      // Calculate 3-part progress
+      const lookingForwardProgress = {
+        business_actions_completed: businessCompleted,
+        spiritual_integration_completed: spiritualCompleted,
+        sharing_person_completed: sharingCompleted
+      };
+
+      console.log('💾 Saving Looking Forward progress to database:', lookingForwardProgress);
+
+      const progressResponse = await fetch('/api/progress/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profile.id,
+          moduleId,
+          sessionId,
+          section: 'lookforward',
+          sectionCompleted: {
+            lookforward: allThreeCompleted
+          },
+          subsectionProgress: {
+            lookingForward: lookingForwardProgress
+          }
+        })
+      });
+
+      if (progressResponse.ok) {
+        console.log('✅ Looking Forward progress saved successfully to database');
+      } else {
+        const errorData = await progressResponse.json();
+        console.error('❌ Failed to save Looking Forward progress:', errorData);
+      }
+    } catch (error) {
+      console.error('❌ Error saving Looking Forward progress:', error);
+    }
+  };
+
+  // Auto-save to database whenever progress changes
+  useEffect(() => {
+    if (actionsLoaded) { // Only save after actions are loaded to avoid false saves
+      const saveTimeout = setTimeout(() => {
+        saveLookingForwardProgress();
+      }, 1000); // Debounce saves by 1 second
+      
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [businessCompleted, spiritualCompleted, sharingCompleted, actionsLoaded]);
+
+  // Auto-save sharing commitment to localStorage
   useEffect(() => {
     if (sharingCommitment.trim().length > 0) {
       const saveTimeout = setTimeout(() => {
         try {
           localStorage.setItem('ibam_sharing_commitment_draft', sharingCommitment);
-          console.log('💾 Sharing commitment auto-saved');
+          console.log('💾 Sharing commitment auto-saved to localStorage');
         } catch (error) {
           console.warn('Failed to save sharing commitment:', error);
         }

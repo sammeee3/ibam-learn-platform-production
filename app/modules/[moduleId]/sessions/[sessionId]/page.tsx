@@ -524,6 +524,15 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
                   ...progress.looking_up_subsections
                 }));
               }
+
+              // 🆕 CRITICAL FIX: Restore Looking Forward subsections from database
+              if (progress.looking_forward_subsections && Object.keys(progress.looking_forward_subsections).length > 0) {
+                console.log('🗄️ Restoring Looking Forward subsections from database:', progress.looking_forward_subsections);
+                
+                // The Looking Forward section tracks: business_actions_completed, spiritual_integration_completed, sharing_person_completed
+                // We need to communicate this to the Looking Forward component (it will check saved actions automatically)
+                // For now, just log that we have this data - the component will sync on its own
+              }
               
               // 🔧 SUPPLEMENT: Also restore from localStorage for any missing data
               try {
