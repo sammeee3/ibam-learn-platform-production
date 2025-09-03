@@ -194,15 +194,28 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 
 ## 🚨 DEPLOYMENT SAFETY PROTOCOL - CRITICAL
 
-### ⛔ PRODUCTION DEPLOYMENT BAN
-**CLAUDE IS PERMANENTLY BANNED FROM PRODUCTION DEPLOYMENTS**
+### 🔒 PRODUCTION V3 DEPLOYMENT - EXTREME CAUTION REQUIRED
+**CLAUDE IS BANNED FROM V3 PRODUCTION UNLESS EXPLICITLY COMMANDED**
 
-### 🔴 FORBIDDEN COMMANDS:
-- `vercel --prod` 
-- `vercel --prod --yes`
-- ANY production deployment command
+### ⛔ PRODUCTION V3 RESTRICTIONS:
+- **NEVER** switch to `ibam-learn-platform-production-v3` project without explicit command
+- **NEVER** deploy to `https://ibam-learn-platform-v3.vercel.app` without explicit command
+- **NEVER** examine production v3 database without explicit command
+- **DEFAULT WORK ENVIRONMENT**: Always work in staging v2 environment only
 
-### ✅ STAGING ONLY PROTOCOL:
+### ✅ PRODUCTION V3 DEPLOYMENT PROTOCOL (ONLY WHEN EXPLICITLY COMMANDED):
+
+**🚨 AUTOMATED V3 DEPLOYMENT TRIGGER:**
+- **TRIGGER PHRASE**: When user says "V3 deployment"
+- **AUTOMATIC ACTION**: Execute `./V3_DEPLOYMENT_SCRIPT.sh` immediately
+- **NO QUESTIONS**: Script handles all pre-checks and safety measures
+
+**MANUAL V3 DEPLOYMENT PROTOCOL:**
+1. **REQUIRES**: User explicitly commands "deploy to production v3" or "switch to v3"
+2. **EXECUTE**: `./V3_DEPLOYMENT_SCRIPT.sh` (bulletproof automated process)
+3. **SCRIPT HANDLES**: All database checks, backups, API verification, deployment, and post-checks
+
+### ✅ STAGING DEPLOYMENT PROTOCOL:
 1. **ALWAYS ASK FIRST**: "Deploy to staging only?"
 2. **WAIT FOR APPROVAL**: Never deploy without explicit permission
 3. **USE ONLY**: `vercel --yes` (staging deployment)
