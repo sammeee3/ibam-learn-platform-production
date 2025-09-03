@@ -1020,159 +1020,52 @@ const navigateTo = (path: string) => {
     }
   };
 
-  const markLookingUpComplete = async (subsection: string) => {
+  // Looking Up subsection completion handler that uses the working markSectionComplete pattern
+  const handleLookingUpSubsectionComplete = (subsection: string) => {
     console.log(`🔄 Looking Up subsection completed: ${subsection}`);
     
-    // 🔧 CRITICAL FIX: Before updating progress, restore completion states from localStorage
-    // This ensures we have the accurate state of all subsections before calculating progress
+    // Update the lookingUpProgress state for this subsection
+    setLookingUpProgress(prev => ({
+      ...prev,
+      [subsection]: true
+    }));
+    
+    // Save subsection completion to localStorage for persistence
     const moduleNum = parseInt(moduleId);
     const sessionNum = parseInt(sessionId);
     
-    // Check localStorage for all subsection completions
-    const wealthCompleted = localStorage.getItem(`wealth_video_completed_${moduleNum}_${sessionNum}`) === 'true';
-    const peopleCompleted = localStorage.getItem(`people_video_completed_${moduleNum}_${sessionNum}`) === 'true';
-    const practiceCompleted = localStorage.getItem(`practice_quiz_completed_${moduleNum}_${sessionNum}`) === 'true' || subsection === 'practice';
-    
-    // Check reading completion (has answers = completed)
-    let readingCompleted = lookingUpProgress.reading;
-    try {
-      const readingAnswers = localStorage.getItem(`reading_answers_${moduleNum}_${sessionNum}`);
-      if (readingAnswers) {
-        const parsedAnswers = JSON.parse(readingAnswers);
-        readingCompleted = Object.keys(parsedAnswers).length > 0;
+    // Save specific subsection completion to localStorage based on subsection type
+    if (typeof window !== 'undefined') {
+      if (subsection === 'wealth') {
+        localStorage.setItem(`wealth_video_completed_${moduleNum}_${sessionNum}`, 'true');
+      } else if (subsection === 'people') {
+        localStorage.setItem(`people_video_completed_${moduleNum}_${sessionNum}`, 'true');
+      } else if (subsection === 'practice') {
+        localStorage.setItem(`practice_quiz_completed_${moduleNum}_${sessionNum}`, 'true');
       }
-    } catch (e) {
-      console.log('📖 Reading answers check failed, using current state');
+      console.log(`💾 Saved ${subsection} completion to localStorage`);
     }
     
-    // Check case study completion (has answers = completed)
-    let caseCompleted = lookingUpProgress.case;
-    try {
-      const caseAnswers = localStorage.getItem(`case_study_answers_${moduleNum}_${sessionNum}`);
-      if (caseAnswers) {
-        const parsedAnswers = JSON.parse(caseAnswers);
-        caseCompleted = Object.values(parsedAnswers).every(answer => String(answer).trim().length > 0);
-      }
-    } catch (e) {
-      console.log('📚 Case study answers check failed, using current state');
-    }
-    
-    // 🔧 CRITICAL FIX: Build accurate state from localStorage + current completion
-    const accurateLookingUpProgress = {
-      wealth: wealthCompleted,
-      people: peopleCompleted,
-      reading: readingCompleted,
-      case: caseCompleted,
-      integrate: true, // Always true (hidden)
-      coaching: true, // Always true (hidden)
-      practice: practiceCompleted
-    };
-    
-    console.log(`🔧 ACCURATE STATE RESTORATION:`, {
-      subsection,
-      accurateLookingUpProgress,
-      localStorage: {
-        wealth: wealthCompleted,
-        people: peopleCompleted,
-        reading: readingCompleted,
-        case: caseCompleted,
-        practice: practiceCompleted
-      }
-    });
-    
-    // Update progress state with accurate data
-    setLookingUpProgress(accurateLookingUpProgress);
-    
-    // Check if all VISIBLE subsections are complete (exclude hidden 'integrate' and 'coaching')
+    // Check if all visible subsections are complete after this update
+    const updatedProgress = { ...lookingUpProgress, [subsection]: true };
     const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
-    const completedCount = visibleSubsections.filter(sub => accurateLookingUpProgress[sub as keyof typeof accurateLookingUpProgress]).length;
-    const allVisibleComplete = visibleSubsections.every(sub => accurateLookingUpProgress[sub as keyof typeof accurateLookingUpProgress]);
+    const allComplete = visibleSubsections.every(sub => updatedProgress[sub as keyof typeof updatedProgress]);
     
-    console.log(`📊 Looking Up progress check:`, {
+    console.log(`📊 Looking Up completion check:`, {
       subsection,
-      completed: visibleSubsections.filter(sub => accurateLookingUpProgress[sub as keyof typeof accurateLookingUpProgress]),
-      remaining: visibleSubsections.filter(sub => !accurateLookingUpProgress[sub as keyof typeof accurateLookingUpProgress]),
-      allComplete: allVisibleComplete,
-      completedCount: `${completedCount}/${visibleSubsections.length}`
+      updatedProgress,
+      allComplete,
+      completed: visibleSubsections.filter(sub => updatedProgress[sub as keyof typeof updatedProgress]),
+      remaining: visibleSubsections.filter(sub => !updatedProgress[sub as keyof typeof updatedProgress])
     });
     
-    // Update section progress incrementally for better UX
-    const progressPercent = Math.round((completedCount / visibleSubsections.length) * 100);
-    setSectionProgress(prev => ({ ...prev, lookup: progressPercent }));
-    console.log(`📈 Looking Up section progress: ${completedCount}/${visibleSubsections.length} = ${progressPercent}%`);
-    
-    // Update session progress incrementally - each subsection adds to overall progress
-    const lookbackComplete = completedSections.lookback ? 1 : 0;
-    const lookupPartialProgress = completedCount / visibleSubsections.length; // 0 to 1
-    const lookforwardComplete = completedSections.lookforward ? 1 : 0;
-    
-    // Calculate incremental session progress (each section worth 33.33%)
-    const incrementalSessionProgress = Math.round(((lookbackComplete + lookupPartialProgress + lookforwardComplete) / 3) * 100);
-    setSessionProgressPercent(incrementalSessionProgress);
-    console.log(`📊 INCREMENTAL SESSION PROGRESS: ${lookbackComplete} + ${lookupPartialProgress.toFixed(2)} + ${lookforwardComplete} = ${incrementalSessionProgress}%`);
-    
-    // If all visible subsections are complete, mark the entire lookup section as complete
-    if (allVisibleComplete && !completedSections.lookup) {
-      console.log('🚀 All visible Looking Up subsections complete - marking section complete');
-      setCompletedSections(prev => ({ ...prev, lookup: true }));
-      
-      // Calculate final session progress with lookup section complete
-      const finalSessionProgress = Math.round(((lookbackComplete + 1 + lookforwardComplete) / 3) * 100);
-      setSessionProgressPercent(finalSessionProgress);
-      console.log(`📊 FINAL SESSION PROGRESS: ${lookbackComplete} + 1 + ${lookforwardComplete} = ${finalSessionProgress}%`);
-    }
-    
-    // Save progress to database immediately (no debouncing for reliability)
-    try {
-      const userEmail = localStorage.getItem('ibam-auth-email');
-      if (userEmail) {
-        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
-        const profile = await response.json();
-        
-        if (profile.id) {
-          console.log(`💾 Saving Looking Up progress for subsection: ${subsection}`);
-          
-          const progressResponse = await fetch('/api/progress/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: profile.id,
-              moduleId: parseInt(moduleId),
-              sessionId: parseInt(sessionId),
-              section: 'lookup',
-              sectionCompleted: {
-                lookback: completedSections.lookback,
-                lookup: allVisibleComplete, // Mark fully complete when all visible subsections done
-                lookforward: completedSections.lookforward
-              },
-              subsectionProgress: {
-                lookingUp: accurateLookingUpProgress // Send accurate subsection progress from localStorage
-              }
-            })
-          });
-          
-          if (progressResponse.ok) {
-            console.log('✅ Progress saved successfully');
-            
-            // 🔧 CRITICAL FIX: Force refresh lookingUpProgress state to reflect database changes
-            // This ensures the dashboard popup immediately shows the updated completion status
-            console.log('🔄 Refreshing lookingUpProgress state to reflect database changes');
-            setLookingUpProgress(() => {
-              const refreshedProgress = { ...accurateLookingUpProgress };
-              console.log('🔄 State refreshed - dashboard popup will now show accurate completion status:', refreshedProgress);
-              return refreshedProgress;
-            });
-            
-          } else {
-            const errorData = await progressResponse.json();
-            console.error('❌ Progress save failed:', errorData);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error saving progress:', error);
+    // If all subsections are complete, call the working markSectionComplete function
+    if (allComplete && !completedSections.lookup) {
+      console.log('🚀 All Looking Up subsections complete - calling markSectionComplete');
+      setTimeout(() => markSectionComplete('lookup'), 300); // Small delay for state updates
     }
   };
+
 
   // Loading state
   if (loading) {
@@ -1373,7 +1266,7 @@ const navigateTo = (path: string) => {
               <BeautifulLookingUpSection 
                 sessionData={sessionData}
                 pathwayMode="individual"
-                onMarkComplete={markLookingUpComplete}
+                onMarkComplete={handleLookingUpSubsectionComplete}
                 isCompleted={completedSections.lookup || false}
                 lookingUpProgress={lookingUpProgress}
               />
