@@ -67,3 +67,6 @@ sync-*.js
 AUTOMATED-*.js
 *-staging.js
 *-production.js
+
+# Archive of development scripts (contains hardcoded credentials)
+archive-dev-scripts/

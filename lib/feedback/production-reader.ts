@@ -8,8 +8,8 @@ import { createClient } from '@supabase/supabase-js'
 
 // Production database (READ-ONLY access)
 const productionSupabase = createClient(
-  'https://tutrnikhomrgcpkzszvq.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1dHJuaWtob21yZ2Nwa3pzenZxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODk4OTQxOSwiZXhwIjoyMDY0NTY1NDE5fQ.HyWce8LXA-UeErpKVsQ7NxInOCTs9rYQw59hNjnNEj0'
+  process.env.NEXT_PUBLIC_PRODUCTION_SUPABASE_URL || 'https://tutrnikhomrgcpkzszvq.supabase.co',
+  process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY || ''
 )
 
 // Staging database (for task creation)
