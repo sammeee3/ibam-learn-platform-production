@@ -15,7 +15,12 @@ export default function SuperAdminDashboard() {
     trialUsers: 0
   })
   const [recentActivity, setRecentActivity] = useState<any[]>([])
-  const [securityStatus, setSecurityStatus] = useState({
+  const [securityStatus, setSecurityStatus] = useState<{
+    riskLevel: string;
+    alerts: any[];
+    lastScan: string | null;
+    monitoring: boolean;
+  }>({
     riskLevel: 'UNKNOWN',
     alerts: [],
     lastScan: null,
