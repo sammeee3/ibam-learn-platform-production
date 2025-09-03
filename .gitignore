@@ -70,3 +70,13 @@ AUTOMATED-*.js
 
 # Archive of development scripts (contains hardcoded credentials)
 archive-dev-scripts/
+
+# 🚨 CRITICAL SECURITY: Files with exposed secrets (GitGuardian detected)
+*.backup*
+*backup*
+test-db.*
+*ROLLBACK*
+GET-SERVICE-ROLE-KEY*
+*service-role*
+*.backup-*
+.next/
