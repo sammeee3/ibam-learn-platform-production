@@ -12,11 +12,23 @@ export default function SuperAdminDashboard() {
     trialUsers: 0
   })
   const [recentActivity, setRecentActivity] = useState<any[]>([])
+  const [securityStatus, setSecurityStatus] = useState({
+    riskLevel: 'UNKNOWN',
+    alerts: [],
+    lastScan: null,
+    monitoring: false
+  })
   const router = useRouter()
 
   useEffect(() => {
-    // Fetch basic stats
+    // Fetch basic stats and security status
     fetchDashboardStats()
+    fetchSecurityStatus()
+    
+    // Set up security monitoring refresh (every 5 minutes)
+    const securityInterval = setInterval(fetchSecurityStatus, 5 * 60 * 1000)
+    
+    return () => clearInterval(securityInterval)
   }, [])
 
   const fetchDashboardStats = async () => {
@@ -29,6 +41,35 @@ export default function SuperAdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+    }
+  }
+
+  const fetchSecurityStatus = async () => {
+    try {
+      const response = await fetch('/api/security/dashboard')
+      if (response.ok) {
+        const data = await response.json()
+        setSecurityStatus({
+          riskLevel: data.alerts.length > 0 ? 'HIGH' : 'LOW',
+          alerts: data.alerts || [],
+          lastScan: data.timestamp,
+          monitoring: true
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching security status:', error)
+      setSecurityStatus(prev => ({ ...prev, monitoring: false }))
+    }
+  }
+
+  const runSecurityScan = async () => {
+    try {
+      const response = await fetch('/api/security/scan-repository')
+      if (response.ok) {
+        fetchSecurityStatus() // Refresh status after scan
+      }
+    } catch (error) {
+      console.error('Error running security scan:', error)
     }
   }
 
@@ -68,6 +109,15 @@ export default function SuperAdminDashboard() {
         { name: 'Membership Tiers', href: '#', icon: '🏆', color: 'bg-amber-500', active: false },
         { name: 'Webhook Monitor', href: '/admin/webhooks', icon: '🔗', color: 'bg-cyan-500', active: true },
         { name: 'Pricing Config', href: '#', icon: '💵', color: 'bg-emerald-500', active: false },
+      ]
+    },
+    {
+      title: '🛡️ Security Monitoring',
+      description: 'Real-time security alerts, scanning, and monitoring',
+      items: [
+        { name: 'Security Dashboard', href: '/admin/security', icon: '🚨', color: securityStatus.riskLevel === 'HIGH' ? 'bg-red-500 animate-pulse' : 'bg-green-500', active: true },
+        { name: 'Repository Scan', href: '#', icon: '🔍', color: 'bg-orange-500', active: true, onClick: runSecurityScan },
+        { name: 'Threat Detection', href: '#', icon: '⚠️', color: 'bg-amber-500', active: false },
       ]
     },
     {
@@ -172,6 +222,30 @@ export default function SuperAdminDashboard() {
                 <p className="text-3xl font-bold text-gray-900 mt-1">{stats.trialUsers}</p>
               </div>
               <span className="text-2xl">⏰</span>
+            </div>
+          </div>
+
+          {/* Security Status Card */}
+          <div className={`bg-white rounded-xl shadow-md p-6 border-l-4 ${
+            securityStatus.riskLevel === 'HIGH' ? 'border-red-500' : 
+            securityStatus.riskLevel === 'LOW' ? 'border-green-500' : 'border-gray-500'
+          }`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-gray-600 text-sm">Security Status</p>
+                <p className={`text-2xl font-bold mt-1 ${
+                  securityStatus.riskLevel === 'HIGH' ? 'text-red-600' : 
+                  securityStatus.riskLevel === 'LOW' ? 'text-green-600' : 'text-gray-600'
+                }`}>
+                  {securityStatus.riskLevel}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {securityStatus.alerts.length} alerts
+                </p>
+              </div>
+              <span className={`text-2xl ${securityStatus.riskLevel === 'HIGH' ? 'animate-pulse' : ''}`}>
+                {securityStatus.riskLevel === 'HIGH' ? '🚨' : '🛡️'}
+              </span>
             </div>
           </div>
         </div>

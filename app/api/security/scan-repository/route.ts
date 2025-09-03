@@ -6,15 +6,18 @@ import path from 'path';
 
 const execAsync = promisify(exec);
 
-// Patterns that indicate exposed secrets
+// Patterns that indicate exposed secrets - ENHANCED
 const SECRET_PATTERNS = [
-  { pattern: /eyJ[A-Za-z0-9+/=]{50,}/g, type: 'JWT/Supabase Key' },
-  { pattern: /sk_live_[A-Za-z0-9]{24,}/g, type: 'Stripe Live Key' },
-  { pattern: /sk_test_[A-Za-z0-9]{24,}/g, type: 'Stripe Test Key' },
-  { pattern: /service_role.*['"]\s*[:=]\s*['"][^'"]{20,}/gi, type: 'Service Role Key' },
-  { pattern: /SUPABASE_.*KEY.*['"]\s*[:=]\s*['"][^'"]{20,}/gi, type: 'Supabase Key' },
-  { pattern: /postgresql:\/\/[^@]+@[^/]+/g, type: 'Database URL' },
-  { pattern: /Bearer\s+[A-Za-z0-9+/=]{20,}/g, type: 'Bearer Token' }
+  { pattern: /eyJ[A-Za-z0-9+/=]{50,}/g, type: 'JWT/Supabase Key', severity: 'CRITICAL' },
+  { pattern: /sb_secret_[A-Za-z0-9_]{20,}/g, type: 'Supabase Service Role Key', severity: 'CRITICAL' },
+  { pattern: /sk_live_[A-Za-z0-9]{24,}/g, type: 'Stripe Live Key', severity: 'CRITICAL' },
+  { pattern: /sk_test_[A-Za-z0-9]{24,}/g, type: 'Stripe Test Key', severity: 'HIGH' },
+  { pattern: /service_role.*['"]\s*[:=]\s*['"][^'"]{20,}/gi, type: 'Service Role Key', severity: 'CRITICAL' },
+  { pattern: /SUPABASE_.*KEY.*['"]\s*[:=]\s*['"][^'"]{20,}/gi, type: 'Supabase Key', severity: 'CRITICAL' },
+  { pattern: /postgresql:\/\/[^@]+@[^/]+/g, type: 'Database URL', severity: 'CRITICAL' },
+  { pattern: /Bearer\s+[A-Za-z0-9+/=]{20,}/g, type: 'Bearer Token', severity: 'HIGH' },
+  { pattern: /IBAM_SYSTEME_SECRET.*['"]\s*[:=]\s*['"][^'"]{10,}/gi, type: 'Webhook Secret', severity: 'HIGH' },
+  { pattern: /RESEND_API_KEY.*['"]\s*[:=]\s*['"][^'"]{10,}/gi, type: 'Email API Key', severity: 'MEDIUM' }
 ];
 
 // Files to exclude from scanning
@@ -35,10 +38,10 @@ export async function GET() {
   let totalExposures = 0;
 
   try {
-    // Get list of all JavaScript and TypeScript files
+    // Get list of all JavaScript, TypeScript, and environment files
     const { stdout: fileList } = await execAsync(
-      `find . -type f \\( -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.jsx" \\) \
-       -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./.git/*"`
+      `find . -type f \\( -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.jsx" -o -name ".env*" \\) \
+       -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./.git/*" -not -name ".env.example"`
     );
     
     const files = fileList.split('\n').filter(f => f.length > 0);
@@ -49,7 +52,7 @@ export async function GET() {
         const content = await fs.readFile(file, 'utf-8');
         scannedFiles.push(file);
         
-        for (const { pattern, type } of SECRET_PATTERNS) {
+        for (const { pattern, type, severity } of SECRET_PATTERNS) {
           const matches = content.match(pattern);
           if (matches) {
             totalExposures += matches.length;
@@ -60,12 +63,14 @@ export async function GET() {
             );
             
             threats.push({
-              severity: 'CRITICAL',
+              severity: severity,
               type: `Exposed ${type}`,
               file: file,
               count: matches.length,
               preview: sanitized[0], // Show first match only
-              action: 'Remove hardcoded secret and use environment variables'
+              action: file.includes('.env') 
+                ? 'URGENT: Remove .env file from repository and regenerate all keys'
+                : 'Remove hardcoded secret and use environment variables'
             });
           }
         }

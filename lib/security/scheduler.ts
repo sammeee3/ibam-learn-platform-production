@@ -27,8 +27,8 @@ export class SecurityScheduler {
   constructor(config: MonitoringConfig = {
     enabled: true,
     intervals: {
-      critical: 15,    // Check every 15 minutes for critical issues
-      standard: 60,    // Full scan every hour
+      critical: 5,     // Check every 5 minutes for critical issues (faster detection)
+      standard: 30,    // Full scan every 30 minutes (more frequent)
       metrics: 5       // Collect metrics every 5 minutes
     },
     notifications: {}
@@ -63,10 +63,10 @@ export class SecurityScheduler {
       await this.collectMetrics()
     }, this.config.intervals.metrics * 60 * 1000)
 
-    // NEW: Repository security scan (every 30 minutes)
+    // NEW: Repository security scan (every 10 minutes for immediate detection)
     this.intervals.repository = setInterval(async () => {
       await this.scanRepositoryForSecrets()
-    }, 30 * 60 * 1000)
+    }, 10 * 60 * 1000)
 
     // Run initial scans
     this.runCriticalCheck()
@@ -77,7 +77,7 @@ export class SecurityScheduler {
     console.log(`   - Critical checks: every ${this.config.intervals.critical} minutes`)
     console.log(`   - Full scans: every ${this.config.intervals.standard} minutes`)
     console.log(`   - Metrics: every ${this.config.intervals.metrics} minutes`)
-    console.log(`   - Repository scans: every 30 minutes`) // NEW
+    console.log(`   - Repository scans: every 10 minutes`) // NEW
   }
 
   /**
@@ -308,8 +308,9 @@ export class SecurityScheduler {
 // Export singleton instance
 export const securityScheduler = new SecurityScheduler()
 
-// Auto-start in production environments
-if (process.env.NODE_ENV === 'production') {
-  console.log('🛡️ Production environment detected - starting security monitoring')
+// Auto-start security monitoring in all environments (unless explicitly disabled)
+if (process.env.SECURITY_MONITORING !== 'disabled') {
+  const env = process.env.NODE_ENV || 'development'
+  console.log(`🛡️ ${env} environment detected - starting security monitoring`)
   securityScheduler.start()
 }
