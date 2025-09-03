@@ -71,6 +71,15 @@ export default function SuperAdminDashboard() {
       ]
     },
     {
+      title: '📋 Deployment & Versioning',
+      description: 'Track deployments, version history, and change logs',
+      items: [
+        { name: 'Deployment History', href: '/admin/deployment-history', icon: '📋', color: 'bg-gradient-to-r from-indigo-600 to-purple-600', active: true },
+        { name: 'Version Comparison', href: '#', icon: '🔄', color: 'bg-blue-600', active: false },
+        { name: 'Rollback Tools', href: '#', icon: '⏮️', color: 'bg-orange-600', active: false },
+      ]
+    },
+    {
       title: '⚙️ System & Security',
       description: 'System health, security logs, configurations',
       items: [
