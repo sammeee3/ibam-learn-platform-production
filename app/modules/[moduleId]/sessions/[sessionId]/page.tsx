@@ -1021,14 +1021,14 @@ const navigateTo = (path: string) => {
   };
 
   // Looking Up subsection completion handler that uses the working markSectionComplete pattern
-  const handleLookingUpSubsectionComplete = (subsection: string) => {
+  const handleLookingUpSubsectionComplete = async (subsection: string) => {
     console.log(`🔄 Looking Up subsection completed: ${subsection}`);
     
+    // Calculate the updated progress immediately
+    const updatedProgress = { ...lookingUpProgress, [subsection]: true };
+    
     // Update the lookingUpProgress state for this subsection
-    setLookingUpProgress(prev => ({
-      ...prev,
-      [subsection]: true
-    }));
+    setLookingUpProgress(updatedProgress);
     
     // Save subsection completion to localStorage for persistence
     const moduleNum = parseInt(moduleId);
@@ -1047,7 +1047,6 @@ const navigateTo = (path: string) => {
     }
     
     // Check if all visible subsections are complete after this update
-    const updatedProgress = { ...lookingUpProgress, [subsection]: true };
     const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
     const allComplete = visibleSubsections.every(sub => updatedProgress[sub as keyof typeof updatedProgress]);
     
@@ -1059,10 +1058,67 @@ const navigateTo = (path: string) => {
       remaining: visibleSubsections.filter(sub => !updatedProgress[sub as keyof typeof updatedProgress])
     });
     
-    // If all subsections are complete, call the working markSectionComplete function
+    // If all subsections are complete, save to database immediately with correct progress
     if (allComplete && !completedSections.lookup) {
-      console.log('🚀 All Looking Up subsections complete - calling markSectionComplete');
-      setTimeout(() => markSectionComplete('lookup'), 300); // Small delay for state updates
+      console.log('🚀 All Looking Up subsections complete - saving to database directly');
+      
+      // Update completed sections state
+      setCompletedSections(prev => ({ ...prev, lookup: true }));
+      
+      // Calculate session progress
+      const lookbackComplete = completedSections.lookback ? 1 : 0;
+      const lookforwardComplete = completedSections.lookforward ? 1 : 0;
+      const newProgress = Math.round(((lookbackComplete + 1 + lookforwardComplete) / 3) * 100);
+      setSessionProgressPercent(newProgress);
+      
+      // Save to database with CORRECT updated progress
+      try {
+        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+        if (userEmail) {
+          const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+          const profile = await response.json();
+          const authUserId = profile.id;
+          
+          if (authUserId) {
+            // Build complete section completion state for database
+            const currentDbSections = {
+              lookback: completedSections.lookback || false,
+              lookup: true, // NOW COMPLETE
+              lookforward: completedSections.lookforward || false,
+              assessment: false
+            };
+            
+            console.log(`💾 SAVING TO DATABASE WITH CORRECT PROGRESS:`, {
+              currentDbSections,
+              updatedLookingUpProgress: updatedProgress
+            });
+            
+            const progressResponse = await fetch('/api/progress/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: authUserId,
+                moduleId: parseInt(moduleId),
+                sessionId: parseInt(sessionId),
+                section: 'lookup',
+                sectionCompleted: currentDbSections,
+                subsectionProgress: {
+                  lookingUp: updatedProgress // Use the CORRECT updated progress, not stale state
+                }
+              })
+            });
+            
+            if (!progressResponse.ok) {
+              const errorData = await progressResponse.json();
+              console.error('❌ Progress API error:', errorData);
+            } else {
+              console.log('✅ Looking Up progress saved successfully to database');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error saving Looking Up progress:', error);
+      }
     }
   };
 
