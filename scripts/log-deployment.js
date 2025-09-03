@@ -298,7 +298,7 @@ INTEGRATION:
 
   # Or use in GitHub Actions:
   - name: Log Deployment
-    run: node scripts/log-deployment.js --env=production --version=${{ github.ref_name }}
+    run: node scripts/log-deployment.js --env=production --version=GITHUB_REF_NAME
 
 ENVIRONMENT VARIABLES:
   NODE_ENV                 Determines API base URL (production|development)
