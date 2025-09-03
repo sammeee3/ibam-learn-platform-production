@@ -499,7 +499,7 @@ class SessionRecoveryService {
     if (this.sessionState?.pendingChanges) {
       const message = 'You have unsaved changes. Are you sure you want to leave?';
       event.returnValue = message;
-      return message;
+      // Note: return statement not needed for void function
     }
   }
 

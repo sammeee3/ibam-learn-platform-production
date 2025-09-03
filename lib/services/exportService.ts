@@ -457,5 +457,10 @@ class ExportService {
 // Export singleton instance
 export const exportService = new ExportService();
 
-// Export types for use in components
-export type { UserProgress, ModuleProgress, SessionProgress, BusinessPlanData };
+// Export types for use in components (already declared above)
+export type { 
+  UserProgress as ExportUserProgress, 
+  ModuleProgress as ExportModuleProgress, 
+  SessionProgress as ExportSessionProgress, 
+  BusinessPlanData as ExportBusinessPlanData 
+};

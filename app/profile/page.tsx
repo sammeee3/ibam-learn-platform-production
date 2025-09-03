@@ -16,7 +16,7 @@ import {
   XMarkIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
-import { exportService, type UserProgress } from '@/lib/services/exportService';
+import { exportService, type ExportUserProgress } from '@/lib/services/exportService';
 
 /**
  * ENTERPRISE-GRADE USER PROFILE MANAGEMENT
@@ -318,7 +318,7 @@ export default function ProfilePage() {
         throw new Error('Failed to fetch progress data');
       }
       
-      const progressData: UserProgress = await response.json();
+      const progressData: ExportUserProgress = await response.json();
       
       // Generate comprehensive progress report
       const reportBlob = await exportService.generateProgressReport(progressData);
