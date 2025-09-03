@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAdminAuth } from '../../lib/admin-auth'
 
 export default function SuperAdminDashboard() {
+  const [isAuthorized, setIsAuthorized] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeToday: 0,
@@ -19,28 +22,73 @@ export default function SuperAdminDashboard() {
     monitoring: false
   })
   const router = useRouter()
+  const { checkAdminAuth } = useAdminAuth()
 
   useEffect(() => {
-    // Fetch basic stats and security status
-    fetchDashboardStats()
-    fetchSecurityStatus()
-    
-    // Set up security monitoring refresh (every 5 minutes)
-    const securityInterval = setInterval(fetchSecurityStatus, 5 * 60 * 1000)
-    
-    return () => clearInterval(securityInterval)
+    checkAuthorization()
   }, [])
+
+  useEffect(() => {
+    if (isAuthorized) {
+      // Fetch basic stats and security status
+      fetchDashboardStats()
+      fetchSecurityStatus()
+      
+      // Set up security monitoring refresh (every 5 minutes)
+      const securityInterval = setInterval(fetchSecurityStatus, 5 * 60 * 1000)
+      
+      return () => clearInterval(securityInterval)
+    }
+  }, [isAuthorized])
+
+  const checkAuthorization = async () => {
+    try {
+      const result = await checkAdminAuth()
+      if (result.isAuthorized) {
+        setIsAuthorized(true)
+      } else {
+        alert('⛔ Admin access only. This incident has been logged.')
+        router.push(result.redirectTo || '/dashboard')
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      router.push('/auth/login?redirect=/admin')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
 
   const fetchDashboardStats = async () => {
     try {
       const response = await fetch('/api/admin/stats')
       if (response.ok) {
         const data = await response.json()
-        setStats(data.stats || stats)
+        setStats(data.stats || {
+          totalUsers: 0,
+          activeToday: 0,
+          newThisWeek: 0,
+          trialUsers: 0
+        })
         setRecentActivity(data.recentActivity || [])
+      } else {
+        console.warn('Stats API returned error:', response.status)
+        // Set default values on API failure
+        setStats({
+          totalUsers: 0,
+          activeToday: 0,
+          newThisWeek: 0,
+          trialUsers: 0
+        })
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+      // Set default values on network error
+      setStats({
+        totalUsers: 0,
+        activeToday: 0,
+        newThisWeek: 0,
+        trialUsers: 0
+      })
     }
   }
 
@@ -50,15 +98,28 @@ export default function SuperAdminDashboard() {
       if (response.ok) {
         const data = await response.json()
         setSecurityStatus({
-          riskLevel: data.alerts.length > 0 ? 'HIGH' : 'LOW',
+          riskLevel: data.alerts && data.alerts.length > 0 ? 'HIGH' : 'LOW',
           alerts: data.alerts || [],
-          lastScan: data.timestamp,
+          lastScan: data.timestamp || data.lastScan,
+          monitoring: true
+        })
+      } else {
+        console.warn('Security API not available, using defaults')
+        setSecurityStatus({
+          riskLevel: 'LOW',
+          alerts: [],
+          lastScan: new Date().toISOString(),
           monitoring: true
         })
       }
     } catch (error) {
       console.error('Error fetching security status:', error)
-      setSecurityStatus(prev => ({ ...prev, monitoring: false }))
+      setSecurityStatus({
+        riskLevel: 'UNKNOWN',
+        alerts: [],
+        lastScan: null,
+        monitoring: false
+      })
     }
   }
 
@@ -80,8 +141,8 @@ export default function SuperAdminDashboard() {
       items: [
         { name: 'Add User', href: '/admin/add-user', icon: '➕', color: 'bg-green-500', active: true },
         { name: 'User Reports', href: '/admin/user-reports', icon: '📊', color: 'bg-indigo-600', active: true },
-        { name: 'User List', href: '#', icon: '📋', color: 'bg-blue-500', active: false },
-        { name: 'Activity Log', href: '#', icon: '📈', color: 'bg-purple-500', active: false },
+        { name: 'Quick Add', href: '/admin/quick-add', icon: '⚡', color: 'bg-blue-500', active: true },
+        { name: 'User List', href: '/admin/user-reports', icon: '📋', color: 'bg-purple-500', active: true, tooltip: 'View in User Reports' },
       ]
     },
     {
@@ -90,73 +151,61 @@ export default function SuperAdminDashboard() {
       items: [
         { name: 'Analytics Dashboard', href: '/admin/analytics', icon: '📊', color: 'bg-indigo-500', active: true },
         { name: 'Session Feedback', href: '/admin/session-feedback', icon: '⭐', color: 'bg-purple-500', active: true },
-        { name: 'Conversion Funnel', href: '#', icon: '📉', color: 'bg-pink-500', active: false },
+        { name: 'User Feedback', href: '/admin/feedback', icon: '💬', color: 'bg-pink-500', active: true },
       ]
     },
     {
-      title: '🎓 Course Management',
-      description: 'Manage modules, sessions, content',
-      items: [
-        { name: 'Module Editor', href: '#', icon: '📚', color: 'bg-red-500', active: false },
-        { name: 'Content Library', href: '#', icon: '📝', color: 'bg-orange-500', active: false },
-        { name: 'Assessment Results', href: '#', icon: '✅', color: 'bg-teal-500', active: false },
-      ]
-    },
-    {
-      title: '💳 Membership & Billing',
-      description: 'Manage subscriptions, webhooks, pricing',
-      items: [
-        { name: 'Membership Tiers', href: '#', icon: '🏆', color: 'bg-amber-500', active: false },
-        { name: 'Webhook Monitor', href: '/admin/webhooks', icon: '🔗', color: 'bg-cyan-500', active: true },
-        { name: 'Pricing Config', href: '#', icon: '💵', color: 'bg-emerald-500', active: false },
-      ]
-    },
-    {
-      title: '🛡️ Security Monitoring',
+      title: '🛡️ Security & Monitoring',
       description: 'Real-time security alerts, scanning, and monitoring',
       items: [
         { name: 'Security Dashboard', href: '/admin/security', icon: '🚨', color: securityStatus.riskLevel === 'HIGH' ? 'bg-red-500 animate-pulse' : 'bg-green-500', active: true },
+        { name: 'Webhook Monitor', href: '/admin/webhooks', icon: '🔗', color: 'bg-cyan-500', active: true },
         { name: 'Repository Scan', href: '#', icon: '🔍', color: 'bg-orange-500', active: true, onClick: runSecurityScan },
-        { name: 'Threat Detection', href: '#', icon: '⚠️', color: 'bg-amber-500', active: false },
       ]
     },
     {
-      title: '📋 Deployment & Versioning',
-      description: 'Track deployments, version history, and change logs',
+      title: '📋 Deployment & Testing',
+      description: 'Track deployments, testing tools, and QA',
       items: [
         { name: 'Deployment History', href: '/admin/deployment-history', icon: '📋', color: 'bg-gradient-to-r from-indigo-600 to-purple-600', active: true },
-        { name: 'Version Comparison', href: '#', icon: '🔄', color: 'bg-blue-600', active: false },
-        { name: 'Rollback Tools', href: '#', icon: '⏮️', color: 'bg-orange-600', active: false },
-      ]
-    },
-    {
-      title: '⚙️ System & Security',
-      description: 'System health, security logs, configurations',
-      items: [
-        { name: 'Security Monitor', href: '#', icon: '🔒', color: 'bg-gray-600', active: false },
-        { name: 'System Health', href: '#', icon: '🏥', color: 'bg-lime-500', active: false },
-        { name: 'Database Tools', href: '#', icon: '💾', color: 'bg-slate-600', active: false },
-      ]
-    },
-    {
-      title: '🧪 Testing & QA',
-      description: 'Testing tools, quick scenarios, debugging',
-      items: [
         { name: 'Testing Dashboard', href: '/admin/test-final', icon: '🧪', color: 'bg-gradient-to-r from-purple-600 to-pink-600', active: true },
-        { name: 'Quick Scenarios', href: '/admin/test-final', icon: '🚀', color: 'bg-gradient-to-r from-blue-600 to-cyan-600', active: true },
-        { name: 'Debug Console', href: '#', icon: '🐛', color: 'bg-red-600', active: false },
+        { name: 'Quick Test Scenarios', href: '/admin/test-final', icon: '🚀', color: 'bg-gradient-to-r from-blue-600 to-cyan-600', active: true },
       ]
     },
     {
-      title: '📧 Communications',
-      description: 'Email campaigns, notifications, announcements',
+      title: '🎓 Coming Soon Features',
+      description: 'Features in development - check back later',
       items: [
-        { name: 'Send Broadcast', href: '#', icon: '📢', color: 'bg-violet-500', active: false },
+        { name: 'Module Editor', href: '#', icon: '📚', color: 'bg-red-500', active: false },
+        { name: 'Content Library', href: '#', icon: '📝', color: 'bg-orange-500', active: false },
         { name: 'Email Templates', href: '#', icon: '📨', color: 'bg-fuchsia-500', active: false },
-        { name: 'Notification Center', href: '#', icon: '🔔', color: 'bg-rose-500', active: false },
       ]
     }
   ]
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <div className="text-2xl text-gray-800 mb-2">Verifying Admin Access</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⛔</div>
+          <div className="text-2xl text-gray-800 mb-2">Access Denied</div>
+          <div className="text-gray-600">Admin privileges required</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -255,17 +304,11 @@ export default function SuperAdminDashboard() {
           <h2 className="text-white text-xl font-bold mb-4">⚡ Quick Actions</h2>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/admin/quick-add"
+              href="/admin/add-user"
               className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
             >
               ➕ Add User
             </Link>
-            <button
-              disabled
-              className="bg-white/70 text-blue-400 px-6 py-3 rounded-lg font-semibold cursor-not-allowed shadow-md opacity-75"
-            >
-              📢 Send Broadcast (Soon)
-            </button>
             <Link
               href="/admin/user-reports"
               className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
@@ -282,14 +325,20 @@ export default function SuperAdminDashboard() {
               href="/admin/webhooks"
               className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
             >
-              🔗 Check Webhooks
+              🔗 Webhooks
             </Link>
-            <button
-              disabled
-              className="bg-white/70 text-blue-400 px-6 py-3 rounded-lg font-semibold cursor-not-allowed shadow-md opacity-75"
+            <Link
+              href="/admin/security"
+              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
             >
-              🔒 Security Status (Soon)
-            </button>
+              🛡️ Security
+            </Link>
+            <Link
+              href="/admin/test-final"
+              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-md"
+            >
+              🧪 Testing
+            </Link>
           </div>
         </div>
 

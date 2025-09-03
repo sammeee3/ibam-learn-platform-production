@@ -6,10 +6,11 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Production database (READ-ONLY access)
+// Production database (READ-ONLY access)  
+// Note: This requires PRODUCTION_SUPABASE_SERVICE_ROLE_KEY environment variable
 const productionSupabase = createClient(
   process.env.NEXT_PUBLIC_PRODUCTION_SUPABASE_URL || 'https://tutrnikhomrgcpkzszvq.supabase.co',
-  process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY || ''
+  process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY || 'missing-production-key'
 )
 
 // Staging database (for task creation)
