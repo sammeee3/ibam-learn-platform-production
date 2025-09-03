@@ -35,13 +35,18 @@ export default function AdminAddUser() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage({ type: 'success', text: `User created successfully! Magic link: ${data.magicLink}` })
+        setMessage({ type: 'success', text: `User created successfully! Welcome email sent to ${email}. Magic link: ${data.magicLink}` })
         // Reset form
         setEmail('')
         setFirstName('')
         setLastName('')
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to create user' })
+        // Handle specific error cases
+        let errorMessage = data.error || 'Failed to create user'
+        if (response.status === 409) {
+          errorMessage = `A user with email "${email}" already exists. Try a different email address.`
+        }
+        setMessage({ type: 'error', text: errorMessage })
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'An error occurred' })

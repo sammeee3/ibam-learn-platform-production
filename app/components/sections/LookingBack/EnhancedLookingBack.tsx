@@ -42,14 +42,6 @@ const EnhancedLookingBack: React.FC<EnhancedLookingBackProps> = ({
   const prayerKey = `${sessionData.module_id}_${sessionData.session_number}`;
   const currentPrayer = sessionPrayers[prayerKey]?.[pathwayMode] || sessionPrayers["1_1"][pathwayMode];
   
-  // DEBUG: Log prayer details
-  console.log('🙏 PRAYER DEBUG:', {
-    prayerKey,
-    pathwayMode,
-    currentPrayer: currentPrayer?.substring(0, 50) + '...',
-    sessionPrayersKeys: Object.keys(sessionPrayers),
-    session_1_2: sessionPrayers["1_2"]
-  });
 
   // Load prayer status - PRIORITIZE DATABASE STATE over sessionStorage  
   useEffect(() => {

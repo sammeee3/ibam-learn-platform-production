@@ -1,40 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
 import { MEMBERSHIP_CONFIG, MembershipUtils } from '@/lib/membership-config'
+import { sendWelcomeEmail } from '@/lib/email-service'
 import crypto from 'crypto'
 
 function generateMagicToken(): string {
   return crypto.randomBytes(32).toString('hex')
 }
 
-// Simple email sending function (you can replace with your email service)
-async function sendWelcomeEmail(email: string, name: string, magicLink: string) {
-  // TODO: Replace with actual email service (SendGrid, Resend, etc.)
-  console.log(`
-    📧 WELCOME EMAIL WOULD BE SENT:
-    To: ${email}
-    Subject: Welcome to IBAM - Your Access is Ready!
-    
-    Hi ${name},
-    
-    You've been granted access to the IBAM learning platform!
-    
-    Click here to get started: ${magicLink}
-    
-    This link will:
-    1. Log you in automatically
-    2. Let you set your password
-    3. Give you full access to your membership
-    
-    The link expires in 7 days.
-    
-    Welcome aboard!
-    The IBAM Team
-  `)
-  
-  // For now, return success
-  return true
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -115,7 +88,9 @@ export async function POST(request: NextRequest) {
     const magicLink = `${baseUrl}/api/auth/magic-token?token=${magicToken}&email=${encodeURIComponent(email)}&setup=true`
     
     // Send welcome email
-    await sendWelcomeEmail(email, firstName, magicLink)
+    console.log('📧 QUICK ADD DEBUG: About to send email to:', email, 'with name:', firstName)
+    const emailResult = await sendWelcomeEmail(email, firstName, magicLink)
+    console.log('📬 QUICK ADD DEBUG: Email send result:', emailResult)
     
     return NextResponse.json({
       success: true,

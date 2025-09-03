@@ -4,8 +4,8 @@ import { Resend } from 'resend'
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 // Email configuration
-const FROM_EMAIL = process.env.EMAIL_FROM || 'IBAM Learning Platform <noreply@ibam-learn.com>'
-const REPLY_TO = process.env.EMAIL_REPLY_TO || 'support@ibam-learn.com'
+const FROM_EMAIL = (process.env.EMAIL_FROM || 'IBAM Learning Platform <noreply@ibam-learn.com>').trim()
+const REPLY_TO = (process.env.EMAIL_REPLY_TO || 'support@ibam-learn.com').trim()
 
 interface SendEmailOptions {
   to: string

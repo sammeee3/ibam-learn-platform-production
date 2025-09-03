@@ -57,9 +57,6 @@ const BeautifulCaseStudyComponent: React.FC<BeautifulCaseStudyProps> = ({
     [storageKey]
   );
 
-  // Add this line for debugging
-  console.log('DEBUG case_study data:', sessionData.case_study);
-  console.log('DEBUG case_study data:', sessionData.content?.case_study);
 
   const caseStudyContent = sessionData.content?.case_study ? 
     `<h3>${sessionData.content.case_study.title}</h3>

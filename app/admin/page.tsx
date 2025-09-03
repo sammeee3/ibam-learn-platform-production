@@ -37,7 +37,7 @@ export default function SuperAdminDashboard() {
       title: '👥 User Management',
       description: 'Add users, manage accounts, view activity',
       items: [
-        { name: 'Quick Add User', href: '/admin/quick-add', icon: '➕', color: 'bg-green-500', active: true },
+        { name: 'Add User', href: '/admin/add-user', icon: '➕', color: 'bg-green-500', active: true },
         { name: 'User Reports', href: '/admin/user-reports', icon: '📊', color: 'bg-indigo-600', active: true },
         { name: 'User List', href: '#', icon: '📋', color: 'bg-blue-500', active: false },
         { name: 'Activity Log', href: '#', icon: '📈', color: 'bg-purple-500', active: false },

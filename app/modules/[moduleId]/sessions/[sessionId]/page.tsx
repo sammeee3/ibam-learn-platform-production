@@ -486,7 +486,6 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
                 'UI sections restored': restoredSections
               });
               setCompletedSections(restoredSections);
-              console.log('🎯 CRITICAL DEBUG: completedSections state updated to:', restoredSections);
               
               // Calculate section progress percentages
               const sectionProg = {

@@ -137,10 +137,13 @@ export async function POST(request: NextRequest) {
 
     console.log('💾 Saving progress with admin client:', updatedProgress);
 
-    // Upsert the progress record using admin client
+    // Upsert the progress record using admin client with explicit conflict resolution
     const { data, error } = await supabase
       .from('user_session_progress')
-      .upsert(updatedProgress)
+      .upsert(updatedProgress, { 
+        onConflict: 'user_id,module_id,session_id',
+        ignoreDuplicates: false 
+      })
       .select()
       .single();
 

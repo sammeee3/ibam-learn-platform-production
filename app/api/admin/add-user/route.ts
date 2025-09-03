@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-config'
 import { MEMBERSHIP_CONFIG, MembershipUtils } from '@/lib/membership-config'
+import { sendWelcomeEmail as sendWelcomeEmailService } from '@/lib/email-service'
 import crypto from 'crypto'
 
 // Generate secure magic token
@@ -17,6 +18,14 @@ export async function POST(request: NextRequest) {
     // }
     
     const { email, firstName, lastName, membershipLevel, sendWelcomeEmail } = await request.json()
+    
+    console.log('🔍 ADD USER DEBUG: Received request data:', {
+      email,
+      firstName,
+      lastName,
+      membershipLevel,
+      sendWelcomeEmail
+    })
     
     // Validate required fields
     if (!email || !firstName || !membershipLevel) {
@@ -112,8 +121,16 @@ export async function POST(request: NextRequest) {
     
     // Send welcome email if requested
     if (sendWelcomeEmail) {
-      // TODO: Implement email sending
-      console.log(`Welcome email would be sent to ${email} with magic link: ${magicLink}`)
+      try {
+        console.log('📧 ADD USER DEBUG: About to send email to:', email, 'with name:', firstName)
+        const emailResult = await sendWelcomeEmailService(email, firstName, magicLink)
+        console.log('📬 ADD USER DEBUG: Email send result:', emailResult)
+        if (!emailResult.success) {
+          console.warn('⚠️ Welcome email failed to send:', emailResult.error)
+        }
+      } catch (error) {
+        console.error('❌ Welcome email error:', error)
+      }
     }
     
     return NextResponse.json({
