@@ -212,26 +212,56 @@ async function getDetailedScanResults(): Promise<any> {
       ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
       : 'https://ibam-learn-platform-staging.vercel.app';
     
-    const response = await fetch(`${baseUrl}/api/security/scan-repository`, {
+    const scanUrl = `${baseUrl}/api/security/scan-repository`;
+    console.log('🔍 Fetching detailed scan results from:', scanUrl);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    const response = await fetch(scanUrl, {
       method: 'GET',
       headers: {
         'User-Agent': 'IBAM-Security-Dashboard/1.0'
-      }
+      },
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    console.log('🔍 Scan API response status:', response.status);
     
     if (response.ok) {
       const data = await response.json();
-      return {
+      console.log('🔍 Raw scan API response:', {
+        filesScanned: data.filesScanned,
+        totalExposures: data.totalExposures,
+        threatsLength: data.threats?.length,
+        status: data.status,
+        timestamp: data.timestamp
+      });
+      
+      const result = {
         filesScanned: data.filesScanned || 0,
         totalExposures: data.totalExposures || 0,
         threatsCount: data.threats?.length || 0,
         status: data.status || 'SECURE'
       };
+      
+      console.log('🔍 Processed scan results:', result);
+      return result;
+    } else {
+      console.error('❌ Scan API failed with status:', response.status);
+      const errorText = await response.text();
+      console.error('❌ Error response body:', errorText);
     }
   } catch (error) {
-    console.error('Error getting detailed scan results:', error);
+    if (error.name === 'AbortError') {
+      console.error('❌ Scan API request timed out after 30 seconds');
+    } else {
+      console.error('❌ Error getting detailed scan results:', error);
+    }
   }
   
+  console.log('🔍 Returning fallback scan results (0/0/0)');
   return {
     filesScanned: 0,
     totalExposures: 0,
