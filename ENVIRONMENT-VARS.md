@@ -5,16 +5,19 @@
 
 ### Staging Environment
 ```bash
+# 🔒 SECURE: All keys stored in Vercel environment variables
+# ⚠️ NEVER put real secrets in documentation files
+
 # Supabase (Staging Database)
 NEXT_PUBLIC_SUPABASE_URL="https://yhfxxouswctucxvfetcq.supabase.co"
-SUPABASE_SERVICE_ROLE_KEY="sb_secret_7qGEl5QH2rI90yV9mLwumA_XP040VQx"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_Dp09PaxcR55pPqyfqp_cPA_6d4JLbQX"
+SUPABASE_SERVICE_ROLE_KEY="[SECURE_IN_VERCEL_ENV_VARS]"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="[SECURE_IN_VERCEL_ENV_VARS]"
 
 # System.io Webhook Security
-IBAM_SYSTEME_SECRET="staging-secret-2025-secure"
+IBAM_SYSTEME_SECRET="[SECURE_IN_VERCEL_ENV_VARS]"
 
 # Resend Email Service (Added Aug 26, 2025)
-RESEND_API_KEY="re_TttZ8Gyf_3JWqBwf6BaHoSzPYVTKirH4W"
+RESEND_API_KEY="[SECURE_IN_VERCEL_ENV_VARS]"
 EMAIL_FROM="IBAM Learning Platform <onboarding@resend.dev>"
 EMAIL_REPLY_TO="sammeee@yahoo.com"
 ```
