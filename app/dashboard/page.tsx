@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight, Star } from 'lucide-react';
+import { User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight, Star, Target } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import LearningPathOnboarding from '../components/common/LearningPathOnboarding';
 import SafeFeedbackWidget from '../components/feedback/SafeFeedbackWidget';
@@ -982,35 +982,60 @@ const handleLogout = async () => {
        )}
 
 
-       {/* Course Information with integrated Meet Your Trainers - Moved above modules */}
+       {/* Persistent Course Information Section - Always Available */}
        <div className="mb-8">
-         <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-teal-50 rounded-xl p-6 border border-blue-200 shadow-lg">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {/* Course Information Side */}
-             <div className="space-y-4">
-               <h3 className="text-2xl font-bold text-gray-900 mb-2">Want to Learn More?</h3>
-               <p className="text-gray-700 text-lg leading-relaxed">Explore our complete course curriculum, meet all trainers, and see success stories.</p>
-               <button
-                 onClick={() => router.push('/course-info')}
-                 className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
-               >
-                 Course Information
-               </button>
+         <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+           <div className="flex items-center justify-between mb-6">
+             <h3 className="text-xl font-semibold text-slate-800">Course Resources</h3>
+             <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">Always Available</span>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             {/* Welcome Video Card */}
+             <div 
+               onClick={() => router.push('/getting-started')}
+               className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md group"
+             >
+               <div className="flex items-start space-x-3">
+                 <div className="bg-blue-100 rounded-full p-2 flex-shrink-0 group-hover:bg-blue-200 transition-colors">
+                   <Play className="w-4 h-4 text-blue-600" />
+                 </div>
+                 <div className="min-w-0 flex-1">
+                   <h4 className="font-medium text-slate-800 mb-1">Welcome Video</h4>
+                   <p className="text-sm text-slate-600 leading-relaxed">Course overview, expectations & learning path</p>
+                 </div>
+               </div>
              </div>
              
-             {/* Meet Your Trainers Side */}
-             <div className="space-y-4">
-               <div className="flex items-center space-x-3">
-                 <Users className="w-8 h-8 text-purple-600" />
-                 <h3 className="text-2xl font-bold text-gray-900">Meet Your Trainers</h3>
+             {/* Meet Trainers Card */}
+             <div 
+               onClick={() => setShowTrainersModal(true)}
+               className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md group"
+             >
+               <div className="flex items-start space-x-3">
+                 <div className="bg-purple-100 rounded-full p-2 flex-shrink-0 group-hover:bg-purple-200 transition-colors">
+                   <Users className="w-4 h-4 text-purple-600" />
+                 </div>
+                 <div className="min-w-0 flex-1">
+                   <h4 className="font-medium text-slate-800 mb-1">Meet Trainers</h4>
+                   <p className="text-sm text-slate-600 leading-relaxed">180+ years combined ministry experience</p>
+                 </div>
                </div>
-               <p className="text-gray-700 text-lg leading-relaxed">180+ years combined experience guiding entrepreneurs</p>
-               <button
-                 onClick={() => setShowTrainersModal(true)}
-                 className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
-               >
-                 View Trainer Profiles
-               </button>
+             </div>
+             
+             {/* Course Guide Card */}
+             <div 
+               onClick={() => router.push('/course-info')}
+               className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md group"
+             >
+               <div className="flex items-start space-x-3">
+                 <div className="bg-teal-100 rounded-full p-2 flex-shrink-0 group-hover:bg-teal-200 transition-colors">
+                   <Target className="w-4 h-4 text-teal-600" />
+                 </div>
+                 <div className="min-w-0 flex-1">
+                   <h4 className="font-medium text-slate-800 mb-1">Course Guide</h4>
+                   <p className="text-sm text-slate-600 leading-relaxed">Curriculum, structure & success stories</p>
+                 </div>
+               </div>
              </div>
            </div>
          </div>
