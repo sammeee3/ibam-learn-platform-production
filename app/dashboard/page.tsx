@@ -686,6 +686,19 @@ const handleLogout = async () => {
     return null; // Session complete
   };
 
+  // Calculate true overall progress across all 22 sessions
+  const calculateOverallProgress = (progressData: any[]) => {
+    if (!progressData || progressData.length === 0) return 0;
+    
+    // Count sessions with 100% completion across all modules
+    const completedSessions = progressData.filter(p => p.completion_percentage === 100).length;
+    
+    // Total sessions: Module 1=4, Module 2=4, Module 3=5, Module 4=4, Module 5=5 = 22 total
+    const totalSessions = 22;
+    
+    return Math.round((completedSessions / totalSessions) * 100);
+  };
+
   // Get overall next action for primary navigation
   const getOverallNextAction = (progressData: any[]) => {
     if (!progressData.length) return { moduleId: 1, sessionId: 1 };
@@ -705,7 +718,7 @@ const handleLogout = async () => {
     
     // All complete - find the furthest progress
     const latest = progressData
-      .sort((a, b) => b.module_id - a.module_id || b.session_id - a.session_id)[0];
+      .sort((a, b) => b.module_id - a.module_id || b.session_id - b.session_id)[0];
     
     return { 
       moduleId: latest.module_id, 
@@ -931,11 +944,11 @@ const handleLogout = async () => {
                      <div className="w-40 bg-blue-800 rounded-full h-2">
                        <div 
                          className="bg-white h-2 rounded-full transition-all duration-300 shadow-sm"
-                         style={{ width: `${continueSession.completion_percentage}%` }}
+                         style={{ width: `${calculateOverallProgress(dashboardData.progress)}%` }}
                        />
                      </div>
                      <span className="text-white font-bold text-sm">
-                       {continueSession.completion_percentage}%
+                       {calculateOverallProgress(dashboardData.progress)}%
                      </span>
                    </div>
                  </div>
@@ -967,12 +980,12 @@ const handleLogout = async () => {
               <div className="lg:hidden mt-4 bg-white/10 rounded-full p-1">
                 <div className="flex items-center justify-between text-white text-sm font-medium mb-2">
                   <span>Overall Progress</span>
-                  <span>{continueSession.completion_percentage}%</span>
+                  <span>{calculateOverallProgress(dashboardData.progress)}%</span>
                 </div>
                 <div className="w-full bg-blue-800 rounded-full h-2">
                   <div 
                     className="bg-white h-2 rounded-full transition-all duration-300 shadow-sm"
-                    style={{ width: `${continueSession.completion_percentage}%` }}
+                    style={{ width: `${calculateOverallProgress(dashboardData.progress)}%` }}
                   />
                 </div>
               </div>
