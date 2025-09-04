@@ -80,6 +80,49 @@ async function getFilesToScan(): Promise<string[]> {
   console.log(`🔍 Scan complete: Found ${files.length} files to scan`);
   console.log(`🔍 First few files:`, files.slice(0, 5));
   
+  // FALLBACK: If no files found via filesystem scanning, use known critical paths
+  if (files.length === 0) {
+    console.log('🔍 Filesystem scan found no files, using fallback critical paths');
+    const criticalPaths = [
+      './app/api/security/dashboard/route.ts',
+      './app/api/security/scan-repository/route.ts', 
+      './app/admin/security/page.tsx',
+      './lib/supabase.ts',
+      './middleware.ts',
+      './app/layout.tsx',
+      './ENVIRONMENT-VARS.md',
+      './.env.local'
+    ];
+    
+    for (const criticalPath of criticalPaths) {
+      try {
+        await fs.access(criticalPath);
+        files.push(criticalPath);
+        console.log(`🔍 Found critical file: ${criticalPath}`);
+      } catch (error) {
+        console.log(`🔍 Critical file not accessible: ${criticalPath}`);
+      }
+    }
+    
+    // Add archive files if they exist
+    const archivePaths = [
+      './archive-dev-scripts',
+      './components', 
+      './hooks',
+      './lib'
+    ];
+    
+    for (const archivePath of archivePaths) {
+      try {
+        const archiveFiles = await fs.readdir(archivePath);
+        console.log(`🔍 Found archive directory: ${archivePath} with ${archiveFiles.length} items`);
+        files.push(archivePath);
+      } catch (error) {
+        console.log(`🔍 Archive directory not accessible: ${archivePath}`);
+      }
+    }
+  }
+  
   return files;
 }
 
