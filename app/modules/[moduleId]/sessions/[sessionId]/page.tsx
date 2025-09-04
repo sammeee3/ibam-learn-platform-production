@@ -15,7 +15,9 @@ import {
   Clock,
   User,
   Loader2,
-  Briefcase
+  Briefcase,
+  Download,
+  LogOut
 } from 'lucide-react';
 
 // Add these lines here:
@@ -168,6 +170,7 @@ export default function SessionPage({ params }: SessionPageProps) {
   
   // Enhanced state management
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [completedSections, setCompletedSections] = useState({
     lookback: false,
     lookup: false,
@@ -1182,9 +1185,46 @@ const navigateTo = (path: string) => {
               <button className="text-gray-500 hover:text-gray-700">
                 <BookOpen className="w-5 h-5" />
               </button>
-              <button className="text-gray-500 hover:text-gray-700">
-                <User className="w-5 h-5" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border py-2 z-50">
+                    <button 
+                      onClick={() => navigateTo('/profile')}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      View Profile
+                    </button>
+                    <button 
+                      onClick={() => {/* TODO: Download progress */}}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Progress
+                    </button>
+                    <hr className="my-1" />
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem('ibam-auth-email');
+                        document.cookie = 'ibam_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                        document.cookie = 'ibam_auth_server=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                        navigateTo('/auth/login');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1206,14 +1246,6 @@ const navigateTo = (path: string) => {
             </button>
             
             <div className="flex items-center space-x-1">
-              <button 
-                onClick={() => navigateTo(`/modules/${moduleId}`)}
-                className="px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-all flex items-center"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                <span className="hidden md:inline">Modules</span>
-              </button>
-              
               <button 
                 onClick={() => navigateTo('/business-planner')}
                 className="px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-full transition-all flex items-center"
@@ -1273,7 +1305,7 @@ const navigateTo = (path: string) => {
                   <Target className="w-8 h-8 mr-3" />
                   <div>
                     <h3 className="text-2xl font-bold">👀 LOOKING BACK</h3>
-                    <p className="text-blue-100">Accountability & Previous Commitments</p>
+                    <p className="text-blue-100">Previous Commitments</p>
                   </div>
                 </div>
                 {expandedSection === 'lookback' ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
@@ -1310,7 +1342,7 @@ const navigateTo = (path: string) => {
                   <Book className="w-8 h-8 mr-3" />
                   <div>
                     <h3 className="text-2xl font-bold">📖 LOOKING UP</h3>
-                    <p className="text-green-100">Scripture + Business Learning + Integration</p>
+                    <p className="text-green-100">Spiritual + Business Learning + Integration</p>
                   </div>
                 </div>
                 {expandedSection === 'lookup' ? <ChevronDown className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}

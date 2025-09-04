@@ -266,7 +266,7 @@ const LookingForwardSection: React.FC<LookingForwardSectionProps> = ({
             <div>
               <h3 className="text-2xl font-bold">🎯 LOOKING FORWARD</h3>
               <p className="text-orange-100">
-                {completedCount}/3 Complete: Plan your next steps
+                Taking specific action
               </p>
             </div>
           </div>
