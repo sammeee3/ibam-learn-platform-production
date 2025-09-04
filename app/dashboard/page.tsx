@@ -270,8 +270,11 @@ const getCurrentUserId = async (): Promise<string | null> => {
       return null;
     }
     
-    console.log('🔍 Using profile.id for dashboard:', profile.id);
-    return profile.id; // Returns the profile ID (integer) used by session system
+    console.log('🔍 Profile.id (integer):', profile.id);
+    console.log('🔍 Profile.auth_user_id (UUID):', profile.auth_user_id);
+    
+    // Convert profile.id to string to match session system usage
+    return String(profile.id); // Returns profile ID as string to match session system
   } catch (error) {
     console.error('Error in getCurrentUserId:', error);
     return null;
@@ -328,12 +331,13 @@ const getCurrentUserId = async (): Promise<string | null> => {
     
      // Get user ID
      const currentUserId = await getCurrentUserId();
-     if (!userId) {
-      return;
-}
-     if (currentUserId) {
-  setUserId(currentUserId);
-}
+     if (!currentUserId) {
+       console.log('❌ No current user ID found');
+       return;
+     }
+     
+     console.log('✅ Current user ID:', currentUserId);
+     setUserId(currentUserId);
     
      // Try to get sessions data
      const { data: sessions, error: sessionsError } = await supabase
@@ -428,8 +432,8 @@ const loadContinueData = async () => {
     const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
     const profile = await profileResponse.json();
     if (profile.id) {
-      console.log('🔍 Using profile.id for Continue Session:', profile.id);
-      const lastSession = await fetchLastAccessedSession(profile.id);
+      console.log('🔍 Using profile.id for Continue Session:', String(profile.id));
+      const lastSession = await fetchLastAccessedSession(String(profile.id));
       setContinueSession(lastSession);
     }
   }
