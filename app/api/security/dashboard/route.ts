@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
     // Enhanced dashboard data with repository scan integration
     const repositoryStatus = await getRepositoryStatus();
     
+    // Get detailed scan results for the frontend
+    const scanResults = await getDetailedScanResults();
+    
     // Return JSON dashboard data
     return NextResponse.json({
       timestamp: new Date().toISOString(),
@@ -60,6 +63,7 @@ export async function GET(request: NextRequest) {
       monitoring: true,
       lastScan: new Date().toISOString(),
       repositoryStatus: repositoryStatus.status || 'Clean',
+      scanResults: scanResults, // Add detailed scan data
       metrics: {
         ...metrics,
         uniqueUsers: metrics.uniqueUsers.size // Convert Set to number
@@ -169,11 +173,13 @@ async function getRepositoryStatus(): Promise<{status: string, riskLevel: string
     
     if (response.ok) {
       const data = await response.json();
-      console.log('Repository scan data:', { 
+      console.log('🔍 Repository scan data received:', { 
         status: data.status, 
         totalExposures: data.totalExposures,
         riskLevel: data.riskLevel,
-        filesScanned: data.filesScanned 
+        filesScanned: data.filesScanned,
+        threats: data.threats?.length || 0,
+        timestamp: data.timestamp
       });
       
       return {
@@ -181,9 +187,9 @@ async function getRepositoryStatus(): Promise<{status: string, riskLevel: string
         riskLevel: data.riskLevel || 'LOW'
       };
     } else {
-      console.log('Repository scan failed with status:', response.status);
+      console.log('❌ Repository scan failed with status:', response.status);
       const errorText = await response.text();
-      console.log('Error response:', errorText);
+      console.log('❌ Error response:', errorText);
     }
   } catch (error) {
     console.error('Repository scan error:', error);
@@ -192,6 +198,45 @@ async function getRepositoryStatus(): Promise<{status: string, riskLevel: string
   return {
     status: 'Scan failed',
     riskLevel: 'UNKNOWN'
+  };
+}
+
+/**
+ * Get detailed scan results for frontend display
+ */
+async function getDetailedScanResults(): Promise<any> {
+  try {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_VERCEL_URL 
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'https://ibam-learn-platform-staging.vercel.app';
+    
+    const response = await fetch(`${baseUrl}/api/security/scan-repository`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'IBAM-Security-Dashboard/1.0'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        filesScanned: data.filesScanned || 0,
+        totalExposures: data.totalExposures || 0,
+        threatsCount: data.threats?.length || 0,
+        status: data.status || 'SECURE'
+      };
+    }
+  } catch (error) {
+    console.error('Error getting detailed scan results:', error);
+  }
+  
+  return {
+    filesScanned: 0,
+    totalExposures: 0,
+    threatsCount: 0,
+    status: 'UNKNOWN'
   };
 }
 

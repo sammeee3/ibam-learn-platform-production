@@ -82,6 +82,8 @@ export default function SecurityDashboard() {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Dashboard API success:', data);
+        
+        // Update security status with dashboard data
         setSecurityStatus({
           riskLevel: data.riskLevel || 'LOW',
           alerts: data.alerts || [],
@@ -89,6 +91,21 @@ export default function SecurityDashboard() {
           monitoring: data.monitoring !== false,
           repositoryStatus: data.repositoryStatus || 'Clean'
         });
+        
+        // Update scan results if available
+        if (data.scanResults) {
+          console.log('📊 Scan results from dashboard:', data.scanResults);
+          setScanResults({
+            success: true,
+            filesScanned: data.scanResults.filesScanned,
+            totalExposures: data.scanResults.totalExposures,
+            riskLevel: data.riskLevel || 'LOW',
+            repositoryStatus: data.scanResults.status === 'VULNERABLE' ? 
+              `${data.scanResults.totalExposures} exposures found` : 'Clean',
+            lastScan: data.timestamp,
+            threats: data.scanResults.threatsCount || 0
+          });
+        }
       } else {
         console.warn('❌ Security dashboard API returned:', response.status);
         // Still try to load repository status separately
