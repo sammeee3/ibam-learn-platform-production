@@ -908,28 +908,15 @@ const handleLogout = async () => {
        )}
 
 
-       {/* Quick Actions */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-         <button
-           onClick={() => router.push('/business-planner')}
-           className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-         >
-           <div className="flex items-center space-x-4">
-             <PlaneTakeoff className="w-8 h-8" />
-             <div className="text-left">
-               <h3 className="text-xl font-bold">Business Planner</h3>
-               <p className="text-orange-100">Build your faith-driven business plan</p>
-             </div>
-           </div>
-         </button>
-
+       {/* Meet Your Trainers - Now full width */}
+       <div className="mb-8">
          <button
            onClick={() => setShowTrainersModal(true)}
-           className="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+           className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
          >
-           <div className="flex items-center space-x-4">
+           <div className="flex items-center justify-center space-x-4">
              <Users className="w-8 h-8" />
-             <div className="text-left">
+             <div className="text-center">
                <h3 className="text-xl font-bold">Meet Your Trainers</h3>
                <p className="text-purple-100">180+ years combined experience</p>
              </div>
@@ -991,6 +978,39 @@ const handleLogout = async () => {
                </div>
              );
            })}
+           
+           {/* Business Planner - Moved to position after Module 5 */}
+           <div 
+             onClick={() => router.push('/business-planner')}
+             className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+           >
+             <div className="bg-gradient-to-r from-orange-400 to-orange-600 p-4">
+               <div className="flex items-center justify-between text-white">
+                 <div className="flex items-center space-x-2">
+                   <PlaneTakeoff className="w-5 h-5" />
+                   <span className="font-semibold">Business Planner</span>
+                 </div>
+               </div>
+             </div>
+            
+             <div className="p-6">
+               <h3 className="text-lg font-semibold text-gray-900 mb-2">Build Your Business Plan</h3>
+               <p className="text-gray-600 text-sm mb-4">Create your faith-driven business plan with AI-powered guidance</p>
+              
+               <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                 <span>Interactive Tool</span>
+                 <span>Ready to Use</span>
+               </div>
+              
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                 <div className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full w-full"></div>
+               </div>
+              
+               <button className="w-full py-2 px-4 rounded-lg font-medium transition-all duration-200 bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:shadow-lg hover:scale-105">
+                 Launch Business Planner
+               </button>
+             </div>
+           </div>
          </div>
        </div>
 
