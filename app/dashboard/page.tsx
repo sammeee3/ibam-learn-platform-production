@@ -155,6 +155,11 @@ const IBAMDashboard: React.FC = () => {
   } | null>(null);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
+  const [dashboardData, setDashboardData] = useState<{
+    sessions: any[];
+    progress: any[];
+    lastSession?: any;
+  }>({ sessions: [], progress: [] });
 
   // Continue Where You Left Off State
   const [continueSession, setContinueSession] = useState<{
@@ -341,17 +346,21 @@ const getCurrentUserId = async (): Promise<string | null> => {
     
      // Get all data from server-side API (bypasses RLS issues)
      const dashboardResponse = await fetch(`/api/dashboard?userId=${currentUserId}`);
-     const dashboardData = await dashboardResponse.json();
-     const sessions = dashboardData.sessions || [];
-     const progress = dashboardData.progress || [];
+     const fetchedDashboardData = await dashboardResponse.json();
+     const sessions = fetchedDashboardData.sessions || [];
+     const progress = fetchedDashboardData.progress || [];
      
      if (!dashboardResponse.ok || !sessions || sessions.length === 0) {
        console.log('⚠️ Dashboard API failed or no sessions found, using mock data');
        setDataSource('mock');
        setModuleProgress(mockModuleProgress);
        setRecentActivity(mockRecentActivity);
+       setDashboardData({ sessions: [], progress: [] });
        return;
      }
+
+     // Store dashboard data in state for component-wide access
+     setDashboardData(fetchedDashboardData);
 
      // Calculate module progress
      const moduleData = calculateModuleProgress(sessions, progress || []);
@@ -393,6 +402,7 @@ const getCurrentUserId = async (): Promise<string | null> => {
      setDataSource('mock');
      setModuleProgress(mockModuleProgress);
      setRecentActivity(mockRecentActivity);
+     setDashboardData({ sessions: [], progress: [] });
    } finally {
      setLoading(false);
    }
@@ -414,8 +424,12 @@ const loadContinueData = async () => {
       // Use dashboard API instead of direct database query
       const dashboardResponse = await fetch(`/api/dashboard?userId=${profile.id}`);
       if (dashboardResponse.ok) {
-        const dashboardData = await dashboardResponse.json();
-        const lastSession = dashboardData.lastSession;
+        const fetchedDashboardData = await dashboardResponse.json();
+        const lastSession = fetchedDashboardData.lastSession;
+        
+        // Update dashboard data state
+        setDashboardData(fetchedDashboardData);
+        
         if (lastSession) {
           setContinueSession({
             module_id: lastSession.module_id,
@@ -912,8 +926,9 @@ const handleLogout = async () => {
                  Continue Learning
                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
                </button>
-           </div>
-         </div>
+            </div>
+          </div>
+        </div>
        )}
 
 
