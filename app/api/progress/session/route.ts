@@ -317,7 +317,7 @@ export async function GET(request: NextRequest) {
       .order('module_id');
 
     // Try to get sessions from complex table first, fall back to simple
-    let sessions = [];
+    let sessions: any[] = [];
     const { data: complexSessions } = await supabase
       .from('user_session_progress')
       .select('*')
