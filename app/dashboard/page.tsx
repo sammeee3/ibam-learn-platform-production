@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight } from 'lucide-react';
+import { User, BookOpen, Award, Play, Clock, CheckCircle, Lock, Users, PlaneTakeoff, ArrowRight, Star } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import LearningPathOnboarding from '../components/common/LearningPathOnboarding';
 import SafeFeedbackWidget from '../components/feedback/SafeFeedbackWidget';
@@ -716,8 +716,8 @@ const handleLogout = async () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-     {/* Header */}
-     <div className="bg-gradient-to-r from-teal-400 to-slate-700 text-white shadow-lg">
+     {/* Enhanced Header with High-Contrast Blue Gradient */}
+     <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
          <div className="flex items-center justify-between">
            <div className="flex items-center space-x-4">
@@ -854,78 +854,128 @@ const handleLogout = async () => {
      </div>
 
      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-       {/* Getting Started Banner for New Users */}
+       {/* Enhanced Getting Started Section for New Users */}
        {!continueSession && (
-         <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl shadow-xl p-8 mb-8 text-white">
-           <div className="flex flex-col md:flex-row items-center justify-between">
-             <div className="mb-4 md:mb-0">
-               <h2 className="text-3xl font-bold mb-2">
-                 🎯 New Here? Start Your Journey!
-               </h2>
-               <p className="text-lg text-blue-100">
-                 Learn the IBAM method and choose your learning path
-               </p>
+         <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-2xl p-8 mb-8 text-white border border-green-300 relative overflow-hidden">
+           {/* Background Pattern */}
+           <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 opacity-50"></div>
+           <div className="relative z-10">
+             <div className="flex flex-col md:flex-row items-center justify-between">
+               <div className="mb-6 md:mb-0 text-center md:text-left">
+                 <div className="flex items-center justify-center md:justify-start mb-4">
+                   <div className="bg-white/20 rounded-full p-3 mr-4">
+                     <Star className="w-8 h-8 text-yellow-300" />
+                   </div>
+                   <div>
+                     <h2 className="text-4xl font-bold mb-2">
+                       Welcome to Your Journey!
+                     </h2>
+                     <div className="flex items-center justify-center md:justify-start space-x-2">
+                       <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                       <p className="text-lg text-green-100 font-medium">
+                         Start with our welcome video and choose your path
+                       </p>
+                     </div>
+                   </div>
+                 </div>
+                 <p className="text-green-50 text-lg leading-relaxed max-w-md">
+                   Discover the IBAM methodology and select the learning approach that fits your entrepreneurial goals
+                 </p>
+               </div>
+               
+               <div className="text-center">
+                 <div className="mb-4">
+                   <div className="inline-flex items-center bg-white/10 rounded-full px-4 py-2 mb-3">
+                     <Play className="w-5 h-5 mr-2" />
+                     <span className="text-sm font-medium">Video Introduction Available</span>
+                   </div>
+                 </div>
+                 <a
+                   href="/getting-started"
+                   className="bg-white text-green-600 px-10 py-5 rounded-xl font-bold text-xl hover:bg-green-50 transition-all transform hover:scale-105 shadow-2xl flex items-center justify-center hover:shadow-green-200/50 border-2 border-white/20"
+                 >
+                   <Star className="w-6 h-6 mr-3 text-yellow-500" />
+                   Get Started Now
+                   <ArrowRight className="w-6 h-6 ml-3" />
+                 </a>
+                 <p className="text-green-100 text-sm mt-3 font-medium">No experience required • Start immediately</p>
+               </div>
              </div>
-             
-             <a
-               href="/getting-started"
-               className="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg flex items-center"
-             >
-               Getting Started Guide
-               <ArrowRight className="w-6 h-6 ml-2" />
-             </a>
            </div>
          </div>
        )}
 
-       {/* Ultra-Thin Professional Primary Navigation */}
+       {/* Enhanced High-Contrast Primary Navigation Bar */}
        {continueSession && dashboardData.progress && (
-         <div className="mb-6">
-           <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-blue-100 rounded-xl p-4 shadow-sm">
-             <div className="flex items-center justify-between">
-               <div className="flex items-center space-x-4">
-                 <div className="flex items-center space-x-3">
-                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
-                   <div>
-                     <div className="text-sm font-semibold text-slate-800">Continue Learning</div>
-                     <div className="text-xs text-slate-500">
-                       Next: Module {getOverallNextAction(dashboardData.progress).moduleId} • Session {getOverallNextAction(dashboardData.progress).sessionId}
+         <div className="mb-8">
+           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 shadow-2xl border border-blue-300 relative overflow-hidden">
+             {/* Background Pattern */}
+             <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-indigo-400/10"></div>
+             <div className="relative z-10">
+               <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
+                 <div className="flex items-center space-x-6">
+                   <div className="flex items-center space-x-4">
+                     <div className="bg-white/20 rounded-full p-3">
+                       <Play className="w-6 h-6 text-white" />
+                     </div>
+                     <div className="text-white">
+                       <div className="text-xl font-bold mb-1">Ready to Continue?</div>
+                       <div className="text-blue-100 font-medium">
+                         Next: Module {getOverallNextAction(dashboardData.progress).moduleId} • Session {getOverallNextAction(dashboardData.progress).sessionId}
+                       </div>
                      </div>
                    </div>
-                 </div>
-                 <div className="hidden md:flex items-center space-x-2">
-                   <div className="w-32 bg-slate-200 rounded-full h-1.5">
-                     <div 
-                       className="bg-blue-500 h-1.5 rounded-full transition-all"
-                       style={{ width: `${continueSession.completion_percentage}%` }}
-                     />
+                   
+                   <div className="hidden lg:flex items-center space-x-4 bg-white/10 rounded-full px-6 py-3">
+                     <div className="text-white text-sm font-medium">Overall Progress:</div>
+                     <div className="w-40 bg-blue-800 rounded-full h-2">
+                       <div 
+                         className="bg-white h-2 rounded-full transition-all duration-300 shadow-sm"
+                         style={{ width: `${continueSession.completion_percentage}%` }}
+                       />
+                     </div>
+                     <span className="text-white font-bold text-sm">
+                       {continueSession.completion_percentage}%
+                     </span>
                    </div>
-                   <span className="text-xs text-slate-500 font-medium">
-                     {continueSession.completion_percentage}%
-                   </span>
                  </div>
-               </div>
-               
-               <button
-                 onClick={async () => {
-                   try {
-                     const nextAction = getOverallNextAction(dashboardData.progress);
-                     const lastSection = getLastSectionForSession(nextAction.moduleId, nextAction.sessionId, dashboardData.progress);
-                     const resumeHash = lastSection ? `#${lastSection}` : '';
-                     const targetUrl = `/modules/${nextAction.moduleId}/sessions/${nextAction.sessionId}${resumeHash}`;
-                     
-                     console.log(`🚀 Smart primary navigation: ${targetUrl}`);
-                     router.push(targetUrl);
-                   } catch (error) {
-                     console.error('Primary navigation error:', error);
-                     router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`);
-                   }
-                 }}
-                 className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg flex items-center group"
-               >
-                 Continue Learning
-                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
-               </button>
+                 
+                 <button
+                   onClick={async () => {
+                     try {
+                       const nextAction = getOverallNextAction(dashboardData.progress);
+                       const lastSection = getLastSectionForSession(nextAction.moduleId, nextAction.sessionId, dashboardData.progress);
+                       const resumeHash = lastSection ? `#${lastSection}` : '';
+                       const targetUrl = `/modules/${nextAction.moduleId}/sessions/${nextAction.sessionId}${resumeHash}`;
+                       
+                       console.log(`🚀 Smart primary navigation: ${targetUrl}`);
+                       router.push(targetUrl);
+                     } catch (error) {
+                       console.error('Primary navigation error:', error);
+                       router.push(`/modules/${continueSession.module_id}/sessions/${continueSession.session_id}`);
+                     }
+                   }}
+                   className="bg-white text-blue-600 px-8 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 font-bold text-lg shadow-xl hover:shadow-2xl flex items-center group transform hover:scale-105 border-2 border-blue-100"
+                 >
+                   <Play className="w-5 h-5 mr-3" />
+                   Continue Learning
+                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-200" />
+                 </button>
+              </div>
+              
+              {/* Mobile Progress Bar */}
+              <div className="lg:hidden mt-4 bg-white/10 rounded-full p-1">
+                <div className="flex items-center justify-between text-white text-sm font-medium mb-2">
+                  <span>Overall Progress</span>
+                  <span>{continueSession.completion_percentage}%</span>
+                </div>
+                <div className="w-full bg-blue-800 rounded-full h-2">
+                  <div 
+                    className="bg-white h-2 rounded-full transition-all duration-300 shadow-sm"
+                    style={{ width: `${continueSession.completion_percentage}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -966,41 +1016,102 @@ const handleLogout = async () => {
          </div>
        </div>
 
-       {/* Professional Module Grid - Secondary Navigation */}
+       {/* Enhanced High-Contrast Module Grid */}
        <div className="mb-8">
-         <h2 className="text-xl font-semibold text-slate-800 mb-4">Learning Modules</h2>
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+         <div className="flex items-center justify-between mb-6">
+           <h2 className="text-2xl font-bold text-slate-800">Learning Modules</h2>
+           <div className="text-sm text-slate-500 font-medium">Choose your path forward</div>
+         </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            {MODULE_CONFIG.map((module) => {
              const status = getModuleStatus(module.id);
              const progress = getModuleProgress(module.id);
+             
+             // Enhanced status colors and borders
+             const getStatusConfig = (status: string) => {
+               switch (status) {
+                 case 'completed':
+                   return {
+                     borderColor: 'border-l-green-500',
+                     bgColor: 'bg-green-50',
+                     statusBadge: 'bg-green-100 text-green-800',
+                     statusIcon: <CheckCircle className="w-5 h-5 text-green-500" />,
+                     progressColor: 'bg-green-500'
+                   };
+                 case 'in-progress':
+                   return {
+                     borderColor: 'border-l-blue-500',
+                     bgColor: 'bg-blue-50',
+                     statusBadge: 'bg-blue-100 text-blue-800',
+                     statusIcon: <Play className="w-5 h-5 text-blue-500" />,
+                     progressColor: 'bg-blue-500'
+                   };
+                 case 'available':
+                   return {
+                     borderColor: 'border-l-indigo-500',
+                     bgColor: 'bg-white',
+                     statusBadge: 'bg-indigo-100 text-indigo-800',
+                     statusIcon: <Star className="w-5 h-5 text-indigo-500" />,
+                     progressColor: 'bg-indigo-500'
+                   };
+                 default: // locked
+                   return {
+                     borderColor: 'border-l-gray-300',
+                     bgColor: 'bg-gray-50',
+                     statusBadge: 'bg-gray-100 text-gray-600',
+                     statusIcon: <Lock className="w-5 h-5 text-gray-400" />,
+                     progressColor: 'bg-gray-400'
+                   };
+               }
+             };
+             
+             const statusConfig = getStatusConfig(status);
             
              return (
-               <div key={module.id} className="bg-white border border-slate-200 rounded-lg hover:border-blue-300 transition-all duration-200 overflow-hidden group">
-                 <div className="p-4">
-                   <div className="flex items-center justify-between mb-3">
-                     <div className="flex items-center space-x-2">
-                       <div className="text-xs text-slate-500 font-medium">Module {module.id}</div>
-                       {status === 'completed' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                       {status === 'locked' && <Lock className="w-4 h-4 text-slate-400" />}
+               <div key={module.id} className={`${statusConfig.bgColor} border-2 border-gray-200 ${statusConfig.borderColor} border-l-8 rounded-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group transform hover:scale-[1.02] ${status !== 'locked' ? 'hover:border-gray-300' : ''}`}>
+                 <div className="p-6">
+                   {/* Header with Status Badge */}
+                   <div className="flex items-center justify-between mb-4">
+                     <div className="flex items-center space-x-3">
+                       <div className="text-sm font-bold text-slate-700">Module {module.id}</div>
+                       <div className={`px-3 py-1 rounded-full text-xs font-bold ${statusConfig.statusBadge}`}>
+                         {status === 'completed' ? 'Complete' : 
+                          status === 'in-progress' ? 'Active' : 
+                          status === 'available' ? 'Ready' : 'Locked'}
+                       </div>
+                     </div>
+                     <div className="bg-white rounded-full p-2 shadow-md">
+                       {statusConfig.statusIcon}
                      </div>
                    </div>
                    
-                   <h3 className="font-semibold text-slate-800 text-sm mb-2 line-clamp-2">{module.title}</h3>
-                   <p className="text-xs text-slate-600 mb-3 line-clamp-2">{module.description}</p>
+                   <h3 className="font-bold text-slate-800 text-lg mb-3 line-clamp-2">{module.title}</h3>
+                   <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">{module.description}</p>
                   
-                   <div className="flex items-center justify-between mb-3">
-                     <div className="flex-1 bg-slate-100 rounded-full h-1.5 mr-3">
+                   {/* Enhanced Progress Bar */}
+                   <div className="mb-4">
+                     <div className="flex items-center justify-between mb-2">
+                       <span className="text-xs font-semibold text-slate-700">Progress</span>
+                       <span className="text-xs font-bold text-slate-700">{progress}%</span>
+                     </div>
+                     <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
                        <div
-                         className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                         className={`${statusConfig.progressColor} h-3 rounded-full transition-all duration-500 shadow-sm`}
                          style={{ width: `${progress}%` }}
                        ></div>
                      </div>
-                     <div className="text-xs text-slate-500 font-medium">{progress}%</div>
                    </div>
                   
-                   <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
-                     <span>{module.sessions} Sessions</span>
-                     <span>{status === 'completed' ? 'Complete' : status === 'in-progress' ? 'In Progress' : 'Not Started'}</span>
+                   <div className="flex items-center justify-between text-sm text-slate-600 mb-5">
+                     <div className="flex items-center space-x-2">
+                       <BookOpen className="w-4 h-4" />
+                       <span className="font-medium">{module.sessions} Sessions</span>
+                     </div>
+                     <span className="font-medium">
+                       {status === 'completed' ? '✅ Done' : 
+                        status === 'in-progress' ? '🔄 Learning' : 
+                        status === 'available' ? '🚀 Ready' : '🔒 Locked'}
+                     </span>
                    </div>
                   
                    <button
@@ -1016,52 +1127,88 @@ const handleLogout = async () => {
                        }
                      }}
                      disabled={status === 'locked'}
-                     className={`w-full py-2 px-3 rounded-md font-medium text-xs transition-all duration-200 ${
+                     className={`w-full py-3 px-4 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
                        status === 'locked'
-                         ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                         : 'bg-slate-800 text-white hover:bg-slate-900 group-hover:shadow-md'
+                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                         : status === 'completed'
+                         ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
+                         : status === 'in-progress'
+                         ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                         : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-xl'
                      }`}
                    >
-                     {status === 'locked' ? 'Complete Previous Module' :
-                      status === 'completed' ? 'Review Module' :
-                      status === 'in-progress' ? 'Continue Learning' : 'Start Module'}
+                     {status === 'locked' ? (
+                       <>
+                         <Lock className="w-4 h-4" />
+                         <span>Complete Previous</span>
+                       </>
+                     ) : status === 'completed' ? (
+                       <>
+                         <CheckCircle className="w-4 h-4" />
+                         <span>Review Module</span>
+                       </>
+                     ) : status === 'in-progress' ? (
+                       <>
+                         <Play className="w-4 h-4" />
+                         <span>Continue Learning</span>
+                       </>
+                     ) : (
+                       <>
+                         <Star className="w-4 h-4" />
+                         <span>Start Module</span>
+                       </>
+                     )}
                    </button>
                  </div>
                </div>
              );
            })}
            
-           {/* Professional Business Planner Card */}
+           {/* Enhanced Business Planner Card */}
            <div 
              onClick={() => router.push('/business-planner')}
-             className="bg-white border border-slate-200 rounded-lg hover:border-orange-300 transition-all duration-200 overflow-hidden group cursor-pointer"
+             className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 border-l-orange-500 border-l-8 rounded-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group cursor-pointer transform hover:scale-[1.02]"
            >
-             <div className="p-4">
-               <div className="flex items-center justify-between mb-3">
-                 <div className="flex items-center space-x-2">
-                   <div className="text-xs text-orange-600 font-medium">Business Planner</div>
-                   <PlaneTakeoff className="w-4 h-4 text-orange-500" />
+             <div className="p-6">
+               {/* Header with Status Badge */}
+               <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center space-x-3">
+                   <div className="text-sm font-bold text-orange-700">Business Planner</div>
+                   <div className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
+                     Ready
+                   </div>
+                 </div>
+                 <div className="bg-white rounded-full p-2 shadow-md">
+                   <PlaneTakeoff className="w-5 h-5 text-orange-500" />
                  </div>
                </div>
                
-               <h3 className="font-semibold text-slate-800 text-sm mb-2">Build Your Business Plan</h3>
-               <p className="text-xs text-slate-600 mb-3 line-clamp-2">Create your faith-driven business plan with AI-powered guidance</p>
+               <h3 className="font-bold text-slate-800 text-lg mb-3">Build Your Business Plan</h3>
+               <p className="text-sm text-slate-600 mb-4 leading-relaxed">Create your faith-driven business plan with AI-powered guidance and biblical principles</p>
               
-               <div className="flex items-center justify-between mb-3">
-                 <div className="flex-1 bg-slate-100 rounded-full h-1.5 mr-3">
-                   <div className="bg-orange-500 h-1.5 rounded-full w-full transition-all duration-300"></div>
+               {/* Enhanced Progress Bar */}
+               <div className="mb-4">
+                 <div className="flex items-center justify-between mb-2">
+                   <span className="text-xs font-semibold text-slate-700">Availability</span>
+                   <span className="text-xs font-bold text-orange-700">100%</span>
                  </div>
-                 <div className="text-xs text-slate-500 font-medium">Ready</div>
+                 <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
+                   <div className="bg-orange-500 h-3 rounded-full w-full transition-all duration-500 shadow-sm"></div>
+                 </div>
                </div>
               
-               <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
-                 <span>Interactive Tool</span>
-                 <span>Available Now</span>
+               <div className="flex items-center justify-between text-sm text-slate-600 mb-5">
+                 <div className="flex items-center space-x-2">
+                   <Award className="w-4 h-4" />
+                   <span className="font-medium">Interactive Tool</span>
+                 </div>
+                 <span className="font-medium">🚀 Ready</span>
                </div>
               
-               <div className="w-full py-2 px-3 bg-orange-600 text-white text-center rounded-md font-medium text-xs hover:bg-orange-700 group-hover:shadow-md transition-all duration-200">
-                 Launch Planner
-               </div>
+               <button className="w-full py-3 px-4 bg-orange-600 text-white rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center space-x-2 hover:bg-orange-700 shadow-lg hover:shadow-xl">
+                 <PlaneTakeoff className="w-4 h-4" />
+                 <span>Launch Planner</span>
+               </button>
              </div>
            </div>
            
