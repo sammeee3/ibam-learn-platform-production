@@ -123,25 +123,49 @@ function redactSensitiveInfo(details: Record<string, any>): Record<string, any> 
  */
 async function getRepositoryStatus(): Promise<{status: string, riskLevel: string}> {
   try {
-    // Call the repository scan API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'}/api/security/scan-repository`, {
-      method: 'GET'
+    // Use the correct Vercel URL for staging
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_VERCEL_URL 
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'https://ibam-learn-platform-staging.vercel.app';
+    
+    console.log('Calling repository scan at:', `${baseUrl}/api/security/scan-repository`);
+    
+    const response = await fetch(`${baseUrl}/api/security/scan-repository`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'IBAM-Security-Dashboard/1.0'
+      }
     });
+    
+    console.log('Repository scan response status:', response.status);
     
     if (response.ok) {
       const data = await response.json();
+      console.log('Repository scan data:', { 
+        status: data.status, 
+        totalExposures: data.totalExposures,
+        riskLevel: data.riskLevel,
+        filesScanned: data.filesScanned 
+      });
+      
       return {
         status: data.status === 'VULNERABLE' ? `${data.totalExposures} secrets found` : 'Clean',
         riskLevel: data.riskLevel || 'LOW'
       };
+    } else {
+      console.log('Repository scan failed with status:', response.status);
+      const errorText = await response.text();
+      console.log('Error response:', errorText);
     }
   } catch (error) {
-    console.log('Repository scan unavailable:', error);
+    console.error('Repository scan error:', error);
   }
   
   return {
-    status: 'Scan available',
-    riskLevel: 'LOW'
+    status: 'Scan failed',
+    riskLevel: 'UNKNOWN'
   };
 }
 
