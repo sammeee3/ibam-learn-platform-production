@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
     // Calculate completion percentage based on section progress
     let totalProgress = 0;
     
-    // Looking Back (33% if complete)
+    // Looking Back (34% if complete) 
     if (sectionCompleted?.lookback) {
-      totalProgress += 33;
+      totalProgress += 34;
     }
     
     // Looking Up (33% with granular subsection tracking)
