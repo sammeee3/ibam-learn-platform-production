@@ -84,27 +84,27 @@ const FloatingCoachButton: React.FC<FloatingCoachButtonProps> = ({
         }
       `}</style>
 
-      {/* Enlarged Centered Button */}
+      {/* Right-Positioned Coach Button */}
       {isVisible && (
         <button
           onClick={() => setIsOpen(true)}
           className={`
-            fixed bottom-[120px] left-1/2 transform -translate-x-1/2 z-[9998]
+            fixed right-6 top-1/2 transform -translate-y-1/2 z-[9998]
             bg-gradient-to-r ${theme.gradient}
-            text-white px-8 py-6 rounded-full
+            text-white px-6 py-4 rounded-full
             shadow-xl ${theme.shadow}
             hover:scale-105 active:scale-95
             transition-all duration-200 ease-in-out
-            text-2xl font-bold
-            flex items-center gap-4
-            min-w-[200px]
+            text-lg font-bold
+            flex items-center gap-3
+            min-w-[140px]
           `}
           style={{
             animation: 'gentlePulse 3s infinite ease-in-out',
           }}
           title={`Get help with ${sessionTitle}`}
         >
-          <span className="text-3xl">🎯</span>
+          <span className="text-2xl">🎯</span>
           <span>Coach</span>
         </button>
       )}

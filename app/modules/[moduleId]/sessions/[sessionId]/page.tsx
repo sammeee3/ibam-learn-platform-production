@@ -1178,13 +1178,6 @@ const navigateTo = (path: string) => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-500 flex items-center">
-                <Clock className="w-4 h-4 mr-1" />
-                ~45 min
-              </span>
-              <button className="text-gray-500 hover:text-gray-700">
-                <BookOpen className="w-5 h-5" />
-              </button>
               <div className="relative">
                 <button 
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -1248,10 +1241,10 @@ const navigateTo = (path: string) => {
             <div className="flex items-center space-x-1">
               <button 
                 onClick={() => navigateTo('/business-planner')}
-                className="px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-full transition-all flex items-center"
+                className="px-6 py-3 bg-purple-600 text-white hover:bg-purple-700 rounded-full transition-all flex items-center shadow-md hover:shadow-lg font-medium"
               >
-                <Briefcase className="w-4 h-4 mr-2" />
-                <span className="hidden md:inline">Planner</span>
+                <Briefcase className="w-5 h-5 mr-2" />
+                <span>Go to Planner</span>
               </button>
               
               <button 
