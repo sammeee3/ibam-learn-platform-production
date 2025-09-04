@@ -84,7 +84,7 @@ export async function POST() {
   return handleScan();
 }
 
-export async function handleScan() {
+async function handleScan() {
   console.log('🔍 Starting repository security scan...');
   
   const threats: any[] = [];
