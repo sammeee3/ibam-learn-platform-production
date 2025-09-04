@@ -997,17 +997,7 @@ const handleLogout = async () => {
              );
            })}
            
-         </div>
-       </div>
-
-       {/* Business Planner - Now positioned to right of Module 5 */}
-       <div className="mb-8">
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-2xl">
-           {/* Empty space for Module 5 alignment */}
-           <div></div>
-           <div></div>
-           
-           {/* Business Planner - Same size as modules */}
+           {/* Business Planner - Positioned directly after Module 5 in grid */}
            <div 
              onClick={() => router.push('/business-planner')}
              className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer"
@@ -1039,6 +1029,7 @@ const handleLogout = async () => {
                </button>
              </div>
            </div>
+           
          </div>
        </div>
 
