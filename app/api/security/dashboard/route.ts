@@ -202,9 +202,43 @@ async function getRepositoryStatus(): Promise<{status: string, riskLevel: string
 }
 
 /**
- * Get detailed scan results for frontend display
+ * Get detailed scan results by directly calling the scan logic
  */
 async function getDetailedScanResults(): Promise<any> {
+  // Import the scan logic directly instead of making HTTP calls
+  try {
+    // Direct integration - import the scan function from the repository scanner
+    const { handleScan } = await import('../scan-repository/route');
+    const scanResponse = await handleScan();
+    
+    if (scanResponse.ok) {
+      const data = await scanResponse.json();
+      console.log('🔍 Direct scan results:', {
+        filesScanned: data.filesScanned,
+        totalExposures: data.totalExposures,
+        threatsLength: data.threats?.length,
+        status: data.status
+      });
+      
+      return {
+        filesScanned: data.filesScanned || 0,
+        totalExposures: data.totalExposures || 0,
+        threatsCount: data.threats?.length || 0,
+        status: data.status || 'SECURE'
+      };
+    }
+  } catch (error) {
+    console.error('❌ Direct scan failed:', error);
+  }
+
+  // Fallback to HTTP call
+  return getDetailedScanResultsViaHTTP();
+}
+
+/**
+ * Get detailed scan results via HTTP (fallback method)
+ */
+async function getDetailedScanResultsViaHTTP(): Promise<any> {
   try {
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
