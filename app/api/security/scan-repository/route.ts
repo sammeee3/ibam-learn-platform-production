@@ -6,6 +6,52 @@ import path from 'path';
 
 const execAsync = promisify(exec);
 
+/**
+ * Get files to scan using Node.js filesystem (Vercel-compatible)
+ */
+async function getFilesToScan(): Promise<string[]> {
+  const files: string[] = [];
+  
+  // File extensions to scan
+  const extensions = ['.js', '.ts', '.tsx', '.jsx', '.md'];
+  const envPattern = /^\.env/;
+  
+  // Directories to exclude
+  const excludeDirs = ['node_modules', '.next', '.git', '.vercel'];
+  
+  async function scanDirectory(dir: string) {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relativePath = path.relative(process.cwd(), fullPath);
+        
+        if (entry.isDirectory()) {
+          // Skip excluded directories
+          if (!excludeDirs.includes(entry.name) && !entry.name.startsWith('.')) {
+            await scanDirectory(fullPath);
+          }
+        } else if (entry.isFile()) {
+          const ext = path.extname(entry.name);
+          const isEnvFile = envPattern.test(entry.name);
+          
+          // Include files with target extensions or .env files (but not .env.example)
+          if ((extensions.includes(ext) || isEnvFile) && entry.name !== '.env.example') {
+            files.push(relativePath.startsWith('.') ? relativePath : `./${relativePath}`);
+          }
+        }
+      }
+    } catch (error) {
+      // Skip directories we can't read
+      console.log(`Skipping directory ${dir}:`, error);
+    }
+  }
+  
+  await scanDirectory(process.cwd());
+  return files;
+}
+
 // Patterns that indicate exposed secrets - ENHANCED
 const SECRET_PATTERNS = [
   { pattern: /eyJ[A-Za-z0-9+/=]{50,}/g, type: 'JWT/Supabase Key', severity: 'CRITICAL' },
@@ -46,13 +92,9 @@ async function handleScan() {
   let totalExposures = 0;
 
   try {
-    // Get list of all JavaScript, TypeScript, and environment files
-    const { stdout: fileList } = await execAsync(
-      `find . -type f \\( -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.jsx" -o -name ".env*" \\) \
-       -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./.git/*" -not -name ".env.example"`
-    );
-    
-    const files = fileList.split('\n').filter(f => f.length > 0);
+    // Get list of all JavaScript, TypeScript, and environment files using Node.js
+    const files = await getFilesToScan();
+    console.log(`📁 Found ${files.length} files to scan`);
     
     // Scan each file for exposed secrets
     for (const file of files) {
