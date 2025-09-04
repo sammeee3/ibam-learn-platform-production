@@ -908,20 +908,38 @@ const handleLogout = async () => {
        )}
 
 
-       {/* Meet Your Trainers - Now full width */}
+       {/* Course Information with integrated Meet Your Trainers - Moved above modules */}
        <div className="mb-8">
-         <button
-           onClick={() => setShowTrainersModal(true)}
-           className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-         >
-           <div className="flex items-center justify-center space-x-4">
-             <Users className="w-8 h-8" />
-             <div className="text-center">
-               <h3 className="text-xl font-bold">Meet Your Trainers</h3>
-               <p className="text-purple-100">180+ years combined experience</p>
+         <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-teal-50 rounded-xl p-6 border border-blue-200 shadow-lg">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             {/* Course Information Side */}
+             <div className="space-y-4">
+               <h3 className="text-2xl font-bold text-gray-900 mb-2">Want to Learn More?</h3>
+               <p className="text-gray-700 text-lg leading-relaxed">Explore our complete course curriculum, meet all trainers, and see success stories.</p>
+               <button
+                 onClick={() => router.push('/course-info')}
+                 className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
+               >
+                 Course Information
+               </button>
+             </div>
+             
+             {/* Meet Your Trainers Side */}
+             <div className="space-y-4">
+               <div className="flex items-center space-x-3">
+                 <Users className="w-8 h-8 text-purple-600" />
+                 <h3 className="text-2xl font-bold text-gray-900">Meet Your Trainers</h3>
+               </div>
+               <p className="text-gray-700 text-lg leading-relaxed">180+ years combined experience guiding entrepreneurs</p>
+               <button
+                 onClick={() => setShowTrainersModal(true)}
+                 className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
+               >
+                 View Trainer Profiles
+               </button>
              </div>
            </div>
-         </button>
+         </div>
        </div>
 
        {/* Learning Modules */}
@@ -979,7 +997,17 @@ const handleLogout = async () => {
              );
            })}
            
-           {/* Business Planner - Moved to position after Module 5 */}
+         </div>
+       </div>
+
+       {/* Business Planner - Now positioned to right of Module 5 */}
+       <div className="mb-8">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-2xl">
+           {/* Empty space for Module 5 alignment */}
+           <div></div>
+           <div></div>
+           
+           {/* Business Planner - Same size as modules */}
            <div 
              onClick={() => router.push('/business-planner')}
              className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer"
@@ -1010,24 +1038,6 @@ const handleLogout = async () => {
                  Launch Business Planner
                </button>
              </div>
-           </div>
-         </div>
-       </div>
-
-       {/* Course Information Link */}
-       <div className="mb-8">
-         <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 border border-teal-200">
-           <div className="flex items-center justify-between">
-             <div>
-               <h3 className="text-lg font-semibold text-gray-900 mb-2">Want to Learn More?</h3>
-               <p className="text-gray-600">Explore our complete course curriculum, meet all trainers, and see success stories.</p>
-             </div>
-             <button
-               onClick={() => router.push('/course-info')}
-               className="bg-gradient-to-r from-teal-400 to-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200 whitespace-nowrap ml-4"
-             >
-               Course Information
-             </button>
            </div>
          </div>
        </div>
