@@ -964,7 +964,7 @@ const handleLogout = async () => {
                    </div>
                   
                    <button
-                     onClick={() => router.push(`/modules/${module.id}`)}
+                     onClick={() => router.push(`/modules/${module.id}/sessions/1`)}
                      disabled={status === 'locked'}
                      className={`w-full py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
                        status === 'locked'
