@@ -356,35 +356,28 @@ const getCurrentUserId = async (): Promise<string | null> => {
        return;
      }
 
-     // Try to get user progress from the correct table
-     const { data: progress, error: progressError } = await supabase
-       .from('user_session_progress')
-       .select('session_id, completion_percentage, last_accessed, module_id')
-       .eq('user_id', currentUserId);
-
-     if (progressError) {
-       console.log('⚠️ User progress query failed, using sessions data only');
+     // Get progress data from server-side API (bypasses RLS issues)
+     const dashboardResponse = await fetch(`/api/dashboard?userId=${currentUserId}`);
+     const dashboardData = await dashboardResponse.json();
+     const progress = dashboardData.progress || [];
+     
+     if (!dashboardResponse.ok) {
+       console.log('⚠️ Dashboard API failed, using mock data');
+       setDataSource('mock');
+       setModuleProgress(mockModuleProgress);
+       setRecentActivity(mockRecentActivity);
+       return;
      }
 
      // Calculate module progress
      const moduleData = calculateModuleProgress(sessions, progress || []);
      setModuleProgress(moduleData);
 
-     // Get recent activity from correct table
-     const { data: activityData, error: activityError } = await supabase
-       .from('user_session_progress')
-       .select(`
-         session_id,
-         completion_percentage,
-         last_accessed,
-         module_id
-       `)
-       .eq('user_id', currentUserId)
-       .order('last_accessed', { ascending: false })
-       .limit(5);
-
-     if (!activityError && activityData && activityData.length > 0) {
-       console.log('✅ Using real activity data');
+     // Use progress data for recent activity (already fetched from API)
+     const activityData = progress.slice(0, 5); // Get first 5 items
+     
+     if (activityData && activityData.length > 0) {
+       console.log('✅ Using real activity data from API');
        
        // Transform the data - need to get session titles from sessions data
        const transformedActivity: RecentActivity[] = activityData.map((item: any) => {
@@ -433,8 +426,21 @@ const loadContinueData = async () => {
     const profile = await profileResponse.json();
     if (profile.id) {
       console.log('🔍 Using profile.id for Continue Session:', String(profile.id));
-      const lastSession = await fetchLastAccessedSession(String(profile.id));
-      setContinueSession(lastSession);
+      
+      // Use dashboard API instead of direct database query
+      const dashboardResponse = await fetch(`/api/dashboard?userId=${profile.id}`);
+      if (dashboardResponse.ok) {
+        const dashboardData = await dashboardResponse.json();
+        const lastSession = dashboardData.lastSession;
+        if (lastSession) {
+          setContinueSession({
+            module_id: lastSession.module_id,
+            session_id: lastSession.session_id,
+            last_section: lastSession.last_section || 'lookback',
+            completion_percentage: lastSession.completion_percentage
+          });
+        }
+      }
     }
   }
 };
