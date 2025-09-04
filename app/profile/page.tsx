@@ -1,27 +1,25 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { 
   UserCircleIcon, 
-  CameraIcon, 
-  EyeIcon, 
-  EyeSlashIcon,
-  BellIcon,
-  ShieldCheckIcon,
   DocumentArrowDownIcon,
-  TrashIcon,
-  CheckIcon,
-  XMarkIcon,
-  ExclamationTriangleIcon
+  AcademicCapIcon,
+  BuildingOfficeIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ArrowLeftIcon,
+  KeyIcon,
+  LinkIcon,
+  PencilIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { exportService, type ExportUserProgress } from '@/lib/services/exportService';
 
 /**
- * ENTERPRISE-GRADE USER PROFILE MANAGEMENT
- * Complete GDPR-compliant profile system with data portability
- * Security-first implementation with comprehensive UX
+ * SIMPLIFIED USER PROFILE - ALIGNED WITH DASHBOARD
+ * Focus on core student needs: view profile, download work
  */
 
 interface UserProfile {
@@ -29,288 +27,97 @@ interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
-  profilePicture?: string;
-  learningPath: 'self_paced' | 'structured' | 'intensive';
-  learningMode: 'casual' | 'focused' | 'immersive';
-  notifications: {
-    email: boolean;
-    progress: boolean;
-    reminders: boolean;
-    marketing: boolean;
-  };
-  privacy: {
-    showProgress: boolean;
-    allowAnalytics: boolean;
-    shareAchievements: boolean;
-  };
-  createdAt: string;
+  loginSource: string; // 'systemio' or 'direct' - Critical for password management
+  membershipLevel: string;
+  completedModules: number;
+  totalModules: number;
+  overallProgress: number;
+  joinedDate: string;
   lastActive: string;
 }
 
-interface NotificationSettings {
-  email: boolean;
-  progress: boolean;
-  reminders: boolean;
-  marketing: boolean;
-}
-
-interface PrivacySettings {
-  showProgress: boolean;
-  allowAnalytics: boolean;
-  shareAchievements: boolean;
+interface BusinessPlan {
+  id: string;
+  name: string;
+  completionPercentage: number;
+  lastModified: string;
 }
 
 export default function ProfilePage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State Management
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [businessPlans, setBusinessPlans] = useState<BusinessPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'notifications' | 'privacy' | 'data'>('profile');
+  const [downloading, setDownloading] = useState<string | null>(null);
   
-  // Form States
-  const [profileForm, setProfileForm] = useState({
+  // Profile editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
-    learningPath: 'self_paced' as 'self_paced' | 'structured' | 'intensive',
-    learningMode: 'casual' as 'casual' | 'focused' | 'immersive'
+    email: '',
+    bio: '',
+    phone: ''
   });
-  
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-    showCurrentPassword: false,
-    showNewPassword: false,
-    showConfirmPassword: false
-  });
-  
-  const [notifications, setNotifications] = useState<NotificationSettings>({
-    email: true,
-    progress: true,
-    reminders: false,
-    marketing: false
-  });
-  
-  const [privacy, setPrivacy] = useState<PrivacySettings>({
-    showProgress: true,
-    allowAnalytics: true,
-    shareAchievements: false
-  });
+  const [saving, setSaving] = useState(false);
 
-  // UI States
-  const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
-  const [showErrorMessage, setShowErrorMessage] = useState<string | null>(null);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [exportingData, setExportingData] = useState(false);
-
-  // Load user profile
+  // Load user data
   useEffect(() => {
-    loadUserProfile();
+    loadUserData();
   }, []);
 
-  const loadUserProfile = async () => {
+  const loadUserData = async () => {
     try {
       setLoading(true);
       
-      const response = await fetch('/api/user/profile');
-      if (!response.ok) {
-        throw new Error('Failed to load profile');
+      // Get user email from localStorage
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (!userEmail) {
+        console.error('No user email found in localStorage');
+        setLoading(false);
+        return;
       }
       
-      const userData = await response.json();
-      setUser(userData);
-      
-      // Populate forms with current data
-      setProfileForm({
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        learningPath: userData.learningPath || 'self_paced',
-        learningMode: userData.learningMode || 'casual'
-      });
-      
-      setNotifications(userData.notifications || {
-        email: true,
-        progress: true,
-        reminders: false,
-        marketing: false
-      });
-      
-      setPrivacy(userData.privacy || {
-        showProgress: true,
-        allowAnalytics: true,
-        shareAchievements: false
-      });
+      // Load user profile with email parameter
+      const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setUser({
+          id: profileData.id || 'unknown',
+          email: profileData.email || '',
+          firstName: profileData.firstName || 'Student',
+          lastName: profileData.lastName || '',
+          loginSource: profileData.loginSource || 'direct', // Critical for password management
+          membershipLevel: profileData.membershipLevel || 'Basic Member',
+          completedModules: profileData.completedModules || 0,
+          totalModules: profileData.totalModules || 5,
+          overallProgress: profileData.overallProgress || 0,
+          joinedDate: profileData.createdAt || new Date().toISOString(),
+          lastActive: profileData.lastActive || new Date().toISOString()
+        });
+      }
+
+      // Load business plans
+      const plansResponse = await fetch('/api/user/business-plans');
+      if (plansResponse.ok) {
+        const plansData = await plansResponse.json();
+        setBusinessPlans(plansData || []);
+      }
       
     } catch (error) {
-      console.error('Error loading profile:', error);
-      setShowErrorMessage('Failed to load profile information');
+      console.error('Error loading user data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateProfile = async () => {
-    try {
-      setSaving(true);
-      
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileForm)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-      
-      await loadUserProfile();
-      showSuccess('Profile updated successfully!');
-      
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setShowErrorMessage('Failed to update profile');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const changePassword = async () => {
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setShowErrorMessage('New passwords do not match');
-      return;
-    }
-    
-    if (passwordForm.newPassword.length < 8) {
-      setShowErrorMessage('Password must be at least 8 characters long');
-      return;
-    }
-    
-    try {
-      setSaving(true);
-      
-      const response = await fetch('/api/user/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to change password');
-      }
-      
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-        showCurrentPassword: false,
-        showNewPassword: false,
-        showConfirmPassword: false
-      });
-      
-      showSuccess('Password changed successfully!');
-      
-    } catch (error: any) {
-      console.error('Error changing password:', error);
-      setShowErrorMessage(error.message || 'Failed to change password');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const updateNotifications = async () => {
-    try {
-      setSaving(true);
-      
-      const response = await fetch('/api/user/notifications', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notifications)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update notifications');
-      }
-      
-      showSuccess('Notification preferences updated!');
-      
-    } catch (error) {
-      console.error('Error updating notifications:', error);
-      setShowErrorMessage('Failed to update notification settings');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const updatePrivacy = async () => {
-    try {
-      setSaving(true);
-      
-      const response = await fetch('/api/user/privacy', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(privacy)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update privacy settings');
-      }
-      
-      showSuccess('Privacy settings updated!');
-      
-    } catch (error) {
-      console.error('Error updating privacy:', error);
-      setShowErrorMessage('Failed to update privacy settings');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const uploadProfilePicture = async (file: File) => {
-    try {
-      setSaving(true);
-      
-      const formData = new FormData();
-      formData.append('profilePicture', file);
-      
-      const response = await fetch('/api/user/profile-picture', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload profile picture');
-      }
-      
-      await loadUserProfile();
-      showSuccess('Profile picture updated successfully!');
-      
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      setShowErrorMessage('Failed to update profile picture');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const exportUserData = async () => {
+  const downloadCourseProgress = async () => {
     if (!user) return;
     
     try {
-      setExportingData(true);
-      
-      // Validate export permissions
-      const isValid = await exportService.validateExportPermissions(user.id, 'progress');
-      if (!isValid) {
-        throw new Error('Export permission denied');
-      }
+      setDownloading('progress');
       
       // Get user progress data
       const response = await fetch('/api/user/export-progress');
@@ -320,85 +127,157 @@ export default function ProfilePage() {
       
       const progressData: ExportUserProgress = await response.json();
       
-      // Generate comprehensive progress report
+      // Generate progress report
       const reportBlob = await exportService.generateProgressReport(progressData);
       
       // Download the report
       const timestamp = new Date().toISOString().split('T')[0];
       exportService.downloadFile(
         reportBlob, 
-        `IBAM_Progress_Report_${timestamp}.pdf`, 
+        `${user.firstName}_${user.lastName}_Course_Progress_${timestamp}.pdf`, 
         'application/pdf'
       );
       
-      showSuccess('Your progress report has been downloaded!');
-      
     } catch (error) {
-      console.error('Error exporting data:', error);
-      setShowErrorMessage('Failed to export your data');
+      console.error('Error downloading progress:', error);
+      alert('Failed to download progress report. Please try again.');
     } finally {
-      setExportingData(false);
+      setDownloading(null);
     }
   };
 
-  const deleteAccount = async () => {
-    if (deleteConfirmText !== 'DELETE MY ACCOUNT') {
-      setShowErrorMessage('Please type "DELETE MY ACCOUNT" to confirm');
-      return;
+  const downloadBusinessPlan = async (planId: string, planName: string) => {
+    if (!user) return;
+    
+    try {
+      setDownloading(planId);
+      
+      // Get business plan data
+      const response = await fetch(`/api/user/business-plan/${planId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch business plan data');
+      }
+      
+      const planData = await response.json();
+      
+      // Generate business plan document
+      const planBlob = await exportService.generateBusinessPlan(planData);
+      
+      // Download the document
+      const timestamp = new Date().toISOString().split('T')[0];
+      const sanitizedName = planName.replace(/[^a-zA-Z0-9]/g, '_');
+      exportService.downloadFile(
+        planBlob, 
+        `${user.firstName}_${user.lastName}_${sanitizedName}_${timestamp}.docx`, 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      );
+      
+    } catch (error) {
+      console.error('Error downloading business plan:', error);
+      alert('Failed to download business plan. Please try again.');
+    } finally {
+      setDownloading(null);
     }
+  };
+
+  const downloadCertificate = async (moduleId: number) => {
+    if (!user) return;
+    
+    try {
+      setDownloading(`cert-${moduleId}`);
+      
+      // Get certificate data
+      const response = await fetch('/api/user/export-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ moduleId })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Module not completed or certificate not available');
+      }
+      
+      const certificateData = await response.json();
+      
+      // Generate certificate
+      const certBlob = await exportService.generateCertificate(certificateData, moduleId);
+      
+      // Download certificate
+      const timestamp = new Date().toISOString().split('T')[0];
+      exportService.downloadFile(
+        certBlob, 
+        `${user.firstName}_${user.lastName}_Module_${moduleId}_Certificate_${timestamp}.pdf`, 
+        'application/pdf'
+      );
+      
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Certificate not available. Complete the module first.');
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  // Profile editing functions
+  const startEditing = () => {
+    if (!user) return;
+    setEditForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      bio: '', // TODO: Get from user profile when bio field is added
+      phone: '' // TODO: Get from user profile when phone field is added
+    });
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditForm({ firstName: '', lastName: '', email: '', bio: '', phone: '' });
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
     
     try {
       setSaving(true);
       
-      const response = await fetch('/api/user/delete-account', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmation: deleteConfirmText })
+      // TODO: Create API endpoint to update profile
+      const response = await fetch(`/api/user/profile/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email, // For identification
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          bio: editForm.bio,
+          phone: editForm.phone,
+          // Note: Email changes need special handling for System.io users
+          newEmail: editForm.email !== user.email ? editForm.email : null
+        })
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete account');
+
+      if (response.ok) {
+        // Update local user state
+        setUser({
+          ...user,
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          email: editForm.email
+        });
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      } else {
+        alert('Failed to update profile. Please try again.');
       }
-      
-      // Clear local storage and redirect
-      localStorage.clear();
-      sessionStorage.clear();
-      router.push('/auth/login?message=account_deleted');
-      
     } catch (error) {
-      console.error('Error deleting account:', error);
-      setShowErrorMessage('Failed to delete account');
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    } finally {
       setSaving(false);
     }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setShowErrorMessage('Profile picture must be smaller than 5MB');
-        return;
-      }
-      
-      if (!file.type.startsWith('image/')) {
-        setShowErrorMessage('Please select a valid image file');
-        return;
-      }
-      
-      uploadProfilePicture(file);
-    }
-  };
-
-  const showSuccess = (message: string) => {
-    setShowSuccessMessage(message);
-    setShowErrorMessage(null);
-    setTimeout(() => setShowSuccessMessage(null), 5000);
-  };
-
-  const showError = (message: string) => {
-    setShowErrorMessage(message);
-    setShowSuccessMessage(null);
-    setTimeout(() => setShowErrorMessage(null), 5000);
   };
 
   if (loading) {
@@ -413,7 +292,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <UserCircleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-gray-900 mb-2">Profile Not Found</h1>
           <p className="text-gray-600 mb-4">Unable to load your profile information.</p>
           <button
@@ -431,577 +310,366 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => router.push('/dashboard')}
-                  className="text-blue-600 hover:text-blue-700 transition-colors"
+                  className="text-blue-600 hover:text-blue-700 transition-colors flex items-center space-x-2"
                 >
-                  ← Back to Dashboard
+                  <ArrowLeftIcon className="h-5 w-5" />
+                  <span>Back to Dashboard</span>
                 </button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-                  <p className="text-gray-600">Manage your account and preferences</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                {user.profilePicture ? (
-                  <Image
-                    src={user.profilePicture}
-                    alt="Profile"
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  <UserCircleIcon className="h-10 w-10 text-gray-400" />
-                )}
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">{user.firstName} {user.lastName}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {showSuccessMessage && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
-            <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
-            <p className="text-green-800">{showSuccessMessage}</p>
-            <button
-              onClick={() => setShowSuccessMessage(null)}
-              className="ml-auto text-green-600 hover:text-green-800"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showErrorMessage && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-            <ExclamationTriangleIcon className="h-5 w-5 text-red-600 flex-shrink-0" />
-            <p className="text-red-800">{showErrorMessage}</p>
-            <button
-              onClick={() => setShowErrorMessage(null)}
-              className="ml-auto text-red-600 hover:text-red-800"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-          {/* Navigation Sidebar */}
-          <div className="lg:col-span-3">
-            <nav className="space-y-2">
-              {[
-                { id: 'profile', label: 'Profile Information', icon: UserCircleIcon },
-                { id: 'security', label: 'Security', icon: ShieldCheckIcon },
-                { id: 'notifications', label: 'Notifications', icon: BellIcon },
-                { id: 'privacy', label: 'Privacy', icon: EyeIcon },
-                { id: 'data', label: 'Your Data', icon: DocumentArrowDownIcon }
-              ].map((section) => {
-                const Icon = section.icon;
-                return (
-                  <button
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id as any)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeSection === section.id
-                        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-medium">{section.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Main Content */}
-          <div className="mt-8 lg:mt-0 lg:col-span-9">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              
-              {/* Profile Information Section */}
-              {activeSection === 'profile' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Profile Information</h2>
-                  </div>
-
-                  {/* Profile Picture */}
-                  <div className="mb-8">
-                    <label className="block text-sm font-medium text-gray-700 mb-4">Profile Picture</label>
-                    <div className="flex items-center space-x-6">
-                      <div className="relative">
-                        {user.profilePicture ? (
-                          <Image
-                            src={user.profilePicture}
-                            alt="Profile"
-                            width={80}
-                            height={80}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <UserCircleIcon className="h-20 w-20 text-gray-400" />
-                        )}
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 text-white hover:bg-blue-700 transition-colors"
-                          disabled={saving}
-                        >
-                          <CameraIcon className="h-4 w-4" />
-                        </button>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                        />
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        <p>Upload a new profile picture</p>
-                        <p className="text-xs text-gray-500">Max file size: 5MB</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
-                      </label>
-                      <input
-                        type="text"
-                        value={profileForm.firstName}
-                        onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your first name"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
-                      </label>
-                      <input
-                        type="text"
-                        value={profileForm.lastName}
-                        onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your last name"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email (Read-only) */}
-                  <div className="mb-8">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={user.email}
-                      disabled
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Contact support to change your email address</p>
-                  </div>
-
-                  {/* Learning Preferences */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Learning Path
-                      </label>
-                      <select
-                        value={profileForm.learningPath}
-                        onChange={(e) => setProfileForm({ 
-                          ...profileForm, 
-                          learningPath: e.target.value as 'self_paced' | 'structured' | 'intensive' 
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="self_paced">Self-Paced</option>
-                        <option value="structured">Structured</option>
-                        <option value="intensive">Intensive</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Learning Mode
-                      </label>
-                      <select
-                        value={profileForm.learningMode}
-                        onChange={(e) => setProfileForm({ 
-                          ...profileForm, 
-                          learningMode: e.target.value as 'casual' | 'focused' | 'immersive' 
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="casual">Casual</option>
-                        <option value="focused">Focused</option>
-                        <option value="immersive">Immersive</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      onClick={updateProfile}
-                      disabled={saving}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {saving ? 'Saving...' : 'Update Profile'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Security Section */}
-              {activeSection === 'security' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Security Settings</h2>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={passwordForm.showCurrentPassword ? 'text' : 'password'}
-                          value={passwordForm.currentPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Enter current password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setPasswordForm({ 
-                            ...passwordForm, 
-                            showCurrentPassword: !passwordForm.showCurrentPassword 
-                          })}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {passwordForm.showCurrentPassword ? (
-                            <EyeSlashIcon className="h-5 w-5" />
-                          ) : (
-                            <EyeIcon className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={passwordForm.showNewPassword ? 'text' : 'password'}
-                          value={passwordForm.newPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Enter new password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setPasswordForm({ 
-                            ...passwordForm, 
-                            showNewPassword: !passwordForm.showNewPassword 
-                          })}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {passwordForm.showNewPassword ? (
-                            <EyeSlashIcon className="h-5 w-5" />
-                          ) : (
-                            <EyeIcon className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Confirm New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={passwordForm.showConfirmPassword ? 'text' : 'password'}
-                          value={passwordForm.confirmPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Confirm new password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setPasswordForm({ 
-                            ...passwordForm, 
-                            showConfirmPassword: !passwordForm.showConfirmPassword 
-                          })}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {passwordForm.showConfirmPassword ? (
-                            <EyeSlashIcon className="h-5 w-5" />
-                          ) : (
-                            <EyeIcon className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      onClick={changePassword}
-                      disabled={saving || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {saving ? 'Changing...' : 'Change Password'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Notifications Section */}
-              {activeSection === 'notifications' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Notification Preferences</h2>
-                  </div>
-
-                  <div className="space-y-6">
-                    {[
-                      { key: 'email', label: 'Email Notifications', description: 'Receive important updates via email' },
-                      { key: 'progress', label: 'Progress Updates', description: 'Notifications about your learning progress' },
-                      { key: 'reminders', label: 'Learning Reminders', description: 'Reminders to continue your learning journey' },
-                      { key: 'marketing', label: 'Marketing Communications', description: 'Updates about new courses and features' }
-                    ].map((notification) => (
-                      <div key={notification.key} className="flex items-center justify-between py-4">
-                        <div>
-                          <h3 className="font-medium text-gray-900">{notification.label}</h3>
-                          <p className="text-sm text-gray-500">{notification.description}</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={notifications[notification.key as keyof NotificationSettings]}
-                            onChange={(e) => setNotifications({
-                              ...notifications,
-                              [notification.key]: e.target.checked
-                            })}
-                            className="sr-only"
-                          />
-                          <div className={`w-11 h-6 rounded-full transition-colors ${
-                            notifications[notification.key as keyof NotificationSettings] 
-                              ? 'bg-blue-600' 
-                              : 'bg-gray-200'
-                          }`}>
-                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
-                              notifications[notification.key as keyof NotificationSettings] 
-                                ? 'translate-x-5' 
-                                : 'translate-x-0'
-                            } mt-0.5 ml-0.5`}></div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      onClick={updateNotifications}
-                      disabled={saving}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {saving ? 'Saving...' : 'Save Preferences'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Privacy Section */}
-              {activeSection === 'privacy' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Privacy Settings</h2>
-                  </div>
-
-                  <div className="space-y-6">
-                    {[
-                      { key: 'showProgress', label: 'Show Progress to Others', description: 'Allow other learners to see your progress' },
-                      { key: 'allowAnalytics', label: 'Usage Analytics', description: 'Help us improve by sharing anonymous usage data' },
-                      { key: 'shareAchievements', label: 'Share Achievements', description: 'Allow achievements to be shared publicly' }
-                    ].map((setting) => (
-                      <div key={setting.key} className="flex items-center justify-between py-4">
-                        <div>
-                          <h3 className="font-medium text-gray-900">{setting.label}</h3>
-                          <p className="text-sm text-gray-500">{setting.description}</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={privacy[setting.key as keyof PrivacySettings]}
-                            onChange={(e) => setPrivacy({
-                              ...privacy,
-                              [setting.key]: e.target.checked
-                            })}
-                            className="sr-only"
-                          />
-                          <div className={`w-11 h-6 rounded-full transition-colors ${
-                            privacy[setting.key as keyof PrivacySettings] 
-                              ? 'bg-blue-600' 
-                              : 'bg-gray-200'
-                          }`}>
-                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
-                              privacy[setting.key as keyof PrivacySettings] 
-                                ? 'translate-x-5' 
-                                : 'translate-x-0'
-                            } mt-0.5 ml-0.5`}></div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      onClick={updatePrivacy}
-                      disabled={saving}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {saving ? 'Saving...' : 'Save Settings'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Data Management Section */}
-              {activeSection === 'data' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Your Data</h2>
-                  </div>
-
-                  <div className="space-y-8">
-                    {/* Export Data */}
-                    <div className="border border-gray-200 rounded-lg p-6">
-                      <div className="flex items-start space-x-4">
-                        <DocumentArrowDownIcon className="h-8 w-8 text-blue-600 flex-shrink-0 mt-1" />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">Export Your Data</h3>
-                          <p className="text-gray-600 mb-4">
-                            Download a comprehensive report of all your learning progress, achievements, and account information.
-                          </p>
-                          <ul className="text-sm text-gray-500 mb-4 space-y-1">
-                            <li>• Learning progress and module completions</li>
-                            <li>• Quiz scores and assessment results</li>
-                            <li>• Time spent on each session</li>
-                            <li>• Account information and preferences</li>
-                          </ul>
-                          <button
-                            onClick={exportUserData}
-                            disabled={exportingData}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                          >
-                            {exportingData ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Preparing Export...</span>
-                              </>
-                            ) : (
-                              <>
-                                <DocumentArrowDownIcon className="h-4 w-4" />
-                                <span>Export My Data</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Account Deletion */}
-                    <div className="border border-red-200 rounded-lg p-6 bg-red-50">
-                      <div className="flex items-start space-x-4">
-                        <TrashIcon className="h-8 w-8 text-red-600 flex-shrink-0 mt-1" />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium text-red-900 mb-2">Delete Account</h3>
-                          <p className="text-red-700 mb-4">
-                            Permanently delete your account and all associated data. This action cannot be undone.
-                          </p>
-                          
-                          {!showDeleteConfirmation ? (
-                            <button
-                              onClick={() => setShowDeleteConfirmation(true)}
-                              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                              Delete My Account
-                            </button>
-                          ) : (
-                            <div className="space-y-4">
-                              <div className="bg-white rounded-lg p-4 border border-red-200">
-                                <p className="text-red-800 font-medium mb-3">
-                                  Are you absolutely sure? This will permanently delete your account and all your learning progress.
-                                </p>
-                                <p className="text-red-700 text-sm mb-3">
-                                  Type <strong>DELETE MY ACCOUNT</strong> below to confirm:
-                                </p>
-                                <input
-                                  type="text"
-                                  value={deleteConfirmText}
-                                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                  className="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                  placeholder="DELETE MY ACCOUNT"
-                                />
-                              </div>
-                              <div className="flex space-x-3">
-                                <button
-                                  onClick={deleteAccount}
-                                  disabled={saving || deleteConfirmText !== 'DELETE MY ACCOUNT'}
-                                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                  {saving ? 'Deleting...' : 'Confirm Deletion'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowDeleteConfirmation(false);
-                                    setDeleteConfirmText('');
-                                  }}
-                                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Profile Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center space-x-6">
+            <div className="bg-blue-100 rounded-full p-4">
+              <UserCircleIcon className="h-16 w-16 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {user.firstName} {user.lastName}
+              </h1>
+              <p className="text-gray-600">{user.email}</p>
+              <div className="flex items-center space-x-4 mt-2">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  {user.membershipLevel}
+                </span>
+                <span className="text-sm text-gray-500">
+                  Member since {new Date(user.joinedDate).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">{user.overallProgress}%</div>
+              <div className="text-sm text-gray-500">Complete</div>
             </div>
           </div>
         </div>
+
+        {/* Account Security - Differentiated for System.io vs Direct Users */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+              <KeyIcon className="h-6 w-6 text-blue-600" />
+              <span>Account Security</span>
+            </h2>
+            {user.loginSource === 'systemio' && (
+              <div className="flex items-center space-x-2 text-sm text-blue-600">
+                <LinkIcon className="h-4 w-4" />
+                <span>System.io Account</span>
+              </div>
+            )}
+          </div>
+
+          {user.loginSource === 'systemio' ? (
+            // System.io User - External Password Management
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <h3 className="font-medium text-blue-900 mb-2">Password Management via System.io</h3>
+              <p className="text-sm text-blue-700 mb-4">
+                Your account was created through System.io. To change your password or update account security settings, 
+                please use your System.io account dashboard.
+              </p>
+              <div className="flex items-center space-x-3">
+                <a
+                  href="https://www.ibam.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Manage in System.io
+                </a>
+                <div className="text-xs text-blue-600">
+                  ✅ Password changes won't affect your IBAM platform access
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Direct User - IBAM Password Management
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <h3 className="font-medium text-green-900 mb-2">IBAM Account Security</h3>
+              <p className="text-sm text-green-700 mb-4">
+                Your account was created directly on the IBAM platform. You can change your password and manage 
+                security settings here.
+              </p>
+              <div className="space-y-3">
+                <button className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                  <KeyIcon className="h-4 w-4 mr-2" />
+                  Change Password
+                </button>
+                <div className="text-xs text-green-600">
+                  ⚡ Full password management available
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Profile Information - Editable */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+              <UserCircleIcon className="h-6 w-6 text-green-600" />
+              <span>Profile Information</span>
+            </h2>
+            {!isEditing ? (
+              <button
+                onClick={startEditing}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                Edit Profile
+              </button>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={saveProfile}
+                  disabled={saving}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  disabled={saving}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 transition-colors"
+                >
+                  <XMarkIcon className="h-4 w-4 mr-1" />
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
+          {!isEditing ? (
+            // View Mode
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium text-gray-700">First Name</label>
+                <div className="mt-1 text-gray-900">{user.firstName}</div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Last Name</label>
+                <div className="mt-1 text-gray-900">{user.lastName}</div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Email Address</label>
+                <div className="mt-1 text-gray-900">{user.email}</div>
+                {user.loginSource === 'systemio' && (
+                  <div className="text-xs text-amber-600 mt-1">
+                    ⚠️ Email managed by System.io - changes may affect access
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Account Type</label>
+                <div className="mt-1">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    user.loginSource === 'systemio' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {user.loginSource === 'systemio' ? 'System.io Account' : 'Direct IBAM Account'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Edit Mode
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <input
+                  type="text"
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <input
+                  type="text"
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {user.loginSource === 'systemio' && (
+                  <div className="text-xs text-amber-600 mt-1">
+                    ⚠️ Changing email may affect System.io integration
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Bio (Optional)</label>
+                <textarea
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  rows={3}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Tell us a bit about yourself..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Learning Progress */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+              <AcademicCapIcon className="h-6 w-6 text-blue-600" />
+              <span>Your Learning Journey</span>
+            </h2>
+            <div className="flex items-center space-x-2">
+              <CheckCircleIcon className="h-5 w-5 text-green-500" />
+              <span className="text-sm text-gray-600">
+                {user.completedModules} of {user.totalModules} modules completed
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-gray-200 rounded-full h-3 mb-6">
+            <div 
+              className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${user.overallProgress}%` }}
+            ></div>
+          </div>
+
+          <button
+            onClick={downloadCourseProgress}
+            disabled={downloading === 'progress'}
+            className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+          >
+            {downloading === 'progress' ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Generating Report...</span>
+              </>
+            ) : (
+              <>
+                <DocumentArrowDownIcon className="h-5 w-5" />
+                <span>Download Complete Course Progress Report</span>
+              </>
+            )}
+          </button>
+
+          {/* Module Certificates */}
+          {user.completedModules > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Available Certificates</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: user.completedModules }, (_, i) => i + 1).map((moduleId) => (
+                  <button
+                    key={moduleId}
+                    onClick={() => downloadCertificate(moduleId)}
+                    disabled={downloading === `cert-${moduleId}`}
+                    className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <AcademicCapIcon className="h-8 w-8 text-blue-600" />
+                      <div>
+                        <div className="font-medium text-gray-900">Module {moduleId} Certificate</div>
+                        <div className="text-sm text-gray-500">
+                          {downloading === `cert-${moduleId}` ? 'Generating...' : 'Ready to download'}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Business Plans */}
+        {businessPlans.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <BuildingOfficeIcon className="h-6 w-6 text-green-600" />
+                <span>Your Business Plans</span>
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              {businessPlans.map((plan) => (
+                <div key={plan.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{plan.name}</h3>
+                      <div className="flex items-center space-x-4 mt-1">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-gray-200 rounded-full h-2 w-20">
+                            <div 
+                              className="bg-green-500 h-2 rounded-full"
+                              style={{ width: `${plan.completionPercentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600">{plan.completionPercentage}% complete</span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-sm text-gray-500">
+                          <ClockIcon className="h-4 w-4" />
+                          <span>Modified {new Date(plan.lastModified).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => downloadBusinessPlan(plan.id, plan.name)}
+                      disabled={downloading === plan.id || plan.completionPercentage < 80}
+                      className="ml-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    >
+                      {downloading === plan.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <DocumentArrowDownIcon className="h-4 w-4" />
+                          <span>Download</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {plan.completionPercentage < 80 && (
+                    <p className="text-xs text-amber-600 mt-2">
+                      Complete at least 80% of your business plan to download
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

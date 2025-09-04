@@ -1239,7 +1239,7 @@ const navigateTo = (path: string) => {
             <button 
               onClick={() => navigateToSession('prev')}
               disabled={sessionData.session_number <= 1 && sessionData.module_id <= 1}
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Back</span>

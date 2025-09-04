@@ -332,22 +332,35 @@ export default function SafeFeedbackWidget() {
         </div>
       )}
 
-      {/* Purple Button */}
+      {/* Beta Feedback Button */}
       <div 
         onClick={() => setIsOpen(true)}
         style={{
           position: 'fixed', 
           bottom: '20px', 
           right: '20px', 
-          background: 'purple', 
+          background: 'linear-gradient(135deg, #ff6b6b, #ee5a52)', 
           color: 'white', 
-          padding: '15px', 
+          padding: '15px 20px', 
           borderRadius: '50px', 
           cursor: 'pointer', 
-          zIndex: 9999
+          zIndex: 9999,
+          boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          border: '2px solid rgba(255, 255, 255, 0.2)',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 107, 0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.3)';
         }}
       >
-        💬 Help & Feedback
+        🐛 Report Bug or Suggest Fix
       </div>
 
       {/* Form Modal */}
@@ -377,9 +390,10 @@ export default function SafeFeedbackWidget() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{margin: '0 0 16px 0', color: '#333'}}>Help & Feedback</h3>
+            <h3 style={{margin: '0 0 16px 0', color: '#333'}}>🧪 Beta Testing - Report Issues</h3>
             <p style={{fontSize: '12px', color: '#666', marginBottom: '12px'}}>
-              Questions? Contact Jeffrey at jsamuelson@ibam.org
+              Help us improve! Report bugs, suggest features, or ask questions.<br/>
+              Contact Jeffrey directly: jsamuelson@ibam.org
             </p>
             
             {/* Bug/Feature Buttons */}
