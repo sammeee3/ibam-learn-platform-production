@@ -79,31 +79,46 @@ export default function SecurityDashboard() {
       if (response.ok) {
         const data = await response.json();
         setSecurityStatus({
-          riskLevel: data.alerts && data.alerts.length > 0 ? 
-            (data.alerts.some((a: any) => a.severity === 'critical') ? 'CRITICAL' : 'HIGH') : 'LOW',
+          riskLevel: data.riskLevel || 'LOW',
           alerts: data.alerts || [],
           lastScan: data.lastScan || data.timestamp,
           monitoring: data.monitoring !== false,
           repositoryStatus: data.repositoryStatus || 'Clean'
         });
       } else {
-        console.warn('Security dashboard API not available, using mock data');
-        setSecurityStatus(prev => ({
-          ...prev,
-          riskLevel: 'LOW',
-          monitoring: true,
-          repositoryStatus: 'API Unavailable'
-        }));
+        console.warn('Security dashboard API returned:', response.status);
+        // Still try to load repository status separately
+        await loadRepositoryStatus();
       }
     } catch (error) {
       console.error('Error fetching security status:', error);
-      setSecurityStatus(prev => ({
-        ...prev,
-        monitoring: false,
-        repositoryStatus: 'Connection Error'
-      }));
+      await loadRepositoryStatus();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRepositoryStatus = async () => {
+    try {
+      const response = await fetch('/api/security/scan-repository');
+      if (response.ok) {
+        const data = await response.json();
+        setSecurityStatus(prev => ({
+          ...prev,
+          riskLevel: data.riskLevel || 'LOW',
+          repositoryStatus: data.status === 'VULNERABLE' ? 
+            `${data.totalExposures} exposures found` : 'Clean',
+          lastScan: data.timestamp,
+          monitoring: true
+        }));
+      }
+    } catch (error) {
+      console.error('Repository status unavailable:', error);
+      setSecurityStatus(prev => ({
+        ...prev,
+        repositoryStatus: 'Scan Available',
+        monitoring: false
+      }));
     }
   };
 
@@ -118,19 +133,34 @@ export default function SecurityDashboard() {
       
       if (response.ok) {
         const results = await response.json();
-        setScanResults(results);
-        // Refresh security status after scan
-        await loadSecurityStatus();
+        setScanResults({
+          success: true,
+          status: results.status,
+          riskLevel: results.riskLevel,
+          totalExposures: results.totalExposures,
+          threats: results.threats || [],
+          recommendations: results.recommendations || [],
+          filesScanned: results.filesScanned
+        });
+        
+        // Update the dashboard status immediately
+        setSecurityStatus(prev => ({
+          ...prev,
+          riskLevel: results.riskLevel || 'LOW',
+          repositoryStatus: results.status === 'VULNERABLE' ? 
+            `${results.totalExposures} exposures found` : 'Clean',
+          lastScan: results.timestamp
+        }));
       } else {
-        const error = await response.text();
+        const errorText = await response.text();
         setScanResults({ 
-          error: `Scan failed: ${error}`,
+          error: `Scan failed (${response.status}): ${errorText}`,
           success: false 
         });
       }
     } catch (error) {
       setScanResults({ 
-        error: `Network error: ${error}`,
+        error: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         success: false 
       });
     } finally {
@@ -289,19 +319,100 @@ export default function SecurityDashboard() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">🔍 Latest Scan Results</h2>
             {scanResults.error ? (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">❌</span>
+                  <span className="font-bold text-red-800">Scan Failed</span>
+                </div>
                 <p className="text-red-800">{scanResults.error}</p>
               </div>
             ) : (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-800">✅ Security scan completed successfully</p>
-                {scanResults.findings && (
-                  <div className="mt-3">
-                    <p className="font-medium">Findings: {scanResults.findings.length}</p>
-                    {scanResults.findings.slice(0, 5).map((finding: any, index: number) => (
-                      <div key={index} className="mt-2 text-sm">
-                        <span className="font-medium">{finding.type}:</span> {finding.description}
-                      </div>
-                    ))}
+              <div className={`border rounded-lg p-4 ${
+                scanResults.riskLevel === 'CRITICAL' ? 'bg-red-50 border-red-200' :
+                scanResults.riskLevel === 'HIGH' ? 'bg-orange-50 border-orange-200' :
+                scanResults.riskLevel === 'MEDIUM' ? 'bg-yellow-50 border-yellow-200' :
+                'bg-green-50 border-green-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">
+                    {scanResults.riskLevel === 'CRITICAL' ? '🚨' :
+                     scanResults.riskLevel === 'HIGH' ? '⚠️' :
+                     scanResults.riskLevel === 'MEDIUM' ? '🟡' : '✅'}
+                  </span>
+                  <span className={`font-bold ${
+                    scanResults.riskLevel === 'CRITICAL' ? 'text-red-800' :
+                    scanResults.riskLevel === 'HIGH' ? 'text-orange-800' :
+                    scanResults.riskLevel === 'MEDIUM' ? 'text-yellow-800' :
+                    'text-green-800'
+                  }`}>
+                    {scanResults.status === 'VULNERABLE' ? 'Vulnerabilities Found' : 'Repository Secure'}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="font-bold text-2xl">{scanResults.filesScanned || 0}</div>
+                    <div className="text-sm text-gray-600">Files Scanned</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-2xl">{scanResults.totalExposures || 0}</div>
+                    <div className="text-sm text-gray-600">Exposures Found</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-2xl">{scanResults.threats?.length || 0}</div>
+                    <div className="text-sm text-gray-600">Threats Identified</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`font-bold text-2xl px-3 py-1 rounded ${getRiskLevelColor(scanResults.riskLevel || 'LOW')}`}>
+                      {scanResults.riskLevel || 'LOW'}
+                    </div>
+                    <div className="text-sm text-gray-600">Risk Level</div>
+                  </div>
+                </div>
+
+                {scanResults.threats && scanResults.threats.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-bold mb-2">🚨 Top Security Threats:</h3>
+                    <div className="space-y-2">
+                      {scanResults.threats.slice(0, 5).map((threat: any, index: number) => (
+                        <div key={index} className="bg-white border rounded p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                threat.severity === 'CRITICAL' ? 'bg-red-100 text-red-800' :
+                                threat.severity === 'HIGH' ? 'bg-orange-100 text-orange-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {threat.severity}
+                              </span>
+                              <div className="font-medium mt-1">{threat.type}</div>
+                              <div className="text-sm text-gray-600">{threat.file}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {threat.count > 1 ? `${threat.count} instances` : '1 instance'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {scanResults.threats.length > 5 && (
+                        <div className="text-center text-gray-600 text-sm">
+                          ... and {scanResults.threats.length - 5} more threats
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {scanResults.recommendations && scanResults.recommendations.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-bold mb-2">💡 Recommendations:</h3>
+                    <div className="space-y-2">
+                      {scanResults.recommendations.slice(0, 3).map((rec: any, index: number) => (
+                        <div key={index} className="bg-blue-50 border border-blue-200 rounded p-3">
+                          <div className="font-medium">{rec.action}</div>
+                          <div className="text-sm text-blue-700 mt-1">Priority: {rec.priority}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -365,12 +476,24 @@ export default function SecurityDashboard() {
             </button>
             
             <button
-              onClick={() => alert('Feature coming soon: Real-time monitoring toggle')}
-              className="p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center"
+              onClick={() => {
+                setSecurityStatus(prev => ({
+                  ...prev,
+                  monitoring: !prev.monitoring
+                }));
+                alert(`Security monitoring ${securityStatus.monitoring ? 'disabled' : 'enabled'}`);
+              }}
+              className={`p-4 text-white rounded-lg text-center ${
+                securityStatus.monitoring ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+              }`}
             >
-              <div className="text-2xl mb-2">📊</div>
-              <div className="font-medium">Toggle Monitoring</div>
-              <div className="text-sm opacity-90">Enable/disable real-time alerts</div>
+              <div className="text-2xl mb-2">{securityStatus.monitoring ? '👁️' : '👁️‍🗨️'}</div>
+              <div className="font-medium">
+                {securityStatus.monitoring ? 'Disable' : 'Enable'} Monitoring
+              </div>
+              <div className="text-sm opacity-90">
+                {securityStatus.monitoring ? 'Stop real-time alerts' : 'Start real-time alerts'}
+              </div>
             </button>
             
             <Link

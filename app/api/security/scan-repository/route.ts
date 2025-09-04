@@ -31,6 +31,14 @@ const EXCLUDE_PATTERNS = [
 ];
 
 export async function GET() {
+  return handleScan();
+}
+
+export async function POST() {
+  return handleScan();
+}
+
+async function handleScan() {
   console.log('🔍 Starting repository security scan...');
   
   const threats: any[] = [];
