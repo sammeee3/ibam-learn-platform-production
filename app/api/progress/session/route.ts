@@ -46,14 +46,33 @@ export async function POST(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabase = supabaseAdmin;
 
-    // Get existing progress or create new
-    const { data: existing } = await supabase
+    // Try user_session_progress first (if it exists), fall back to user_progress
+    let existing = null;
+    let useComplexTable = true;
+    
+    // Try the complex table first
+    const { data: complexProgress } = await supabase
       .from('user_session_progress')
       .select('*')
       .eq('user_id', validUserId)
       .eq('module_id', validModuleId)
       .eq('session_id', validSessionId)
       .single();
+      
+    if (complexProgress) {
+      existing = complexProgress;
+    } else {
+      // Fall back to simple progress table
+      useComplexTable = false;
+      const { data: simpleProgress } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', validUserId)
+        .eq('module_id', validModuleId.toString())
+        .eq('session_id', validSessionId.toString())
+        .single();
+      existing = simpleProgress;
+    }
 
     const currentProgress = existing || {
       lookback_completed: false,
@@ -62,11 +81,53 @@ export async function POST(request: NextRequest) {
       assessment_completed: false,
       time_spent_seconds: 0,
       quiz_attempts: 0,
-      video_watch_percentage: 0
+      video_watch_percentage: 0,
+      completion_percentage: 0,
+      last_section: null,
+      looking_up_subsections: {},
+      looking_forward_subsections: {},
+      quiz_score: null,
+      last_accessed: null,
+      completed_at: null
     };
 
-    // Update section completion status
-    const updatedProgress: any = {
+    // Calculate completion percentage based on section progress
+    let totalProgress = 0;
+    
+    // Looking Back (33% if complete)
+    if (sectionCompleted?.lookback) {
+      totalProgress += 33;
+    }
+    
+    // Looking Up (33% with granular subsection tracking)
+    if (sectionCompleted?.lookup) {
+      totalProgress += 33; // All subsections complete
+    } else if (subsectionProgress?.lookingUp) {
+      // Calculate granular Looking Up progress based on completed subsections
+      const lookupSubsections = ['wealth', 'people', 'reading', 'case', 'practice']; // 5 visible subsections
+      const completedCount = lookupSubsections.filter(sub => subsectionProgress.lookingUp[sub]).length;
+      const lookupProgress = (completedCount / lookupSubsections.length) * 33;
+      totalProgress += lookupProgress;
+    }
+    
+    // Looking Forward (33% if complete, or granular based on 3 parts)
+    if (sectionCompleted?.lookforward) {
+      totalProgress += 33; // All 3 parts complete
+    } else if (subsectionProgress?.lookingForward) {
+      // Calculate granular Looking Forward progress based on 3 parts
+      const lookForwardParts = ['business_actions_completed', 'spiritual_integration_completed', 'sharing_person_completed'];
+      const forwardCompletedCount = lookForwardParts.filter(part => subsectionProgress.lookingForward[part]).length;
+      const forwardProgress = (forwardCompletedCount / lookForwardParts.length) * 33;
+      totalProgress += forwardProgress;
+    }
+    
+    const finalCompletionPercentage = Math.max(
+      currentProgress.completion_percentage || 0,
+      Math.min(100, Math.round(totalProgress))
+    );
+
+    // Create progress object based on which table we're using
+    const updatedProgress: any = useComplexTable ? {
       user_id: validUserId,
       module_id: validModuleId,
       session_id: validSessionId,
@@ -83,52 +144,18 @@ export async function POST(request: NextRequest) {
       quiz_score: quizScore ?? currentProgress.quiz_score,
       quiz_attempts: (currentProgress.quiz_attempts || 0) + (quizAttempts || 0),
       last_accessed: new Date().toISOString(),
-      // 🔧 CRITICAL FIX: Store individual subsection progress for persistence
       looking_up_subsections: subsectionProgress?.lookingUp || currentProgress.looking_up_subsections || {},
-      // 🎯 NEW: Store individual Looking Forward subsection progress 
-      looking_forward_subsections: subsectionProgress?.lookingForward || currentProgress.looking_forward_subsections || {}
+      looking_forward_subsections: subsectionProgress?.lookingForward || currentProgress.looking_forward_subsections || {},
+      completion_percentage: finalCompletionPercentage
+    } : {
+      user_id: validUserId,
+      module_id: validModuleId.toString(),
+      session_id: validSessionId.toString(),
+      completion_percentage: finalCompletionPercentage,
+      updated_at: new Date().toISOString()
     };
 
-    // Calculate completion percentage with granular subsection progress
-    // Each main section: ~33% (Looking Back, Looking Up, Looking Forward)
-    // Looking Up has 5 active subsections: wealth, people, reading, case, practice (integrate is hidden/auto-complete)
-    
-    let totalProgress = 0;
-    
-    // Looking Back (33% if complete)
-    if (updatedProgress.lookback_completed) {
-      totalProgress += 33;
-    }
-    
-    // Looking Up (33% with granular subsection tracking)
-    if (updatedProgress.lookup_completed) {
-      totalProgress += 33; // All subsections complete
-    } else if (subsectionProgress?.lookingUp) {
-      // Calculate granular Looking Up progress based on completed subsections
-      const lookupSubsections = ['wealth', 'people', 'reading', 'case', 'practice']; // 5 visible subsections
-      const completedCount = lookupSubsections.filter(sub => subsectionProgress.lookingUp[sub]).length;
-      const lookupProgress = (completedCount / lookupSubsections.length) * 33;
-      totalProgress += lookupProgress;
-      
-      console.log(`📊 Looking Up granular progress: ${completedCount}/${lookupSubsections.length} = ${Math.round(lookupProgress)}%`);
-    }
-    
-    // Looking Forward (33% if complete, or granular based on 3 parts)
-    if (updatedProgress.lookforward_completed) {
-      totalProgress += 33; // All 3 parts complete
-    } else if (subsectionProgress?.lookingForward) {
-      // Calculate granular Looking Forward progress based on 3 parts
-      const lookForwardParts = ['business_actions_completed', 'spiritual_integration_completed', 'sharing_person_completed'];
-      const forwardCompletedCount = lookForwardParts.filter(part => subsectionProgress.lookingForward[part]).length;
-      const forwardProgress = (forwardCompletedCount / lookForwardParts.length) * 33;
-      totalProgress += forwardProgress;
-      
-      console.log(`📊 Looking Forward granular progress: ${forwardCompletedCount}/${lookForwardParts.length} = ${Math.round(forwardProgress)}%`);
-    }
-    
-    updatedProgress.completion_percentage = Math.min(100, Math.round(totalProgress));
-    
-    console.log(`📊 Total session progress: ${updatedProgress.completion_percentage}% (Looking Back: ${updatedProgress.lookback_completed ? '✅' : '❌'}, Looking Up: ${updatedProgress.lookup_completed ? '✅' : Math.round((subsectionProgress?.lookingUp ? Object.values(subsectionProgress.lookingUp).filter(Boolean).length : 0) / 5 * 33)}%, Looking Forward: ${updatedProgress.lookforward_completed ? '✅' : '❌'})`);
+    console.log(`📊 Total session progress: ${updatedProgress.completion_percentage}%`);
 
     // Set completed_at if 100% complete
     if (updatedProgress.completion_percentage === 100 && !currentProgress.completed_at) {
@@ -138,8 +165,9 @@ export async function POST(request: NextRequest) {
     console.log('💾 Saving progress with admin client:', updatedProgress);
 
     // Upsert the progress record using admin client with explicit conflict resolution
+    const tableName = useComplexTable ? 'user_session_progress' : 'user_progress';
     const { data, error } = await supabase
-      .from('user_session_progress')
+      .from(tableName)
       .upsert(updatedProgress, { 
         onConflict: 'user_id,module_id,session_id',
         ignoreDuplicates: false 
@@ -191,16 +219,28 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       return;
     }
     
-    // Get all sessions for this module
-    const { data: sessions, error: sessionError } = await supabase
+    // Get all sessions for this module - try complex table first
+    let sessions: any[] = [];
+    const { data: complexSessions } = await supabase
       .from('user_session_progress')
       .select('completion_percentage, time_spent_seconds')
       .eq('user_id', validUserId)
       .eq('module_id', validModuleId);
-
-    if (sessionError) {
-      console.error('❌ Error fetching sessions for module completion:', sessionError);
-      return;
+      
+    if (complexSessions && complexSessions.length > 0) {
+      sessions = complexSessions;
+    } else {
+      const { data: simpleSessions, error: sessionError } = await supabase
+        .from('user_progress')
+        .select('completion_percentage')
+        .eq('user_id', validUserId)
+        .eq('module_id', validModuleId.toString());
+        
+      if (sessionError) {
+        console.error('❌ Error fetching sessions for module completion:', sessionError);
+        return;
+      }
+      sessions = simpleSessions || [];
     }
 
     if (!sessions || sessions.length === 0) {
@@ -210,7 +250,6 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
 
     const totalSessions = getTotalSessionsForModule(validModuleId);
     const completedSessions = sessions.filter((s: any) => s.completion_percentage === 100).length;
-    const totalTimeSpent = sessions.reduce((sum: number, s: any) => sum + (s.time_spent_seconds || 0), 0);
     const moduleCompletion = Math.round((completedSessions / totalSessions) * 100);
 
     console.log('📊 Module completion calculation:', {
@@ -219,16 +258,11 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       moduleCompletion: `${moduleCompletion}%`
     });
 
+    // Use the existing module_completions table structure
     const moduleData: any = {
       user_id: validUserId,
-      module_id: validModuleId,
-      sessions_completed: completedSessions,
-      total_sessions: totalSessions,
-      completion_percentage: moduleCompletion,
-      total_time_spent_seconds: totalTimeSpent,
-      status: moduleCompletion === 0 ? 'not_started' : 
-              moduleCompletion === 100 ? 'completed' : 'in_progress',
-      last_accessed: new Date().toISOString()
+      module_id: validModuleId.toString(),
+      created_at: new Date().toISOString()
     };
 
     if (moduleCompletion === 100) {
@@ -236,7 +270,7 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
     }
 
     const { error: upsertError } = await supabase
-      .from('module_completion')
+      .from('module_completions')
       .upsert(moduleData);
 
     if (upsertError) {
@@ -277,16 +311,29 @@ export async function GET(request: NextRequest) {
     const supabase = supabaseAdmin;
 
     const { data: modules } = await supabase
-      .from('module_completion')
+      .from('module_completions')
       .select('*')
       .eq('user_id', validUserId)
       .order('module_id');
 
-    const { data: sessions } = await supabase
+    // Try to get sessions from complex table first, fall back to simple
+    let sessions = [];
+    const { data: complexSessions } = await supabase
       .from('user_session_progress')
       .select('*')
       .eq('user_id', validUserId)
       .order('module_id, session_id');
+      
+    if (complexSessions && complexSessions.length > 0) {
+      sessions = complexSessions;
+    } else {
+      const { data: simpleSessions } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', validUserId)
+        .order('module_id, session_id');
+      sessions = simpleSessions || [];
+    }
 
     const overallCompletion = calculateOverallCompletion(modules || []);
 

@@ -50,7 +50,8 @@ const IBAMLogo: React.FC<IBAMLogoProps> = ({
 interface UserProgressRaw {
  session_id: number;
  completion_percentage: number;
- last_accessed_at: string;
+ updated_at: string; // Updated to match user_progress table
+ module_id: string;
 }
 
 interface UserProgress {
@@ -105,7 +106,7 @@ const MODULE_CONFIG = [
  { id: 2, title: "Success and Failure Factors", sessions: 4, color: "from-green-400 to-green-600", description: "Learning from setbacks and victories" },
  { id: 3, title: "Marketing Excellence", sessions: 5, color: "from-purple-400 to-purple-600", description: "Ethical marketing and sales strategies" },
  { id: 4, title: "Financial Management", sessions: 4, color: "from-orange-400 to-orange-600", description: "Biblical approach to business finances" },
- { id: 5, title: "Business Planning", sessions: 3, color: "from-indigo-400 to-indigo-600", description: "Strategic planning with divine guidance" }
+ { id: 5, title: "Business Planning", sessions: 5, color: "from-indigo-400 to-indigo-600", description: "Strategic planning with divine guidance" }
 ];
 
 const IBAMDashboard: React.FC = () => {
@@ -169,16 +170,29 @@ const IBAMDashboard: React.FC = () => {
 
   // Fetch last accessed session
   const fetchLastAccessedSession = async (userId: string) => {
+    console.log('🔍 Fetching last session for user:', userId);
+    
     const { data, error } = await supabase
-      .from('user_session_progress')
-      .select('module_id, session_id, last_section, last_subsection, completion_percentage')
+      .from('user_progress')
+      .select('module_id, session_id, completion_percentage, updated_at')
       .eq('user_id', userId)
-      .order('last_accessed', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(1)
       .single();
 
-    if (error || !data) return null;
-    return data;
+    if (error || !data) {
+      console.log('❌ Error fetching last session:', error);
+      return null;
+    }
+
+    console.log('✅ Found last session:', data);
+    
+    return {
+      module_id: parseInt(data.module_id || '1'),
+      session_id: parseInt(data.session_id || '1'),
+      last_section: 'lookback', // Default section since user_progress doesn't store this
+      completion_percentage: data.completion_percentage
+    };
   };
 
  // Mock data for fallback - CLEAN SLATE FOR NEW USERS
@@ -187,7 +201,7 @@ const IBAMDashboard: React.FC = () => {
    { module_id: 2, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
    { module_id: 3, total_sessions: 5, completed_sessions: 0, completion_percentage: 0 },
    { module_id: 4, total_sessions: 4, completed_sessions: 0, completion_percentage: 0 },
-   { module_id: 5, total_sessions: 3, completed_sessions: 0, completion_percentage: 0 }
+   { module_id: 5, total_sessions: 5, completed_sessions: 0, completion_percentage: 0 }
  ];
 
  // CLEAN RECENT ACTIVITY FOR NEW USERS
@@ -251,12 +265,13 @@ const getCurrentUserId = async (): Promise<string | null> => {
     
     const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
     const profile = await profileResponse.json();
-    if (!profile.auth_user_id) {
+    if (!profile.id) {
       console.error('User profile not found');
       return null;
     }
     
-    return profile.auth_user_id; // Returns the actual logged-in user's ID
+    console.log('🔍 Using profile.id for dashboard:', profile.id);
+    return profile.id; // Returns the profile ID (integer) used by session system
   } catch (error) {
     console.error('Error in getCurrentUserId:', error);
     return null;
@@ -337,10 +352,10 @@ const getCurrentUserId = async (): Promise<string | null> => {
        return;
      }
 
-     // Try to get user progress
+     // Try to get user progress from the correct table
      const { data: progress, error: progressError } = await supabase
        .from('user_progress')
-       .select('session_id, completion_percentage, last_accessed_at')
+       .select('session_id, completion_percentage, updated_at, module_id')
        .eq('user_id', currentUserId);
 
      if (progressError) {
@@ -351,32 +366,38 @@ const getCurrentUserId = async (): Promise<string | null> => {
      const moduleData = calculateModuleProgress(sessions, progress || []);
      setModuleProgress(moduleData);
 
-     // Get recent activity
+     // Get recent activity from correct table
      const { data: activityData, error: activityError } = await supabase
        .from('user_progress')
        .select(`
          session_id,
          completion_percentage,
-         last_accessed_at,
-         sessions!inner(title, module_id, session_number)
+         updated_at,
+         module_id
        `)
        .eq('user_id', currentUserId)
-       .order('last_accessed_at', { ascending: false })
+       .order('updated_at', { ascending: false })
        .limit(5);
 
      if (!activityError && activityData && activityData.length > 0) {
        console.log('✅ Using real activity data');
-       // Transform the data to match our interface
-       const transformedActivity: RecentActivity[] = activityData.map((item: any) => ({
-         session_id: item.session_id,
-         completion_percentage: item.completion_percentage,
-         last_accessed_at: item.last_accessed_at,
-         sessions: {
-           title: item.sessions.title,
-           module_id: item.sessions.module_id,
-           session_number: item.sessions.session_number
-         }
-       }));
+       
+       // Transform the data - need to get session titles from sessions data
+       const transformedActivity: RecentActivity[] = activityData.map((item: any) => {
+         // Find matching session from sessions data
+         const sessionInfo = sessions.find(s => s.id === item.session_id);
+         
+         return {
+           session_id: item.session_id,
+           completion_percentage: item.completion_percentage,
+           last_accessed_at: item.updated_at,
+           sessions: {
+             title: sessionInfo?.title || `Session ${item.session_id}`,
+             module_id: item.module_id,
+             session_number: sessionInfo?.session_number || 1
+           }
+         };
+       });
        setRecentActivity(transformedActivity);
        setDataSource('real');
      } else {
@@ -406,8 +427,9 @@ const loadContinueData = async () => {
   if (userEmail) {
     const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
     const profile = await profileResponse.json();
-    if (profile.auth_user_id) {
-      const lastSession = await fetchLastAccessedSession(profile.auth_user_id);
+    if (profile.id) {
+      console.log('🔍 Using profile.id for Continue Session:', profile.id);
+      const lastSession = await fetchLastAccessedSession(profile.id);
       setContinueSession(lastSession);
     }
   }
@@ -472,6 +494,15 @@ useEffect(() => {
 useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
     if (showUserMenu) {
+      const target = event.target as HTMLElement;
+      // Don't close if clicking on the dropdown menu itself
+      const dropdownMenu = document.querySelector('.user-dropdown-menu');
+      const userButton = document.querySelector('.user-menu-button');
+      
+      if (dropdownMenu && (dropdownMenu.contains(target) || userButton?.contains(target))) {
+        return;
+      }
+      
       setShowUserMenu(false);
     }
   };
@@ -660,7 +691,7 @@ const handleLogout = async () => {
                <div className="relative">
                  <button
                    onClick={() => setShowUserMenu(!showUserMenu)}
-                   className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 rounded-full px-3 py-2 transition-colors"
+                   className="user-menu-button flex items-center space-x-2 bg-white/10 hover:bg-white/20 rounded-full px-3 py-2 transition-colors"
                  >
                    <User className="w-4 h-4" />
                    <span className="text-sm font-medium">
@@ -669,7 +700,10 @@ const handleLogout = async () => {
                  </button>
                  
                  {showUserMenu && (
-                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                   <div 
+                     className="user-dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50"
+                     onClick={(e) => e.stopPropagation()}
+                   >
                      <div className="px-4 py-3 border-b">
                        <p className="text-sm font-medium text-gray-900">
                          {userProfile.first_name} {userProfile.last_name}
@@ -680,28 +714,52 @@ const handleLogout = async () => {
                        </p>
                      </div>
                      <div className="py-1">
-                       <a
-                         href="/profile"
-                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                       <button
+                         onClick={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                           console.log('Navigating to /profile');
+                           setShowUserMenu(false);
+                           router.push('/profile');
+                         }}
+                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                        >
                          View Profile
-                       </a>
-                       <a
-                         href="/settings"
-                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                       </button>
+                       <button
+                         onClick={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                           console.log('Navigating to /settings');
+                           setShowUserMenu(false);
+                           router.push('/settings');
+                         }}
+                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                        >
                          Settings
-                       </a>
+                       </button>
                        {userProfile.email === 'sammeee@yahoo.com' && (
-                         <a
-                           href="/admin"
-                           className="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"
+                         <button
+                           onClick={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             console.log('Navigating to /admin');
+                             setShowUserMenu(false);
+                             router.push('/admin');
+                           }}
+                           className="block w-full text-left px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 font-bold"
                          >
                            🛡️ Admin Command Center
-                         </a>
+                         </button>
                        )}
                        <button
-                         onClick={handleLogout}
+                         onClick={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                           console.log('Logging out');
+                           setShowUserMenu(false);
+                           handleLogout();
+                         }}
                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                        >
                          Sign Out
