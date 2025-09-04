@@ -15,6 +15,16 @@ export async function GET(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabase = supabaseAdmin;
 
+    // Get sessions data (needed for progress calculation)
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('id, module_id, session_number, title, subtitle');
+
+    if (sessionsError) {
+      console.error('❌ Sessions query error:', sessionsError);
+      return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
+    }
+
     // Get user progress data
     const { data: progress, error: progressError } = await supabase
       .from('user_session_progress')
@@ -36,11 +46,13 @@ export async function GET(request: NextRequest) {
       .single();
 
     console.log('✅ Dashboard data fetched:', {
+      sessionsCount: sessions?.length || 0,
       progressCount: progress?.length || 0,
       lastSession: lastSession?.module_id ? `${lastSession.module_id}-${lastSession.session_id}` : 'none'
     });
 
     return NextResponse.json({
+      sessions: sessions || [],
       progress: progress || [],
       lastSession: lastSession || null
     });

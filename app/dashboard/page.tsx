@@ -339,30 +339,14 @@ const getCurrentUserId = async (): Promise<string | null> => {
      console.log('✅ Current user ID:', currentUserId);
      setUserId(currentUserId);
     
-     // Try to get sessions data
-     const { data: sessions, error: sessionsError } = await supabase
-       .from('sessions')
-       .select('id, module_id, session_number, title, subtitle');
-    
-     if (sessionsError) {
-       throw new Error(`Sessions query failed: ${sessionsError.message}`);
-     }
-
-     if (!sessions || sessions.length === 0) {
-       console.log('⚠️ No sessions found in database, using mock data');
-       setDataSource('mock');
-       setModuleProgress(mockModuleProgress);
-       setRecentActivity(mockRecentActivity);
-       return;
-     }
-
-     // Get progress data from server-side API (bypasses RLS issues)
+     // Get all data from server-side API (bypasses RLS issues)
      const dashboardResponse = await fetch(`/api/dashboard?userId=${currentUserId}`);
      const dashboardData = await dashboardResponse.json();
+     const sessions = dashboardData.sessions || [];
      const progress = dashboardData.progress || [];
      
-     if (!dashboardResponse.ok) {
-       console.log('⚠️ Dashboard API failed, using mock data');
+     if (!dashboardResponse.ok || !sessions || sessions.length === 0) {
+       console.log('⚠️ Dashboard API failed or no sessions found, using mock data');
        setDataSource('mock');
        setModuleProgress(mockModuleProgress);
        setRecentActivity(mockRecentActivity);
