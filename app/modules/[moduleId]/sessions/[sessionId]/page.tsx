@@ -459,7 +459,7 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
             if (profile.id) { // 🔧 FIX: Use profile.id consistently
               // Get user's overall progress using auth UUID
               // 🔧 FIX: Use server-side API for progress loading
-              const progressResponse = await fetch(`/api/progress/session?userId=${profile.id}`);
+              const progressResponse = await fetch(`/api/progress/session?userId=${profile.auth_user_id}`);
               const progressData = progressResponse.ok ? await progressResponse.json() : { sessions: [], modules: [], overallCompletion: 0 };
             console.log('📊 Progress data loaded:', progressData);
             
@@ -895,7 +895,7 @@ const navigateTo = (path: string) => {
       if (userEmail) {
         const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
         const profile = await response.json();
-        const authUserId = profile.id; // 🔧 FIX: Use profile.id consistently (same as load process)
+        const authUserId = profile.auth_user_id; // 🔧 FIX: Use profile.auth_user_id for UUID database compatibility
         
         if (authUserId) {
           // 🚨 CRITICAL FIX: Map UI sections to database fields correctly
@@ -1076,7 +1076,7 @@ const navigateTo = (path: string) => {
         if (userEmail) {
           const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
           const profile = await response.json();
-          const authUserId = profile.id;
+          const authUserId = profile.auth_user_id;
           
           if (authUserId) {
             // Build complete section completion state for database

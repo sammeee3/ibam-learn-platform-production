@@ -273,8 +273,8 @@ const getCurrentUserId = async (): Promise<string | null> => {
     console.log('🔍 Profile.id (integer):', profile.id);
     console.log('🔍 Profile.auth_user_id (UUID):', profile.auth_user_id);
     
-    // Convert profile.id to string to match session system usage
-    return String(profile.id); // Returns profile ID as string to match session system
+    // Use UUID for database queries (user_progress table expects UUIDs)
+    return profile.auth_user_id; // Returns UUID for database compatibility
   } catch (error) {
     console.error('Error in getCurrentUserId:', error);
     return null;
@@ -432,8 +432,8 @@ const loadContinueData = async () => {
     const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
     const profile = await profileResponse.json();
     if (profile.id) {
-      console.log('🔍 Using profile.id for Continue Session:', String(profile.id));
-      const lastSession = await fetchLastAccessedSession(String(profile.id));
+      console.log('🔍 Using profile.auth_user_id for Continue Session:', profile.auth_user_id);
+      const lastSession = await fetchLastAccessedSession(profile.auth_user_id);
       setContinueSession(lastSession);
     }
   }
