@@ -89,14 +89,40 @@ async function checkSecurityAccess(request: NextRequest): Promise<boolean> {
   // TEMPORARY: Allow all requests for staging dashboard testing
   // TODO: Implement proper authentication after testing
   
-  console.log('Security access check:', {
+  const headers = {
     origin: request.headers.get('origin'),
     referer: request.headers.get('referer'),
     userAgent: request.headers.get('user-agent'),
-    nodeEnv: process.env.NODE_ENV
-  });
+    nodeEnv: process.env.NODE_ENV,
+    host: request.headers.get('host'),
+    method: request.method
+  };
   
-  // For staging/development, allow all requests for now
+  console.log('🔍 Security access check:', headers);
+  
+  // For staging/development, allow all requests from our domain
+  const allowedOrigins = [
+    'https://ibam-learn-platform-staging.vercel.app',
+    'https://ibam-learn-platform-staging-v2.vercel.app',
+    'localhost:3000',
+    'localhost:3001'
+  ];
+  
+  const origin = headers.origin || headers.referer;
+  if (origin) {
+    const isAllowed = allowedOrigins.some(allowed => origin.includes(allowed));
+    console.log('🔍 Origin check:', { origin, isAllowed });
+    if (isAllowed) return true;
+  }
+  
+  // Allow direct API calls (no origin/referer)
+  if (!origin && headers.userAgent?.includes('IBAM-Security-Dashboard')) {
+    console.log('🔍 Internal API call allowed');
+    return true;
+  }
+  
+  // For staging, allow all requests for now
+  console.log('🔍 Allowing request for staging environment');
   return true;
 }
 

@@ -74,10 +74,14 @@ export default function SecurityDashboard() {
   };
 
   const loadSecurityStatus = async () => {
+    setLoading(true);
+    console.log('🔄 Refreshing security status...');
+    
     try {
       const response = await fetch('/api/security/dashboard');
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Dashboard API success:', data);
         setSecurityStatus({
           riskLevel: data.riskLevel || 'LOW',
           alerts: data.alerts || [],
@@ -86,15 +90,16 @@ export default function SecurityDashboard() {
           repositoryStatus: data.repositoryStatus || 'Clean'
         });
       } else {
-        console.warn('Security dashboard API returned:', response.status);
+        console.warn('❌ Security dashboard API returned:', response.status);
         // Still try to load repository status separately
         await loadRepositoryStatus();
       }
     } catch (error) {
-      console.error('Error fetching security status:', error);
+      console.error('❌ Error fetching security status:', error);
       await loadRepositoryStatus();
     } finally {
       setLoading(false);
+      console.log('🔄 Security status refresh complete');
     }
   };
 
@@ -243,9 +248,21 @@ export default function SecurityDashboard() {
               </button>
               <button
                 onClick={loadSecurityStatus}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={loading}
+                className={`px-4 py-2 text-white rounded-lg transition-all ${
+                  loading 
+                    ? 'bg-blue-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                🔄 Refresh Status
+                {loading ? (
+                  <>
+                    <span className="animate-spin inline-block mr-2">⟳</span>
+                    Refreshing...
+                  </>
+                ) : (
+                  <>🔄 Refresh Status</>
+                )}
               </button>
             </div>
           </div>
