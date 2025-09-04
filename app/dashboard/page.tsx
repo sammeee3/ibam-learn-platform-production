@@ -50,8 +50,8 @@ const IBAMLogo: React.FC<IBAMLogoProps> = ({
 interface UserProgressRaw {
  session_id: number;
  completion_percentage: number;
- updated_at: string; // Updated to match user_progress table
- module_id: string;
+ last_accessed: string; // Updated to match user_session_progress table
+ module_id: number;
 }
 
 interface UserProgress {
@@ -173,10 +173,10 @@ const IBAMDashboard: React.FC = () => {
     console.log('🔍 Fetching last session for user:', userId);
     
     const { data, error } = await supabase
-      .from('user_progress')
-      .select('module_id, session_id, completion_percentage, updated_at')
+      .from('user_session_progress')
+      .select('module_id, session_id, completion_percentage, last_accessed, last_section')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('last_accessed', { ascending: false })
       .limit(1)
       .single();
 
@@ -190,7 +190,7 @@ const IBAMDashboard: React.FC = () => {
     return {
       module_id: parseInt(data.module_id || '1'),
       session_id: parseInt(data.session_id || '1'),
-      last_section: 'lookback', // Default section since user_progress doesn't store this
+      last_section: data.last_section || 'lookback',
       completion_percentage: data.completion_percentage
     };
   };
@@ -273,8 +273,8 @@ const getCurrentUserId = async (): Promise<string | null> => {
     console.log('🔍 Profile.id (integer):', profile.id);
     console.log('🔍 Profile.auth_user_id (UUID):', profile.auth_user_id);
     
-    // Use UUID for database queries (user_progress table expects UUIDs)
-    return profile.auth_user_id; // Returns UUID for database compatibility
+    // Use integer ID for database queries (user_session_progress table uses integers)
+    return String(profile.id); // Returns integer ID for database compatibility
   } catch (error) {
     console.error('Error in getCurrentUserId:', error);
     return null;
@@ -358,8 +358,8 @@ const getCurrentUserId = async (): Promise<string | null> => {
 
      // Try to get user progress from the correct table
      const { data: progress, error: progressError } = await supabase
-       .from('user_progress')
-       .select('session_id, completion_percentage, updated_at, module_id')
+       .from('user_session_progress')
+       .select('session_id, completion_percentage, last_accessed, module_id')
        .eq('user_id', currentUserId);
 
      if (progressError) {
@@ -372,15 +372,15 @@ const getCurrentUserId = async (): Promise<string | null> => {
 
      // Get recent activity from correct table
      const { data: activityData, error: activityError } = await supabase
-       .from('user_progress')
+       .from('user_session_progress')
        .select(`
          session_id,
          completion_percentage,
-         updated_at,
+         last_accessed,
          module_id
        `)
        .eq('user_id', currentUserId)
-       .order('updated_at', { ascending: false })
+       .order('last_accessed', { ascending: false })
        .limit(5);
 
      if (!activityError && activityData && activityData.length > 0) {
@@ -432,8 +432,8 @@ const loadContinueData = async () => {
     const profileResponse = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
     const profile = await profileResponse.json();
     if (profile.id) {
-      console.log('🔍 Using profile.auth_user_id for Continue Session:', profile.auth_user_id);
-      const lastSession = await fetchLastAccessedSession(profile.auth_user_id);
+      console.log('🔍 Using profile.id for Continue Session:', String(profile.id));
+      const lastSession = await fetchLastAccessedSession(String(profile.id));
       setContinueSession(lastSession);
     }
   }
