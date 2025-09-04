@@ -19,18 +19,33 @@ async function getFilesToScan(): Promise<string[]> {
   // Directories to exclude
   const excludeDirs = ['node_modules', '.next', '.git', '.vercel'];
   
-  async function scanDirectory(dir: string) {
+  // Debug: Check what directories are available
+  const workingDir = process.cwd();
+  console.log('🔍 Working directory:', workingDir);
+  console.log('🔍 Process env LAMBDA_TASK_ROOT:', process.env.LAMBDA_TASK_ROOT);
+  console.log('🔍 Process env VERCEL_URL:', process.env.VERCEL_URL);
+  
+  try {
+    const rootEntries = await fs.readdir(workingDir, { withFileTypes: true });
+    console.log('🔍 Root directory contents:', rootEntries.slice(0, 10).map(e => `${e.name}${e.isDirectory() ? '/' : ''}`));
+  } catch (error) {
+    console.error('🔍 Cannot read working directory:', error);
+  }
+
+  async function scanDirectory(dir: string, depth = 0) {
+    if (depth > 10) return; // Prevent infinite recursion
+    
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
       
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
-        const relativePath = path.relative(process.cwd(), fullPath);
+        const relativePath = path.relative(workingDir, fullPath);
         
         if (entry.isDirectory()) {
           // Skip excluded directories
           if (!excludeDirs.includes(entry.name) && !entry.name.startsWith('.')) {
-            await scanDirectory(fullPath);
+            await scanDirectory(fullPath, depth + 1);
           }
         } else if (entry.isFile()) {
           const ext = path.extname(entry.name);
@@ -44,11 +59,27 @@ async function getFilesToScan(): Promise<string[]> {
       }
     } catch (error) {
       // Skip directories we can't read
-      console.log(`Skipping directory ${dir}:`, error);
+      console.log(`🔍 Skipping directory ${dir}:`, error.message);
     }
   }
   
-  await scanDirectory(process.cwd());
+  // Try multiple possible source locations
+  const possibleRoots = [
+    workingDir,
+    path.join(workingDir, 'app'),
+    path.join(workingDir, 'src'),
+    process.env.LAMBDA_TASK_ROOT || workingDir
+  ];
+  
+  for (const root of possibleRoots) {
+    console.log(`🔍 Scanning root: ${root}`);
+    await scanDirectory(root);
+    if (files.length > 0) break; // Found files, stop trying other roots
+  }
+  
+  console.log(`🔍 Scan complete: Found ${files.length} files to scan`);
+  console.log(`🔍 First few files:`, files.slice(0, 5));
+  
   return files;
 }
 
