@@ -46,11 +46,11 @@ export async function POST(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabase = supabaseAdmin;
 
-    // Always use simple progress table for staging (INTEGER user_id)
+    // Always use simple progress table for staging (STRING user_id)
     let existing = null;
-    let useComplexTable = false; // Force simple table for staging
+    let useComplexTable = false; // Force simple table - all data is in user_progress
     
-    // Use simple progress table (matches staging database schema)
+    // Use simple progress table where all the actual data lives
     const { data: simpleProgress } = await supabase
       .from('user_progress')
       .select('*')
