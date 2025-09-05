@@ -1069,67 +1069,72 @@ const navigateTo = (path: string) => {
       remaining: visibleSubsections.filter(sub => !updatedProgress[sub as keyof typeof updatedProgress])
     });
     
-    // If all subsections are complete, save to database immediately with correct progress
-    if (allComplete && !completedSections.lookup) {
-      console.log('🚀 All Looking Up subsections complete - saving to database directly');
-      
-      // Update completed sections state
-      setCompletedSections(prev => ({ ...prev, lookup: true }));
-      
-      // Calculate session progress
-      const lookbackComplete = completedSections.lookback ? 1 : 0;
-      const lookforwardComplete = completedSections.lookforward ? 1 : 0;
-      const newProgress = Math.round(((lookbackComplete + 1 + lookforwardComplete) / 3) * 100);
-      setSessionProgressPercent(newProgress);
-      
-      // Save to database with CORRECT updated progress
-      try {
-        const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
-        if (userEmail) {
-          const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
-          const profile = await response.json();
-          const authUserId = profile.id;
+    // 🔧 CRITICAL FIX: Save EVERY subsection completion immediately to database
+    console.log('💾 Saving individual subsection progress to database immediately');
+    
+    try {
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('ibam-auth-email') : null;
+      if (userEmail) {
+        const response = await fetch(`/api/user/profile?email=${encodeURIComponent(userEmail)}`);
+        const profile = await response.json();
+        const authUserId = profile.id;
+        
+        if (authUserId) {
+          // Build section completion state for database (keep current state, don't mark complete until all done)
+          const currentDbSections = {
+            lookback: completedSections.lookback || false,
+            lookup: allComplete, // Only mark complete when ALL subsections done
+            lookforward: completedSections.lookforward || false,
+            assessment: false
+          };
           
-          if (authUserId) {
-            // Build complete section completion state for database
-            const currentDbSections = {
-              lookback: completedSections.lookback || false,
-              lookup: true, // NOW COMPLETE
-              lookforward: completedSections.lookforward || false,
-              assessment: false
-            };
+          console.log(`💾 SAVING SUBSECTION TO DATABASE:`, {
+            subsection,
+            currentDbSections,
+            updatedLookingUpProgress: updatedProgress
+          });
+          
+          const progressResponse = await fetch('/api/progress/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: authUserId,
+              moduleId: parseInt(moduleId),
+              sessionId: parseInt(sessionId),
+              section: 'lookup',
+              sectionCompleted: currentDbSections,
+              subsectionProgress: {
+                lookingUp: updatedProgress // Save current subsection progress
+              }
+            })
+          });
+          
+          if (!progressResponse.ok) {
+            const errorData = await progressResponse.json();
+            console.error('❌ Progress API error:', errorData);
+          } else {
+            console.log(`✅ ${subsection} progress saved successfully to database`);
+          }
+          
+          // If all subsections are now complete, update UI state and session progress
+          if (allComplete && !completedSections.lookup) {
+            console.log('🚀 All Looking Up subsections complete - updating UI state');
             
-            console.log(`💾 SAVING TO DATABASE WITH CORRECT PROGRESS:`, {
-              currentDbSections,
-              updatedLookingUpProgress: updatedProgress
-            });
+            // Update completed sections state
+            setCompletedSections(prev => ({ ...prev, lookup: true }));
             
-            const progressResponse = await fetch('/api/progress/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: authUserId,
-                moduleId: parseInt(moduleId),
-                sessionId: parseInt(sessionId),
-                section: 'lookup',
-                sectionCompleted: currentDbSections,
-                subsectionProgress: {
-                  lookingUp: updatedProgress // Use the CORRECT updated progress, not stale state
-                }
-              })
-            });
+            // Calculate session progress
+            const lookbackComplete = completedSections.lookback ? 1 : 0;
+            const lookforwardComplete = completedSections.lookforward ? 1 : 0;
+            const newProgress = Math.round(((lookbackComplete + 1 + lookforwardComplete) / 3) * 100);
+            setSessionProgressPercent(newProgress);
             
-            if (!progressResponse.ok) {
-              const errorData = await progressResponse.json();
-              console.error('❌ Progress API error:', errorData);
-            } else {
-              console.log('✅ Looking Up progress saved successfully to database');
-            }
+            console.log('✅ Looking Up section now fully completed');
           }
         }
-      } catch (error) {
-        console.error('❌ Error saving Looking Up progress:', error);
       }
+    } catch (error) {
+      console.error('❌ Error saving Looking Up progress:', error);
     }
   };
 
