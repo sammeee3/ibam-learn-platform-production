@@ -181,3 +181,4 @@ To run from source:
 # Go >= 1.22
 go run . help
 ```
+# V3 DEPLOYMENT TRIGGER - Fri Sep  5 07:48:38 PDT 2025
