@@ -46,19 +46,19 @@ export async function POST(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabase = supabaseAdmin;
 
-    // Always use simple progress table for staging (STRING user_id)
+    // Use user_session_progress table (INTEGER user_id) - where the actual data lives
     let existing = null;
-    let useComplexTable = false; // Force simple table - all data is in user_progress
+    let useComplexTable = true; // Use the correct table with all the data
     
-    // Use simple progress table where all the actual data lives
-    const { data: simpleProgress } = await supabase
-      .from('user_progress')
+    // Use user_session_progress table where sammeee@yahoo.com data exists
+    const { data: stagingProgress } = await supabase
+      .from('user_session_progress')
       .select('*')
-      .eq('user_id', validUserId)
-      .eq('module_id', validModuleId.toString())
-      .eq('session_id', validSessionId.toString())
+      .eq('user_id', parseInt(validUserId))
+      .eq('module_id', validModuleId)
+      .eq('session_id', validSessionId)
       .single();
-    existing = simpleProgress;
+    existing = stagingProgress;
 
     const currentProgress = existing || {
       lookback_completed: false,
@@ -202,19 +202,19 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       return;
     }
     
-    // Always use simple table for staging consistency
+    // Use user_session_progress table for module completion
     let sessions: any[] = [];
-    const { data: simpleSessions, error: sessionError } = await supabase
-      .from('user_progress')
+    const { data: stagingSessions, error: sessionError } = await supabase
+      .from('user_session_progress')
       .select('completion_percentage')
-      .eq('user_id', validUserId)
-      .eq('module_id', validModuleId.toString());
+      .eq('user_id', parseInt(validUserId))
+      .eq('module_id', validModuleId);
       
     if (sessionError) {
       console.error('❌ Error fetching sessions for module completion:', sessionError);
       return;
     }
-    sessions = simpleSessions || [];
+    sessions = stagingSessions || [];
 
     if (!sessions || sessions.length === 0) {
       console.log('⚠️ No sessions found for module completion calculation');
@@ -289,14 +289,14 @@ export async function GET(request: NextRequest) {
       .eq('user_id', validUserId)
       .order('module_id');
 
-    // Always use simple table for staging consistency
+    // Use user_session_progress table for GET requests
     let sessions: any[] = [];
-    const { data: simpleSessions } = await supabase
-      .from('user_progress')
+    const { data: stagingSessions } = await supabase
+      .from('user_session_progress')
       .select('*')
-      .eq('user_id', validUserId)
+      .eq('user_id', parseInt(validUserId))
       .order('module_id, session_id');
-    sessions = simpleSessions || [];
+    sessions = stagingSessions || [];
 
     const overallCompletion = calculateOverallCompletion(modules || []);
 
