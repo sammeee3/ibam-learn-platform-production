@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const { data: progress, error: progressError } = await supabase
       .from('user_session_progress')
       .select('session_id, completion_percentage, last_accessed, module_id')
-      .eq('user_id', parseInt(userId));
+      .eq('user_id', userId); // FIX: Use UUID string directly, not parseInt()
 
     if (progressError) {
       console.error('❌ Progress query error:', progressError);
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const { data: lastSession, error: lastSessionError } = await supabase
       .from('user_session_progress')
       .select('module_id, session_id, completion_percentage, last_accessed, last_section')
-      .eq('user_id', parseInt(userId))
+      .eq('user_id', userId) // FIX: Use UUID string directly, not parseInt()
       .order('last_accessed', { ascending: false })
       .limit(1)
       .single();
