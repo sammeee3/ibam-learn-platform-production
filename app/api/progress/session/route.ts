@@ -164,14 +164,11 @@ export async function POST(request: NextRequest) {
 
     console.log('💾 Saving progress with admin client:', updatedProgress);
 
-    // Upsert the progress record using admin client with explicit conflict resolution
+    // Upsert the progress record using admin client
     const tableName = useComplexTable ? 'user_session_progress' : 'user_progress';
     const { data, error } = await supabase
       .from(tableName)
-      .upsert(updatedProgress, { 
-        onConflict: 'user_id,module_id,session_id',
-        ignoreDuplicates: false 
-      })
+      .upsert(updatedProgress)
       .select()
       .single();
 

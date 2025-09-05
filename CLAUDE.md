@@ -194,8 +194,10 @@ This is a Next.js-based learning platform for IBAM (International Business and M
 
 ## 🚨 DEPLOYMENT SAFETY PROTOCOL - CRITICAL
 
-### 🔒 PRODUCTION V3 DEPLOYMENT - EXTREME CAUTION REQUIRED
-**CLAUDE IS BANNED FROM V3 PRODUCTION UNLESS EXPLICITLY COMMANDED**
+### 🔒 V3 PRODUCTION DEPLOYMENT COMMAND: `V3 DEPLOY NOW`
+**When user types `V3 DEPLOY NOW` - follow V3_DEPLOYMENT_PROTOCOL.md EXACTLY**
+**NEVER deploy to V3 production without this exact command**
+**REFERENCE FILE: V3_DEPLOYMENT_PROTOCOL.md contains complete safety protocol**
 
 ### ⛔ PRODUCTION V3 RESTRICTIONS:
 - **NEVER** switch to `ibam-learn-platform-production-v3` project without explicit command
