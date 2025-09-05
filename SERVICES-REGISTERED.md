@@ -7,7 +7,7 @@
 ### 1. Resend Email Service
 - **Sign-up Date**: August 26, 2025
 - **Account Email**: sammeee@yahoo.com  
-- **API Key**: re_TttZ8Gyf_3JWqBwf6BaHoSzPYVTKirH4W
+- **API Key**: [SECURE_KEY_IN_VERCEL_ENV_VARS]
 - **Default From**: onboarding@resend.dev (development)
 - **Purpose**: Sending welcome emails with magic links, membership updates
 - **Plan**: Free tier (suitable for development)
@@ -20,7 +20,7 @@
 
 ## 🔗 System.io Integration (Existing)
 - **Webhook URL**: https://ibam-learn-platform-staging.vercel.app/api/webhooks/systemio
-- **Secret Key**: staging-secret-2025-secure
+- **Secret Key**: [SECURE_KEY_IN_VERCEL_ENV_VARS]
 - **Events Configured**: TAG_ADDED, TAG_REMOVED, CONTACT_CREATED, CONTACT_UPDATED
 
 ## 🚀 Vercel Deployment (Existing)
