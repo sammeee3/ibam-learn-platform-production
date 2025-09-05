@@ -46,33 +46,19 @@ export async function POST(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabase = supabaseAdmin;
 
-    // Try user_session_progress first (if it exists), fall back to user_progress
+    // Always use simple progress table for staging (INTEGER user_id)
     let existing = null;
-    let useComplexTable = true;
+    let useComplexTable = false; // Force simple table for staging
     
-    // Try the complex table first
-    const { data: complexProgress } = await supabase
-      .from('user_session_progress')
+    // Use simple progress table (matches staging database schema)
+    const { data: simpleProgress } = await supabase
+      .from('user_progress')
       .select('*')
       .eq('user_id', validUserId)
-      .eq('module_id', validModuleId)
-      .eq('session_id', validSessionId)
+      .eq('module_id', validModuleId.toString())
+      .eq('session_id', validSessionId.toString())
       .single();
-      
-    if (complexProgress) {
-      existing = complexProgress;
-    } else {
-      // Fall back to simple progress table
-      useComplexTable = false;
-      const { data: simpleProgress } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', validUserId)
-        .eq('module_id', validModuleId.toString())
-        .eq('session_id', validSessionId.toString())
-        .single();
-      existing = simpleProgress;
-    }
+    existing = simpleProgress;
 
     const currentProgress = existing || {
       lookback_completed: false,
@@ -216,29 +202,19 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       return;
     }
     
-    // Get all sessions for this module - try complex table first
+    // Always use simple table for staging consistency
     let sessions: any[] = [];
-    const { data: complexSessions } = await supabase
-      .from('user_session_progress')
-      .select('completion_percentage, time_spent_seconds')
+    const { data: simpleSessions, error: sessionError } = await supabase
+      .from('user_progress')
+      .select('completion_percentage')
       .eq('user_id', validUserId)
-      .eq('module_id', validModuleId);
+      .eq('module_id', validModuleId.toString());
       
-    if (complexSessions && complexSessions.length > 0) {
-      sessions = complexSessions;
-    } else {
-      const { data: simpleSessions, error: sessionError } = await supabase
-        .from('user_progress')
-        .select('completion_percentage')
-        .eq('user_id', validUserId)
-        .eq('module_id', validModuleId.toString());
-        
-      if (sessionError) {
-        console.error('❌ Error fetching sessions for module completion:', sessionError);
-        return;
-      }
-      sessions = simpleSessions || [];
+    if (sessionError) {
+      console.error('❌ Error fetching sessions for module completion:', sessionError);
+      return;
     }
+    sessions = simpleSessions || [];
 
     if (!sessions || sessions.length === 0) {
       console.log('⚠️ No sessions found for module completion calculation');
@@ -313,24 +289,14 @@ export async function GET(request: NextRequest) {
       .eq('user_id', validUserId)
       .order('module_id');
 
-    // Try to get sessions from complex table first, fall back to simple
+    // Always use simple table for staging consistency
     let sessions: any[] = [];
-    const { data: complexSessions } = await supabase
-      .from('user_session_progress')
+    const { data: simpleSessions } = await supabase
+      .from('user_progress')
       .select('*')
       .eq('user_id', validUserId)
       .order('module_id, session_id');
-      
-    if (complexSessions && complexSessions.length > 0) {
-      sessions = complexSessions;
-    } else {
-      const { data: simpleSessions } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', validUserId)
-        .order('module_id, session_id');
-      sessions = simpleSessions || [];
-    }
+    sessions = simpleSessions || [];
 
     const overallCompletion = calculateOverallCompletion(modules || []);
 
