@@ -355,22 +355,59 @@ async function performComprehensiveSecurityScan(): Promise<any[]> {
 async function scanEnvironmentSecurity(): Promise<any[]> {
   const threats: any[] = [];
   
-  // Check for exposed environment variables
-  const requiredEnvVars = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'SUPABASE_SERVICE_ROLE_KEY', 
-    'IBAM_SYSTEME_SECRET',
+  // Critical security environment variables (missing = CRITICAL security risk)
+  const criticalSecurityVars = [
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'IBAM_SYSTEME_SECRET'
+  ];
+  
+  // Essential functionality variables (missing = HIGH operational risk)
+  const essentialVars = [
+    'NEXT_PUBLIC_SUPABASE_URL'
+  ];
+  
+  // Optional feature variables (missing = LOW operational impact)
+  const optionalVars = [
     'RESEND_API_KEY'
   ];
   
-  for (const envVar of requiredEnvVars) {
+  // Check critical security variables
+  for (const envVar of criticalSecurityVars) {
+    if (!process.env[envVar]) {
+      threats.push({
+        severity: 'CRITICAL',
+        type: 'Missing Critical Security Variable',
+        file: 'environment',
+        details: `${envVar} not configured - security vulnerability`,
+        action: `URGENT: Set ${envVar} in Vercel environment variables`,
+        count: 1
+      });
+    }
+  }
+  
+  // Check essential functionality variables
+  for (const envVar of essentialVars) {
     if (!process.env[envVar]) {
       threats.push({
         severity: 'HIGH',
-        type: 'Missing Environment Variable',
+        type: 'Missing Essential Configuration',
         file: 'environment',
-        details: `${envVar} not configured`,
+        details: `${envVar} not configured - core functionality broken`,
         action: `Set ${envVar} in Vercel environment variables`,
+        count: 1
+      });
+    }
+  }
+  
+  // Check optional feature variables (LOW severity - just broken features)
+  for (const envVar of optionalVars) {
+    if (!process.env[envVar]) {
+      threats.push({
+        severity: 'LOW',
+        type: 'Missing Optional Feature Configuration',
+        file: 'environment',
+        details: `${envVar} not configured - email functionality disabled`,
+        action: `Optional: Set ${envVar} to enable email features`,
         count: 1
       });
     }

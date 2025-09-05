@@ -131,35 +131,48 @@ export const BottomNavigation = ({ currentSection, setCurrentSection, completedS
     return Math.round((completedRequired.length / requiredSections.length) * 100);
   };
 
+  // Get current and next session info
+  const getCurrentSessionInfo = () => {
+    // Business Planner is accessed from Module 5, Session 1
+    return {
+      currentModule: 5,
+      currentSession: 1,
+      nextModule: 5,
+      nextSession: 2
+    };
+  };
+
+  const sessionInfo = getCurrentSessionInfo();
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg" style={{ borderColor: colors.border }}>
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex justify-between items-center">
+          {/* Back to Current Session */}
           <button
-            onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
-            disabled={currentSection === 0}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg disabled:opacity-50 hover:bg-gray-600 transition-colors"
+            onClick={() => window.location.href = `/modules/${sessionInfo.currentModule}/sessions/${sessionInfo.currentSession}`}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Previous</span>
+            <span>Back to Session</span>
           </button>
 
           <div className="text-center">
             <div className="text-sm text-gray-600">
-              {currentSection + 1} of {sections.length}
+              Business Planner
             </div>
             <div className="text-xs text-gray-500">
               {calculateProgress()}% Complete
             </div>
           </div>
 
+          {/* Next Session */}
           <button
-            onClick={() => setCurrentSection(Math.min(sections.length - 1, currentSection + 1))}
-            disabled={currentSection === sections.length - 1}
-            className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 hover:opacity-90 transition-colors"
+            onClick={() => window.location.href = `/modules/${sessionInfo.nextModule}/sessions/${sessionInfo.nextSession}`}
+            className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
             style={{ backgroundColor: colors.primary }}
           >
-            <span>Next</span>
+            <span>Next Session</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -189,9 +202,21 @@ export const IBAMHeader = ({ completedSections }) => {
               <p className="text-xs text-gray-600">Empower. Educate. Equip.</p>
             </div>
           </div>
-          <div className="text-right text-xs text-gray-600">
-            <div>Progress: {calculateProgress()}%</div>
-            <div>Auto-saving ✓</div>
+          
+          <div className="flex items-center space-x-4">
+            {/* Return to Dashboard Button */}
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Return to Dashboard</span>
+            </button>
+            
+            <div className="text-right text-xs text-gray-600">
+              <div>Progress: {calculateProgress()}%</div>
+              <div>Auto-saving ✓</div>
+            </div>
           </div>
         </div>
       </div>

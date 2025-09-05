@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bot, Send } from 'lucide-react';
 import { aiCoachingResponses } from '../../lib/constants';
 import type { AIMessage } from '../../lib/types';
-import { IBAM_COACHING_KNOWLEDGE, DISCOVERY_QUESTIONS } from '../../lib/coaching-knowledge-base';
+import { IBAM_COACHING_KNOWLEDGE } from '../../lib/coaching-knowledge-base';
 import { ASSESSMENT_COACHING_INTEGRATION } from '../../lib/assessment-coaching-integration';
 import { AI_COACH_INTRODUCTION, getPersonalizedIntroduction } from '../../lib/ai-coach-introduction';
 
@@ -91,8 +91,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     }, 1500);
   };
 
-  // Track conversation history to avoid repetition
-  const [askedQuestions, setAskedQuestions] = useState<Set<string>>(new Set());
+  // Track conversation history
   const [conversationTurn, setConversationTurn] = useState(0);
 
   // Session-specific knowledge base
@@ -117,14 +116,19 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     };
   };
 
-  // IBAM Discovery-Based Coaching Response Generator
+  // Enhanced Coaching Response Generator - Knowledge + Discovery Balance
   const generateDiscoveryResponse = (userMessage: string, sessionTitle: string, moduleId?: number, sessionId?: number) => {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Use IBAM coaching knowledge for context
-    const contextPhrase = AI_COACH_INTRODUCTION.contextPhrases.experienceReference;
+    // 1. INTENT RECOGNITION - Determine what the user actually needs
+    const intent = recognizeUserIntent(lowerMessage);
     
-    // Handle identity questions first
+    // 2. HANDLE DIRECT QUESTIONS FIRST - Answer then discover
+    if (intent.type === 'instruction' || intent.type === 'definition') {
+      return generateKnowledgeResponse(lowerMessage, sessionTitle);
+    }
+    
+    // 3. HANDLE IDENTITY QUESTIONS
     if (lowerMessage.includes("who are you") || lowerMessage.includes("what are you")) {
       return {
         response: `I'm your IBAM Coaching Assistant, backed by experienced IBAM business coaches who follow Jesus. I'm here to help as much as you want or need with discovery questions and biblical business guidance. 
@@ -138,154 +142,259 @@ Based on today's session "${sessionTitle}", what's your biggest question about a
       };
     }
     
-    // Handle simple greetings with discovery approach
+    // 4. HANDLE FRUSTRATION - User feedback about AI responses
+    if (lowerMessage.includes('not listening') || lowerMessage.includes('makes no sense') || 
+        lowerMessage.includes('answer me') || lowerMessage.includes('straightforward')) {
+      return {
+        response: `You're absolutely right, and I apologize. Let me give you a direct answer to your original question.
+
+If you asked about **action items**: Action items are specific commitments you make during the session to apply what you've learned. You can track them, set deadlines, and mark them complete to build momentum in your business development.
+
+If you asked something else, please repeat your question and I'll give you a clear, direct answer first - then we can explore it together if helpful.`,
+        followUp: "What specific question can I answer clearly for you right now?"
+      };
+    }
+    
+    // 5. HANDLE COMMENTS (not questions) - Acknowledge before engaging
+    if (!lowerMessage.includes('?') && !lowerMessage.includes('how') && !lowerMessage.includes('what') && 
+        !lowerMessage.includes('why') && !lowerMessage.includes('when') && !lowerMessage.includes('where')) {
+      return {
+        response: `I hear you sharing that perspective. Thank you for the feedback - it helps me understand what you need better.
+
+From today's session "${sessionTitle}", that insight connects to the principle that effective business relationships require genuine listening and understanding.
+
+What questions do you have that I can answer directly for you?`,
+        followUp: "How can I be more helpful to you right now?"
+      };
+    }
+    
+    // 6. GREETINGS with useful follow-up
     if (lowerMessage === "hi" || lowerMessage === "hello" || lowerMessage === "hey") {
-      const discoveryQuestions = DISCOVERY_QUESTIONS.what.vision;
-      const randomQuestion = discoveryQuestions[Math.floor(Math.random() * discoveryQuestions.length)];
-      
       return {
-        response: `Hi there! I'm excited to help you discover your next steps. ${contextPhrase}, the most breakthrough moments happen when students explore their own insights from today's session.
+        response: `Hi there! I'm here to help you with questions about "${sessionTitle}" and applying biblical business principles to your situation.
 
-From "${sessionTitle}" - ${randomQuestion}`,
-        followUp: "What's on your heart about your business calling?"
+I can provide direct answers, help you think through challenges, or explore new insights - whatever is most helpful for you right now.`,
+        followUp: "What specific question about today's session can I help you with?"
       };
     }
     
-    // Business experience and challenge questions - use WHO questions
-    if (lowerMessage.includes('objective') || lowerMessage.includes('goal') || lowerMessage.includes('learn') || lowerMessage.includes('what should')) {
-      const whoQuestions = DISCOVERY_QUESTIONS.who.identity;
-      const whatQuestions = DISCOVERY_QUESTIONS.what.vision;
-      const randomWhoQuestion = whoQuestions[Math.floor(Math.random() * whoQuestions.length)];
-      const randomWhatQuestion = whatQuestions[Math.floor(Math.random() * whatQuestions.length)];
-      
+    // 7. BUSINESS TOPICS - Substantive content first, then discovery
+    const businessResponse = getBusinessTopicResponse(lowerMessage, sessionTitle);
+    if (businessResponse) return businessResponse;
+    
+    // 8. APPLICATION QUESTIONS - Give substance first
+    if (lowerMessage.includes('apply') || lowerMessage.includes('how do i') || lowerMessage.includes('how does')) {
+      return generateApplicationResponse(sessionTitle, moduleId);
+    }
+    
+    // 9. DISCOVERY FALLBACK - But more targeted
+    return generateTargetedDiscovery(lowerMessage, sessionTitle, conversationTurn);
+  };
+
+  // HELPER FUNCTIONS FOR IMPROVED COACHING
+
+  const recognizeUserIntent = (message: string) => {
+    // Instruction-seeking patterns
+    if (message.includes('how do i') || message.includes('how to') || 
+        message.includes('steps') || message.includes('process')) {
+      return { type: 'instruction', confidence: 'high' };
+    }
+    
+    // Definition-seeking patterns  
+    if (message.includes('what is') || message.includes('what are') ||
+        message.includes('define') || message.includes('meaning')) {
+      return { type: 'definition', confidence: 'high' };
+    }
+    
+    // Problem-solving patterns
+    if (message.includes('problem') || message.includes('challenge') ||
+        message.includes('stuck') || message.includes('help')) {
+      return { type: 'problem-solving', confidence: 'medium' };
+    }
+    
+    // Discovery-seeking patterns
+    if (message.includes('should i') || message.includes('what if') ||
+        message.includes('explore') || message.includes('think about')) {
+      return { type: 'discovery', confidence: 'high' };
+    }
+    
+    return { type: 'general', confidence: 'low' };
+  };
+
+  const generateKnowledgeResponse = (lowerMessage: string, sessionTitle: string) => {
+    // Check for business terms first
+    const businessTerm = findBusinessTerm(lowerMessage);
+    if (businessTerm) {
       return {
-        response: `Great question about your learning journey! ${contextPhrase}, the most powerful learning happens when you connect today's content to your specific calling.
+        response: `**${businessTerm.term}**: ${businessTerm.definition}
 
-From "${sessionTitle}", let's explore: ${randomWhatQuestion}
+From "${sessionTitle}", this applies to your situation because biblical business principles emphasize understanding and excellence in all aspects of your work.
 
-And I'm curious: ${randomWhoQuestion}`,
-        followUp: "What resonates most with your heart about your business vision?"
+How does this concept relate to your current business challenge?`,
+        followUp: "What specific aspect would you like to explore further?"
       };
     }
     
-    // Starting out questions
-    if (lowerMessage.includes('starting out') || lowerMessage.includes('just starting') || lowerMessage.includes('beginner')) {
-      const sessionKnowledge = getSessionKnowledge(sessionTitle, moduleId);
+    // Handle "action items" specifically
+    if (lowerMessage.includes('action item')) {
       return {
-        response: `Starting out is both exciting and overwhelming! Based on "${sessionTitle}", the first step is understanding that ${sessionKnowledge.keyPoints?.[0] || "God has equipped you for this"}. What's the biggest uncertainty you're facing as you begin?`,
-        followUp: "What's one small step you could take this week to move forward with confidence?"
+        response: `**Action Items** are specific commitments you make during each session to apply biblical business principles to your real situation. Here's how to use them effectively:
+
+**1. Make them specific** - Instead of "think about customers," write "interview 3 potential customers about their biggest problem"
+**2. Set deadlines** - "By Friday" or "This week"  
+**3. Track completion** - Check them off when done
+**4. Review regularly** - See your progress over time
+
+From "${sessionTitle}", your action items should connect today's content to concrete steps in your business development.`,
+        followUp: "What action item would help you apply today's lesson most effectively?"
       };
     }
+    
+    // Session application knowledge
+    if (lowerMessage.includes('apply') && sessionTitle.includes("Good Gift from God")) {
+      return {
+        response: `**Applying "Business is a Good Gift from God":**
 
-    // Session content questions
-    if (lowerMessage.includes('affect me') || lowerMessage.includes('apply') || lowerMessage.includes('how does')) {
-      if (sessionTitle.includes("Good Gift from God")) {
-        return {
-          response: `"Business is a Good Gift from God" means you're not just making money - you're stewarding God's gifts to serve others! This affects you by: 1) Removing guilt about profit when it serves others, 2) Giving you confidence that God wants you to succeed, 3) Showing that excellence in business can be worship. What part of your business feels most aligned with serving others right now?`,
-          followUp: "How could you see your daily work as an act of worship this week?"
-        };
+**Mindset Shift**: You're not just making money - you're stewarding God's gifts to serve others
+**Practical Impact**: 
+• Remove guilt about profit when it serves people well
+• Gain confidence that God wants your business to succeed  
+• See daily work as potential worship and ministry
+• Make decisions based on service, not just profit
+
+**This Week**: Look at one business decision through this lens - how does it serve others and honor God?`,
+        followUp: "Which area of your business needs this perspective shift most?"
+      };
+    }
+    
+    // General knowledge fallback
+    return {
+      response: `That's a great question about practical application. From "${sessionTitle}", the key principles focus on integrating faith with excellent business practices.
+
+Let me know what specific aspect you'd like me to explain more clearly - I can provide detailed guidance on business terms, biblical principles, or practical steps.`,
+      followUp: "What specific part of today's content would be most helpful to understand better?"
+    };
+  };
+
+  const findBusinessTerm = (message: string) => {
+    // Check against our business terms library
+    const allTerms = [
+      ...Object.keys(IBAM_COACHING_KNOWLEDGE.businessTerms.financial),
+      ...Object.keys(IBAM_COACHING_KNOWLEDGE.businessTerms.marketing),
+      ...Object.keys(IBAM_COACHING_KNOWLEDGE.businessTerms.operations),
+      ...Object.keys(IBAM_COACHING_KNOWLEDGE.businessTerms.strategy)
+    ];
+    
+    for (const term of allTerms) {
+      if (message.includes(term.toLowerCase())) {
+        // Find the definition
+        for (const category of Object.values(IBAM_COACHING_KNOWLEDGE.businessTerms)) {
+          if (category[term]) {
+            return { term, definition: category[term] };
+          }
+        }
       }
-      const sessionKnowledge = getSessionKnowledge(sessionTitle, moduleId);
+    }
+    return null;
+  };
+
+  const getBusinessTopicResponse = (message: string, sessionTitle: string) => {
+    if (message.includes('pricing') || message.includes('price')) {
       return {
-        response: `Great question about application! The core insight from "${sessionTitle}" is that ${sessionKnowledge.keyPoints?.[0] || "faith and business can work together"}. This affects your business by changing your motivation, methods, and ultimate goals. What's one business decision you're facing where this perspective could help?`,
-        followUp: "How might approaching this with biblical principles change your decision?"
+        response: `**Pricing Strategy from Biblical Principles:**
+
+**Fair Pricing Formula**: Costs + Reasonable Profit + Excellent Service
+**Biblical Foundation**: "Give everyone what you owe them" (Romans 13:7)
+
+**Practical Steps**:
+1. Calculate actual costs (time, materials, overhead)  
+2. Add profit that allows reinvestment and generosity
+3. Ensure value delivered exceeds price charged
+4. Price confidently - undervaluing your work doesn't serve anyone
+
+**Common Mistake**: Pricing too low from false humility actually hurts customers (limits your ability to serve them well).`,
+        followUp: "What's your biggest fear or question about pricing your solution?"
       };
     }
     
-    // Discovery coaching patterns for common topics
-    if (lowerMessage.includes('pricing') || lowerMessage.includes('price')) {
-      if (askedQuestions.has('pricing')) {
-        return {
-          response: `Since we've talked about pricing, let me be more specific: Fair pricing means covering your costs + reasonable profit + excellent service. From "${sessionTitle}", this means pricing that honors God by: 1) Not cheating customers, 2) Not undervaluing your work, 3) Allowing you to serve others well. What's your current pricing challenge?`,
-          followUp: "What would confident, God-honoring pricing look like for your specific situation?"
-        };
-      }
-      setAskedQuestions(prev => new Set([...prev, 'pricing']));
+    if (message.includes('customer') || message.includes('client') || message.includes('market')) {
       return {
-        response: `Pricing is tough! Let's think through this biblically. What does "fair" mean to you? From "${sessionTitle}", we learn that God wants us to be honest and excellent in our work. What fears do you have about your pricing?`,
-        followUp: "What would pricing with complete integrity look like in your business?"
+        response: `**Finding Customers Through Service:**
+
+**Jesus' Method**: He went where people were hurting and served them first
+**Business Application**: Find people with real problems you can solve
+
+**Practical Framework**:
+1. **Who**: Identify specific people you're called to serve
+2. **Where**: Go where they already spend time  
+3. **What**: Listen to their actual problems (don't assume)
+4. **How**: Serve first, sell second
+
+**From "${sessionTitle}"**: Your customers aren't transactions - they're people God loves whom you're called to serve.`,
+        followUp: "Who specifically are you feeling called to serve through your business?"
       };
     }
     
-    if (lowerMessage.includes('funding') || lowerMessage.includes('investment') || lowerMessage.includes('capital')) {
+    return null; // No specific business topic found
+  };
+
+  const generateApplicationResponse = (sessionTitle: string, moduleId?: number) => {
+    const sessionKnowledge = getSessionKnowledge(sessionTitle, moduleId);
+    
+    return {
+      response: `**Applying "${sessionTitle}" to Your Business:**
+
+**Core Principle**: ${sessionKnowledge.keyPoints?.[0] || "Faith and business work together when both serve others"}
+
+**Practical Application**:
+• **This Week**: ${sessionKnowledge.keyPoints?.[1] || "Look for one way to serve customers better"}
+• **Decision Framework**: Ask "How does this honor God and serve people?" 
+• **Daily Practice**: ${sessionKnowledge.keyPoints?.[2] || "See your work as ministry opportunity"}
+
+**Biblical Foundation**: ${sessionKnowledge.scripture || "All work done excellently can glorify God"}`,
+      followUp: "Which specific business decision could you apply this to right now?"
+    };
+  };
+
+  const generateTargetedDiscovery = (message: string, sessionTitle: string, turn: number) => {
+    const contextPhrase = AI_COACH_INTRODUCTION.contextPhrases.experienceReference;
+    
+    // More targeted discovery based on actual message content
+    if (message.includes('start') || message.includes('begin')) {
       return {
-        response: `Funding questions show great vision! But here's what I've learned: Most successful faith-driven businesses start with stewarding what they have first. From "${sessionTitle}", what resources has God already given you that you could maximize? Sometimes the best funding is proving the concept small first.`,
-        followUp: "What's one way you could test your business idea with the resources you have now?"
+        response: `Starting is both exciting and challenging! ${contextPhrase}, the most successful entrepreneurs start with clarity about who they're serving.
+
+From "${sessionTitle}", what's the specific problem you want to solve for people?`,
+        followUp: "What's one small step you could take this week to test that idea?"
       };
     }
     
-    if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('market')) {
-      return {
-        response: `Finding customers is exciting! From "${sessionTitle}", remember that business is about serving others. Who specifically are you called to serve? What problems keep them up at night that you could solve? The best customers become raving fans when you truly serve them well.`,
-        followUp: "If you could help one specific type of person, who would it be and what's their biggest challenge?"
-      };
-    }
+    // Default discovery - but less random
+    const categories = ['who', 'what', 'why', 'how'];
+    const category = categories[turn % categories.length];
     
-    if (lowerMessage.includes('profit') || lowerMessage.includes('money') || lowerMessage.includes('income')) {
-      return {
-        response: `Money and ministry - I get the tension! From "${sessionTitle}", profit isn't evil when it serves God's purposes. Profit allows you to: 1) Serve customers better, 2) Provide for your family, 3) Give generously, 4) expand your impact. What guilt or excitement do you feel about making money?`,
-        followUp: "How could your profit become a tool for Kingdom impact?"
-      };
-    }
-    
-    if (lowerMessage.includes('fear') || lowerMessage.includes('scared') || lowerMessage.includes('worried')) {
-      return {
-        response: `Thank you for sharing that vulnerability. Fear is normal! From "${sessionTitle}", we know God has equipped you for this work. What specifically worries you most? Often our fears point to where we need to trust God more and prepare better.`,
-        followUp: "What's one small, brave step you could take this week to face that fear?"
-      };
-    }
-    
-    // IBAM Discovery-Based Fallback - Use our systematic discovery questions
-    const discoveryCategories = ['who', 'what', 'when', 'where', 'why', 'how'];
-    const currentCategory = discoveryCategories[conversationTurn % discoveryCategories.length];
-    
-    let discoveryQuestion, followUpQuestion, contextIntro;
-    
-    switch (currentCategory) {
+    let question: string, followUp: string;
+    switch (category) {
       case 'who':
-        const whoQuestions = DISCOVERY_QUESTIONS.who.identity;
-        discoveryQuestion = whoQuestions[Math.floor(Math.random() * whoQuestions.length)];
-        followUpQuestion = "Who are the people you feel called to serve?";
-        contextIntro = `${contextPhrase}, great entrepreneurs know their identity and calling.`;
+        question = "Who are the specific people you feel called to serve through business?";
+        followUp = "What problems keep them up at night?";
         break;
       case 'what':
-        const whatQuestions = DISCOVERY_QUESTIONS.what.vision;
-        discoveryQuestion = whatQuestions[Math.floor(Math.random() * whatQuestions.length)];
-        followUpQuestion = "What would success look like for you?";
-        contextIntro = `${contextPhrase}, clarity of vision drives everything.`;
+        question = "What unique value could you bring to solve a real problem?";
+        followUp = "What would success look like for the people you serve?";
         break;
-      case 'when':
-        const whenQuestions = DISCOVERY_QUESTIONS.when.timing;
-        discoveryQuestion = whenQuestions[Math.floor(Math.random() * whenQuestions.length)];
-        followUpQuestion = "When do you feel most motivated to take action?";
-        contextIntro = `${contextPhrase}, timing and urgency create momentum.`;
-        break;
-      case 'where':
-        const whereQuestions = DISCOVERY_QUESTIONS.where.market;
-        discoveryQuestion = whereQuestions[Math.floor(Math.random() * whereQuestions.length)];
-        followUpQuestion = "Where do you see your biggest opportunities?";
-        contextIntro = `${contextPhrase}, knowing your marketplace is crucial.`;
-        break;
-      case 'why':
-        const whyQuestions = DISCOVERY_QUESTIONS.why.purpose;
-        discoveryQuestion = whyQuestions[Math.floor(Math.random() * whyQuestions.length)];
-        followUpQuestion = "Why does this matter to your heart?";
-        contextIntro = `${contextPhrase}, your 'why' gives you power through challenges.`;
+      case 'why':  
+        question = "Why does this business opportunity matter to your heart?";
+        followUp = "How could this work become ministry?";
         break;
       default:
-        const howQuestions = DISCOVERY_QUESTIONS.how.strategy;
-        discoveryQuestion = howQuestions[Math.floor(Math.random() * howQuestions.length)];
-        followUpQuestion = "How might God be leading you to approach this?";
-        contextIntro = `${contextPhrase}, the 'how' turns vision into reality.`;
+        question = "How could you test this idea with one person this week?";
+        followUp = "What would you need to learn to serve them excellently?";
     }
     
     return {
-      response: `Great question! ${contextIntro} Let me ask you something that might unlock insights:
-
-${discoveryQuestion}
-
-And connecting this to "${sessionTitle}" - what resonates with your situation?`,
-      followUp: followUpQuestion
+      response: `That's a great direction to explore! From "${sessionTitle}", let me ask: ${question}`,
+      followUp
     };
   };
 
@@ -346,7 +455,7 @@ And connecting this to "${sessionTitle}" - what resonates with your situation?`,
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage(inputMessage)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage(inputMessage)}
             placeholder="Ask about applying today's lesson to your business..."
             className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />

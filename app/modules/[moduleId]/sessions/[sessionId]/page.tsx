@@ -178,6 +178,8 @@ export default function SessionPage({ params }: SessionPageProps) {
     quiz: false,
     lookforward: false
   });
+  // 🎯 UX ENHANCEMENT: Non-intrusive completion feedback
+  const [recentlyCompleted, setRecentlyCompleted] = useState<string | null>(null);
   const [sectionProgress, setSectionProgress] = useState({
     lookback: 0,
     lookup: 0,
@@ -746,13 +748,9 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
       setExpandedSection('lookup');
       
       // Scroll to Looking UP section after state update
-      setTimeout(() => {
-        const lookingUpSection = document.querySelector('.bg-green-500');
-        if (lookingUpSection) {
-          lookingUpSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          console.log('📜 Scrolled to Looking UP section via custom event');
-        }
-      }, 100);
+      // 🎯 UX FIX: Removed automatic scrollIntoView to prevent jarring scroll jumps
+      // Users now stay focused on their current task when completing sections
+      console.log('📜 Looking UP section completion - staying in place for better UX');
     };
 
     // Handle URL hash navigation for smart resume from Continue Session button
@@ -793,8 +791,15 @@ console.log('🔍 Type of case_study:', typeof data?.content?.case_study);
           const sectionId = hash.split('-')[0]; // Get base section ID
           const targetElement = document.getElementById(sectionId);
           if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            console.log(`✅ Smart resume: Scrolled to ${sectionId} section`);
+            // 🎯 UX IMPROVEMENT: Gentle scroll with offset for better user experience
+            const offset = 80; // Account for header height
+            const elementPosition = targetElement.offsetTop - offset;
+            
+            window.scrollTo({
+              top: elementPosition,
+              behavior: 'smooth'
+            });
+            console.log(`✅ Smart resume: Gently scrolled to ${sectionId} section`);
           } else {
             console.log(`⚠️ Target element not found: ${sectionId}`);
           }
@@ -867,6 +872,10 @@ const navigateTo = (path: string) => {
   // Handle section completion with database persistence
   const markSectionComplete = async (section: string) => {
     console.log(`🚀 MARKING SECTION COMPLETE: ${section}`);
+    
+    // 🎯 UX ENHANCEMENT: Show subtle completion feedback without scroll jumps
+    setRecentlyCompleted(section);
+    setTimeout(() => setRecentlyCompleted(null), 3000); // Clear after 3 seconds
     
     // Update local state immediately for responsive UI
     setCompletedSections(prev => ({
@@ -1164,6 +1173,20 @@ const navigateTo = (path: string) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* 🎯 UX ENHANCEMENT: Subtle completion feedback without scroll jumps */}
+      {recentlyCompleted && (
+        <div className="fixed top-20 right-4 z-50 animate-bounce-in">
+          <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+            <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              ✅
+            </div>
+            <span className="font-medium">
+              {recentlyCompleted.charAt(0).toUpperCase() + recentlyCompleted.slice(1)} Complete!
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Streamlined Header - Clean and Professional */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-4">
