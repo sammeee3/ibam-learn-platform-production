@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
+import { sendSecurityAlert } from '@/lib/security-notifications';
 
 const execAsync = promisify(exec);
 
@@ -292,13 +293,26 @@ async function handleScan() {
       securityCoverage: '100% - All critical security vectors analyzed'
     };
 
-    // Send alert if critical issues found
-    if (report.riskLevel === 'CRITICAL') {
-      console.error('🚨 CRITICAL SECURITY VULNERABILITIES DETECTED!');
-      console.error(`Found ${totalExposures} exposed secrets in repository`);
+    // Send alert if critical or high issues found
+    if (report.riskLevel === 'CRITICAL' || report.riskLevel === 'HIGH') {
+      console.error(`🚨 ${report.riskLevel} SECURITY VULNERABILITIES DETECTED!`);
+      console.error(`Found ${totalExposures} exposed secrets/issues in repository`);
       
-      // Here you could send an email/SMS alert
-      // await sendSecurityAlert(report);
+      // Send comprehensive security alert to super admin
+      try {
+        await sendSecurityAlert({
+          timestamp: report.timestamp,
+          riskLevel: report.riskLevel as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
+          totalExposures: report.totalExposures,
+          threatsCount: threats.length,
+          threats: threats,
+          scanMethod: report.scanMethod
+        });
+        console.log('✅ Super admin notifications sent successfully');
+      } catch (alertError) {
+        console.error('❌ Failed to send security alerts:', alertError);
+        // Continue execution - don't let notification failures break the scan
+      }
     }
 
     return NextResponse.json(report);

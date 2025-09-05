@@ -27,6 +27,9 @@ const SUPER_ADMIN_EMAILS = [
   'jeff@ibamonline.org', // Alternative admin email
 ];
 
+// Super Admin Email for security notifications (configurable via environment)
+const SUPER_ADMIN_NOTIFICATION_EMAIL = 'sammeee@yahoo.com';
+
 export default function SecurityDashboard() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -40,6 +43,7 @@ export default function SecurityDashboard() {
   });
   const [scanLoading, setScanLoading] = useState(false);
   const [scanResults, setScanResults] = useState<any>(null);
+  const [alertBadgeVisible, setAlertBadgeVisible] = useState(false);
 
   useEffect(() => {
     checkAuthorization();
@@ -91,6 +95,18 @@ export default function SecurityDashboard() {
           monitoring: data.monitoring !== false,
           repositoryStatus: data.repositoryStatus || 'Clean'
         });
+
+        // Show alert badge for CRITICAL and HIGH threats
+        if (data.riskLevel === 'CRITICAL' || data.riskLevel === 'HIGH') {
+          setAlertBadgeVisible(true);
+          
+          // Auto-hide alert badge after 30 seconds for HIGH (keep visible for CRITICAL)
+          if (data.riskLevel === 'HIGH') {
+            setTimeout(() => setAlertBadgeVisible(false), 30000);
+          }
+        } else {
+          setAlertBadgeVisible(false);
+        }
         
         // Update scan results if available
         if (data.scanResults) {
@@ -245,6 +261,15 @@ export default function SecurityDashboard() {
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 🛡️ Security Monitoring Dashboard
+                {alertBadgeVisible && (
+                  <span className={`ml-3 px-2 py-1 rounded-full text-xs font-bold animate-pulse ${
+                    securityStatus.riskLevel === 'CRITICAL' 
+                      ? 'bg-red-600 text-white' 
+                      : 'bg-orange-500 text-white'
+                  }`}>
+                    🚨 {securityStatus.riskLevel} ALERT
+                  </span>
+                )}
               </h1>
               <p className="text-gray-600 mt-1">Real-time security alerts and repository monitoring</p>
             </div>
