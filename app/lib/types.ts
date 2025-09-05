@@ -126,9 +126,13 @@ export interface PreviousAction {
 
 // AI Message Interface
 export interface AIMessage {
-  type: 'user' | 'ai';
+  type: 'user' | 'ai' | 'bot';
   content: string;
   followUp?: string;
+  source?: 'ai' | 'fallback';
+  sessionContext?: string;
+  scriptureReferences?: string[];
+  followUpQuestions?: string[];
 }
 
 // Action Step Interface (Database format)
