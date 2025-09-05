@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
     
     // Ensure proper data types
     const validUserId = String(userId);
-    const validModuleId = parseInt(String(moduleId));
-    const validSessionId = parseInt(String(sessionId));
+    const validModuleId = Number(String(moduleId));
+    const validSessionId = Number(String(sessionId));
     
     if (isNaN(validModuleId) || isNaN(validSessionId)) {
       console.error('❌ Invalid moduleId or sessionId:', { moduleId, sessionId, validModuleId, validSessionId });
@@ -212,7 +212,7 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
     
     // Ensure proper data types
     const validUserId = String(userId);
-    const validModuleId = parseInt(String(moduleId));
+    const validModuleId = Number(String(moduleId));
     
     if (isNaN(validModuleId)) {
       console.error('❌ Invalid moduleId in updateModuleCompletion:', moduleId);

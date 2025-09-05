@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
     const { data: actions, error } = await supabaseAdmin
       .from('user_action_steps')
       .select('*')
-      .eq('user_id', parseInt(userId))
-      .eq('module_id', parseInt(moduleId))
-      .eq('session_id', parseInt(sessionId));
+      .eq('user_id', userId) // UUID string - don't convert
+      .eq('module_id', Number(moduleId))
+      .eq('session_id', Number(sessionId));
     
     if (error) {
       console.error('❌ Database query error:', error);
