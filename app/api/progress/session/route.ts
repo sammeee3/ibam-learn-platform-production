@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Use string version of integer id for user_progress table (matches admin API)
-    const validUserId = String(userId);
+    // Use integer parsing like dashboard API (user_session_progress table)
+    const validUserId = parseInt(String(userId));
     const validModuleId = parseInt(String(moduleId));
     const validSessionId = parseInt(String(sessionId));
     
@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
 
     // Use user_session_progress table (INTEGER user_id) - where the actual data lives
     let existing = null;
-    let useComplexTable = false; // Use user_progress table where sammeee@yahoo.com data exists
+    let useComplexTable = true; // Use user_session_progress table like dashboard API
     
-    // Use user_progress table where sammeee@yahoo.com data actually exists
+    // Use user_session_progress table like dashboard API (where data actually exists)
     const { data: stagingProgress } = await supabase
-      .from('user_progress')
+      .from('user_session_progress')
       .select('*')
       .eq('user_id', validUserId)
       .eq('module_id', validModuleId)
@@ -202,10 +202,10 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       return;
     }
     
-    // Use user_progress table for module completion
+    // Use user_session_progress table for module completion (like dashboard API)
     let sessions: any[] = [];
     const { data: stagingSessions, error: sessionError } = await supabase
-      .from('user_progress')
+      .from('user_session_progress')
       .select('completion_percentage')
       .eq('user_id', validUserId)
       .eq('module_id', validModuleId);
@@ -278,8 +278,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    // Use string version of integer id for user_progress table (matches admin API)
-    const validUserId = String(userId);
+    // Use integer parsing like dashboard API (user_session_progress table)
+    const validUserId = parseInt(String(userId));
     console.log('🔍 GET request for user:', validUserId);
 
     const supabase = supabaseAdmin;
@@ -290,10 +290,10 @@ export async function GET(request: NextRequest) {
       .eq('user_id', validUserId)
       .order('module_id');
 
-    // Use user_progress table for GET requests  
+    // Use user_session_progress table for GET requests (like dashboard API)
     let sessions: any[] = [];
     const { data: stagingSessions } = await supabase
-      .from('user_progress')
+      .from('user_session_progress')
       .select('*')
       .eq('user_id', validUserId)
       .order('module_id, session_id');
