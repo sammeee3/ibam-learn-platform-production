@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabaseAdmin } from '@/lib/supabase-config'
 
 export async function GET(request: NextRequest) {
   try {
     // Fetch all feedback, ordered by most recent
-    const { data: feedback, error } = await supabase
+    const { data: feedback, error } = await supabaseAdmin
       .from('user_feedback')
       .select('*')
       .order('created_at', { ascending: false })
