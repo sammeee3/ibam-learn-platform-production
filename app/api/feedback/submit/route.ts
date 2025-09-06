@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabaseAdmin } from '@/lib/supabase-config'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to feedback table
-    const { data: feedback, error: feedbackError } = await supabase
+    const { data: feedback, error: feedbackError } = await supabaseAdmin
       .from('user_feedback')
       .insert([feedbackEntry])
       .select()
@@ -40,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Create task list entry automatically
     const taskDescription = `${type === 'bug' ? '🐛 BUG' : '💡 FEATURE'}: ${description} (ID: ${feedback.id})`
     
-    const { error: taskError } = await supabase
+    const { error: taskError } = await supabaseAdmin
       .from('admin_tasks')
       .insert([{
         title: taskDescription,

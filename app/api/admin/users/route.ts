@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'No name',
       email: user.email,
       id: user.id,
-      created: new Date(user.created_at).toLocaleDateString()
+      created: new Date(String(user.created_at || new Date())).toLocaleDateString()
     }));
 
     return NextResponse.json({

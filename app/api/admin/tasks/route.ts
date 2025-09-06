@@ -4,14 +4,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from "@/lib/supabase-config"
 
 export async function GET(request: NextRequest) {
   try {
     console.log('📋 Fetching admin tasks')
 
     // Get all tasks, ordered by creation date
-    const { data: tasks, error } = await supabase
+    const { data: tasks, error } = await supabaseAdmin
       .from('admin_tasks')
       .select('*')
       .order('created_at', { ascending: false })
@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest) {
       updateData.completed_at = new Date().toISOString()
     }
 
-    const { data: updatedTask, error } = await supabase
+    const { data: updatedTask, error } = await supabaseAdmin
       .from('admin_tasks')
       .update(updateData)
       .eq('id', taskId)

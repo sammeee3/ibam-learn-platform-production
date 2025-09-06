@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-config'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
     
     // Get total users
-    const { count: totalUsers } = await supabase
+    const { count: totalUsers } = await supabaseAdmin
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
     
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
-    const { count: activeToday } = await supabase
+    const { count: activeToday } = await supabaseAdmin
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('last_login', today.toISOString())
@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
     
-    const { count: newThisWeek } = await supabase
+    const { count: newThisWeek } = await supabaseAdmin
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', weekAgo.toISOString())
     
     // Get trial users
-    const { count: trialUsers } = await supabase
+    const { count: trialUsers } = await supabaseAdmin
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .eq('membership_level', 'trial')

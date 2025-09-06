@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   // Check token expiry
   if (userProfile.magic_token_expires_at && 
-      new Date(userProfile.magic_token_expires_at) < new Date()) {
+      new Date(String(userProfile.magic_token_expires_at)) < new Date()) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

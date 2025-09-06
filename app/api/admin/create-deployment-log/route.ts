@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const { data: deployment, error } = await supabaseAdmin
         .from('deployment_logs')
         .update(deploymentData)
-        .eq('id', existingVersion.id)
+        .eq('id', String(existingVersion.id))
         .select()
         .single();
 

@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Check if token is still valid
-    if (profile.magic_token_expires_at && new Date(profile.magic_token_expires_at) <= new Date()) {
+    if (profile.magic_token_expires_at && new Date(String(profile.magic_token_expires_at)) <= new Date()) {
       console.log('❌ Expired token for:', email);
       return NextResponse.json({
         success: false,

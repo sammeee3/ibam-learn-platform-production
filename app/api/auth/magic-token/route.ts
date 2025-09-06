@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Check if token is still valid (not expired)
-    if (profile.magic_token_expires_at && new Date(profile.magic_token_expires_at) <= new Date()) {
+    if (profile.magic_token_expires_at && new Date(String(profile.magic_token_expires_at)) <= new Date()) {
       console.log('❌ Token expired');
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }

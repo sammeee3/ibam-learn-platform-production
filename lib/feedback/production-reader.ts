@@ -6,18 +6,36 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+// Lazy initialization to prevent build-time environment variable requirements
+let _productionSupabase: ReturnType<typeof createClient> | null = null;
+let _stagingSupabase: ReturnType<typeof createClient> | null = null;
+
 // Production database (READ-ONLY access)  
-// Note: This requires PRODUCTION_SUPABASE_SERVICE_ROLE_KEY environment variable
-const productionSupabase = createClient(
-  process.env.NEXT_PUBLIC_PRODUCTION_SUPABASE_URL || 'https://tutrnikhomrgcpkzszvq.supabase.co',
-  process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY || 'missing-production-key'
-)
+const productionSupabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    if (!_productionSupabase) {
+      const productionUrl = process.env.NEXT_PUBLIC_PRODUCTION_SUPABASE_URL || 'https://tutrnikhomrgcpkzszvq.supabase.co';
+      const productionKey = process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY || 'missing-production-key';
+      _productionSupabase = createClient(productionUrl, productionKey);
+    }
+    return _productionSupabase[prop as keyof typeof _productionSupabase];
+  }
+});
 
 // Staging database (for task creation)
-const stagingSupabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const stagingSupabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    if (!_stagingSupabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Missing Supabase configuration for staging database');
+      }
+      _stagingSupabase = createClient(supabaseUrl, supabaseKey);
+    }
+    return _stagingSupabase[prop as keyof typeof _stagingSupabase];
+  }
+});
 
 export interface ProductionFeedback {
   id: string
