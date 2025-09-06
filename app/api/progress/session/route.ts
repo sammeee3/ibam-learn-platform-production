@@ -28,23 +28,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get the UUID auth_user_id for the user_progress table
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('user_profiles')
-      .select('auth_user_id')
-      .eq('id', parseInt(String(userId)))
-      .single();
-      
-    if (profileError || !userProfile?.auth_user_id) {
-      console.error('❌ Failed to get auth_user_id for user:', userId, profileError);
-      return NextResponse.json(
-        { error: 'User not found or invalid auth_user_id' }, 
-        { status: 404 }
-      );
-    }
-    
-    // Use the UUID auth_user_id for user_progress table
-    const validUserId = userProfile.auth_user_id;
+    // Use string version of integer id for user_progress table (matches admin API)
+    const validUserId = String(userId);
     const validModuleId = parseInt(String(moduleId));
     const validSessionId = parseInt(String(sessionId));
     
@@ -293,19 +278,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    // Get the UUID auth_user_id for the user_progress table
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('user_profiles')
-      .select('auth_user_id')
-      .eq('id', parseInt(String(userId)))
-      .single();
-      
-    if (profileError || !userProfile?.auth_user_id) {
-      console.error('❌ Failed to get auth_user_id for user:', userId, profileError);
-      return NextResponse.json({ error: 'User not found or invalid auth_user_id' }, { status: 404 });
-    }
-    
-    const validUserId = userProfile.auth_user_id;
+    // Use string version of integer id for user_progress table (matches admin API)
+    const validUserId = String(userId);
     console.log('🔍 GET request for user:', validUserId);
 
     const supabase = supabaseAdmin;
