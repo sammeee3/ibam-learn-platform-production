@@ -48,13 +48,13 @@ export async function POST(request: NextRequest) {
 
     // Use user_session_progress table (INTEGER user_id) - where the actual data lives
     let existing = null;
-    let useComplexTable = true; // Use the correct table with all the data
+    let useComplexTable = false; // Use user_progress table where sammeee@yahoo.com data exists
     
-    // Use user_session_progress table where sammeee@yahoo.com data exists
+    // Use user_progress table where sammeee@yahoo.com data actually exists
     const { data: stagingProgress } = await supabase
-      .from('user_session_progress')
+      .from('user_progress')
       .select('*')
-      .eq('user_id', parseInt(validUserId))
+      .eq('user_id', validUserId)
       .eq('module_id', validModuleId)
       .eq('session_id', validSessionId)
       .single();
@@ -202,12 +202,12 @@ async function updateModuleCompletion(supabase: any, userId: string, moduleId: n
       return;
     }
     
-    // Use user_session_progress table for module completion
+    // Use user_progress table for module completion
     let sessions: any[] = [];
     const { data: stagingSessions, error: sessionError } = await supabase
-      .from('user_session_progress')
+      .from('user_progress')
       .select('completion_percentage')
-      .eq('user_id', parseInt(validUserId))
+      .eq('user_id', validUserId)
       .eq('module_id', validModuleId);
       
     if (sessionError) {
@@ -289,12 +289,12 @@ export async function GET(request: NextRequest) {
       .eq('user_id', validUserId)
       .order('module_id');
 
-    // Use user_session_progress table for GET requests
+    // Use user_progress table for GET requests  
     let sessions: any[] = [];
     const { data: stagingSessions } = await supabase
-      .from('user_session_progress')
+      .from('user_progress')
       .select('*')
-      .eq('user_id', parseInt(validUserId))
+      .eq('user_id', validUserId)
       .order('module_id, session_id');
     sessions = stagingSessions || [];
 
