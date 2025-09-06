@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductionSecurityMonitor } from '@/lib/monitoring/production-security';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Only allow access from specific IPs or with admin token in production

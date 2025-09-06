@@ -181,8 +181,28 @@ export class SecurityScheduler {
     try {
       console.log('🔍 Scanning repository for exposed secrets...')
       
-      // Call the repository scanning API
-      const response = await fetch('/api/security/scan-repository')
+      // Skip repository scan during build/static generation
+      if (typeof window === 'undefined' && !process.env.VERCEL_URL && !process.env.NEXT_PUBLIC_VERCEL_URL) {
+        console.log('⏭️ Skipping repository scan during build process')
+        return
+      }
+      
+      // Get the base URL dynamically
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : process.env.NEXT_PUBLIC_VERCEL_URL 
+        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+        : 'https://ibam-learn-platform-staging.vercel.app'
+      
+      const scanUrl = `${baseUrl}/api/security/scan-repository`
+      console.log('🔍 Repository scan URL:', scanUrl)
+      
+      // Call the repository scanning API with proper URL
+      const response = await fetch(scanUrl, {
+        headers: {
+          'User-Agent': 'IBAM-Security-Monitor/1.0'
+        }
+      })
       const result = await response.json()
       
       if (result.status === 'VULNERABLE') {
