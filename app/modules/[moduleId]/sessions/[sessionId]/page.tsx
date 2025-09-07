@@ -971,6 +971,25 @@ const navigateTo = (path: string) => {
           
           console.log('✅ Progress saved via server API');
           
+          // 🆕 REAL-TIME UI UPDATE: Ensure dashboard shows updated progress immediately
+          if (section === 'lookback' || section === 'lookforward') {
+            // For main sections, show immediate completion feedback
+            showToast('success', `✅ ${section.charAt(0).toUpperCase() + section.slice(1)} section completed!`);
+            
+            // 🌟 BROADCAST SECTION COMPLETION: Send event for real-time dashboard sync
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('sectionCompleted', {
+                detail: {
+                  moduleId: parseInt(moduleId),
+                  sessionId: parseInt(sessionId),
+                  section,
+                  progress: newProgress
+                }
+              }));
+              console.log(`📡 Broadcasted section completion event: ${section} = ${newProgress}%`);
+            }
+          }
+          
           console.log(`✅ DATABASE SAVE COMPLETED for section: ${section}`);
           
           // 🔧 REMOVED: Activity logging causing 400 errors
@@ -1114,6 +1133,40 @@ const navigateTo = (path: string) => {
             console.error('❌ Progress API error:', errorData);
           } else {
             console.log(`✅ ${subsection} progress saved successfully to database`);
+            
+            // 🆕 IMMEDIATE UI UPDATE: Force real-time progress reflection without page refresh
+            const visibleSubsections = ['wealth', 'people', 'reading', 'case', 'practice'];
+            const completedCount = visibleSubsections.filter(sub => updatedProgress[sub as keyof typeof updatedProgress]).length;
+            const lookupProgressPercent = (completedCount / visibleSubsections.length) * 100;
+            
+            // Update section progress immediately for real-time feedback
+            setSectionProgress(prev => ({
+              ...prev,
+              lookup: Math.round(lookupProgressPercent),
+              content: Math.round(lookupProgressPercent) // Content mirrors lookup
+            }));
+            
+            // Update session progress with partial looking up completion
+            const lookbackComplete = completedSections.lookback ? 34 : 0;
+            const lookforwardComplete = completedSections.lookforward ? 33 : 0;
+            const currentSessionProgress = Math.round(lookbackComplete + (lookupProgressPercent * 0.33) + lookforwardComplete);
+            setSessionProgressPercent(currentSessionProgress);
+            
+            console.log(`📊 Real-time progress update: ${completedCount}/${visibleSubsections.length} subsections = ${currentSessionProgress}%`);
+            
+            // 🌟 BROADCAST PROGRESS UPDATE: Send event to parent windows/dashboard
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('sessionProgressUpdated', {
+                detail: {
+                  moduleId: parseInt(moduleId),
+                  sessionId: parseInt(sessionId),
+                  progress: currentSessionProgress,
+                  subsection,
+                  completedSubsections: completedCount
+                }
+              }));
+              console.log('📡 Broadcasted progress update event for real-time dashboard sync');
+            }
           }
           
           // If all subsections are now complete, update UI state and session progress
@@ -1121,13 +1174,20 @@ const navigateTo = (path: string) => {
             console.log('🚀 All Looking Up subsections complete - updating UI state');
             
             // Update completed sections state
-            setCompletedSections(prev => ({ ...prev, lookup: true }));
+            setCompletedSections(prev => ({ ...prev, lookup: true, content: true }));
             
-            // Calculate session progress
+            // Calculate final session progress
             const lookbackComplete = completedSections.lookback ? 1 : 0;
             const lookforwardComplete = completedSections.lookforward ? 1 : 0;
             const newProgress = Math.round(((lookbackComplete + 1 + lookforwardComplete) / 3) * 100);
             setSessionProgressPercent(newProgress);
+            
+            // Update section progress to 100%
+            setSectionProgress(prev => ({
+              ...prev,
+              lookup: 100,
+              content: 100
+            }));
             
             console.log('✅ Looking Up section now fully completed');
           }

@@ -107,10 +107,21 @@ export async function POST(request: NextRequest) {
       totalProgress += forwardProgress;
     }
     
+    // 🔧 FIX: Always update progress forward, never backward unless explicitly resetting
+    const calculatedProgress = Math.min(100, Math.round(totalProgress));
     const finalCompletionPercentage = Math.max(
       currentProgress.completion_percentage || 0,
-      Math.min(100, Math.round(totalProgress))
+      calculatedProgress
     );
+    
+    console.log('📊 Progress calculation details:', {
+      lookback: sectionCompleted?.lookback ? '34%' : '0%',
+      lookup: sectionCompleted?.lookup ? '33%' : (subsectionProgress?.lookingUp ? `${Math.round((Object.values(subsectionProgress.lookingUp).filter(Boolean).length / 5) * 33)}%` : '0%'),
+      lookforward: sectionCompleted?.lookforward ? '33%' : (subsectionProgress?.lookingForward ? `${Math.round((Object.values(subsectionProgress.lookingForward).filter(Boolean).length / 3) * 33)}%` : '0%'),
+      previousProgress: currentProgress.completion_percentage || 0,
+      calculatedProgress,
+      finalProgress: finalCompletionPercentage
+    });
 
     // Create progress object based on which table we're using
     const updatedProgress: any = useComplexTable ? {

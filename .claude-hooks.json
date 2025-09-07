@@ -1,0 +1,20 @@
+{
+  "pre_v3_deployment": {
+    "trigger": ["V3 DEPLOY", "deploy to v3", "v3 deployment"],
+    "mandatory_steps": [
+      "Check memory for Auto_Schema_Sync_Workflow",
+      "Run schema sync verification",
+      "Block deployment if schemas differ",
+      "Only proceed with identical schemas"
+    ],
+    "script": "./V3_DEPLOYMENT_SCRIPT_NEW.sh"
+  },
+  "v2_schema_change": {
+    "trigger": ["ALTER TABLE", "CREATE TABLE", "DROP TABLE", "schema change"],
+    "auto_action": [
+      "Record schema change timestamp",
+      "Mark V3 sync as required",
+      "Warn about schema divergence"
+    ]
+  }
+}
